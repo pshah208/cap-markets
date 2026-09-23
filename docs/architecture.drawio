@@ -1,0 +1,256 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- BMO Capital Markets Client Intelligence - systems architecture diagram.
+
+     Source of truth for the diagram rendered in the guided demo (slide 5,
+     "How the pieces connect"). Edit in https://app.diagrams.net or
+     drawio-desktop, then re-render the matching React SVG in
+     app/src/web/src/components/ArchitectureDiagram.tsx.
+
+     Palette matches the app's brand tokens:
+       brand       #0051a5   brand-deep #003d7d
+       work        #7c3aed   fabric     #0f766e
+       foundry     #b45309   web        #1d4ed8
+-->
+<mxfile host="app.diagrams.net" modified="2026-08-11T13:40:00.000Z"
+        agent="capital-markets-client-intelligence" version="24.6.4"
+        type="device">
+  <diagram id="cm-architecture" name="BMO Capital Markets Client Intelligence">
+    <mxGraphModel dx="1400" dy="820" grid="1" gridSize="10" guides="1"
+                  tooltips="1" connect="1" arrows="1" fold="1" page="1"
+                  pageScale="1" pageWidth="1400" pageHeight="820" math="0" shadow="0">
+      <root>
+        <mxCell id="0"/>
+        <mxCell id="1" parent="0"/>
+
+        <!-- ================================================== Title -->
+        <mxCell id="title"
+                value="Global Client Intelligence Agent — how the pieces connect"
+                style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=20;fontStyle=1;fontColor=#003D7D;"
+                vertex="1" parent="1">
+          <mxGeometry x="60" y="20" width="1280" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="subtitle"
+                value="One agent, four grounded sources, everything under the signed-in user's own identity"
+                style="text;html=1;strokeColor=none;fillColor=none;align=center;verticalAlign=middle;whiteSpace=wrap;fontSize=13;fontColor=#39404A;"
+                vertex="1" parent="1">
+          <mxGeometry x="60" y="56" width="1280" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- ================================================== User -->
+        <mxCell id="user"
+                value="Cora Thomas&#10;MD Global Coverage"
+                style="shape=umlActor;html=1;whiteSpace=wrap;fillColor=#E8F0FA;strokeColor=#003D7D;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#003D7D;verticalLabelPosition=bottom;verticalAlign=top;spacingTop=6;"
+                vertex="1" parent="1">
+          <mxGeometry x="80" y="360" width="60" height="90" as="geometry"/>
+        </mxCell>
+
+        <!-- ================================================== Web app group -->
+        <mxCell id="app-group"
+                value="Web app · Azure Container Apps"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F9FC;strokeColor=#0051A5;strokeWidth=2;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#0051A5;spacingTop=8;container=1;collapsible=0;"
+                vertex="1" parent="1">
+          <mxGeometry x="230" y="240" width="240" height="320" as="geometry"/>
+        </mxCell>
+        <mxCell id="spa"
+                value="React SPA&#10;&#10;MSAL sign-in, streams answer"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0051A5;fontSize=12;fontStyle=1;fontColor=#14171C;align=center;spacingTop=6;"
+                vertex="1" parent="app-group">
+          <mxGeometry x="20" y="50" width="200" height="100" as="geometry"/>
+        </mxCell>
+        <mxCell id="bff"
+                value="BFF (FastAPI)&#10;&#10;OBO exchange, internal ingress only"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0051A5;fontSize=12;fontStyle=1;fontColor=#14171C;align=center;spacingTop=6;"
+                vertex="1" parent="app-group">
+          <mxGeometry x="20" y="170" width="200" height="120" as="geometry"/>
+        </mxCell>
+
+        <!-- ================================================== Foundry agent -->
+        <mxCell id="agent-group"
+                value="Azure AI Foundry"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F9FC;strokeColor=#003D7D;strokeWidth=3;verticalAlign=top;fontSize=12;fontStyle=1;fontColor=#003D7D;spacingTop=8;container=1;collapsible=0;"
+                vertex="1" parent="1">
+          <mxGeometry x="560" y="240" width="280" height="320" as="geometry"/>
+        </mxCell>
+        <mxCell id="agent"
+                value="Agent-cap-market&#10;&#10;gpt-5.4 · low reasoning&#10;Portal-built prompt agent&#10;&#10;Plans the answer, calls tools, cites"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FEDF01;strokeColor=#003D7D;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#003D7D;align=center;spacingTop=10;"
+                vertex="1" parent="agent-group">
+          <mxGeometry x="20" y="50" width="240" height="240" as="geometry"/>
+        </mxCell>
+
+        <!-- ================================================== Work IQ -->
+        <mxCell id="work-iq"
+                value="Work IQ"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F2EDFC;strokeColor=#7C3AED;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#7C3AED;verticalAlign=top;spacingTop=8;container=1;collapsible=0;"
+                vertex="1" parent="1">
+          <mxGeometry x="940" y="130" width="380" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="work-outlook" value="Outlook"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7C3AED;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="work-iq">
+          <mxGeometry x="16" y="40" width="80" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="work-teams" value="Teams"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7C3AED;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="work-iq">
+          <mxGeometry x="106" y="40" width="80" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="work-sp" value="SharePoint"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7C3AED;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="work-iq">
+          <mxGeometry x="196" y="40" width="80" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="work-od" value="OneDrive"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#7C3AED;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="work-iq">
+          <mxGeometry x="286" y="40" width="80" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="work-note"
+                value="What people said, decided, or committed to"
+                style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#6B7280;"
+                vertex="1" parent="work-iq">
+          <mxGeometry x="16" y="86" width="360" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- ================================================== Fabric IQ -->
+        <mxCell id="fabric-iq"
+                value="Fabric IQ"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E6F2F1;strokeColor=#0F766E;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#0F766E;verticalAlign=top;spacingTop=8;container=1;collapsible=0;"
+                vertex="1" parent="1">
+          <mxGeometry x="940" y="270" width="380" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="fab-onelake" value="OneLake"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="fabric-iq">
+          <mxGeometry x="16" y="40" width="100" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="fab-model" value="Semantic model"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="fabric-iq">
+          <mxGeometry x="126" y="40" width="120" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="fab-limits" value="Country limits"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#0F766E;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="fabric-iq">
+          <mxGeometry x="256" y="40" width="110" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="fabric-note"
+                value="Governed exposures, limits and the country envelope"
+                style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#6B7280;"
+                vertex="1" parent="fabric-iq">
+          <mxGeometry x="16" y="86" width="360" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- ================================================== Foundry IQ -->
+        <mxCell id="foundry-iq"
+                value="Foundry IQ"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FBF0E2;strokeColor=#B45309;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#B45309;verticalAlign=top;spacingTop=8;container=1;collapsible=0;"
+                vertex="1" parent="1">
+          <mxGeometry x="940" y="410" width="380" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="found-search" value="AI Search"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="foundry-iq">
+          <mxGeometry x="16" y="40" width="100" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="found-policy" value="CP-001…CP-014"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="foundry-iq">
+          <mxGeometry x="126" y="40" width="120" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="found-reg" value="OSFI · Basel refs"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#B45309;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="foundry-iq">
+          <mxGeometry x="256" y="40" width="110" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="foundry-note"
+                value="What is allowed, who approves, what evidence applies"
+                style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#6B7280;"
+                vertex="1" parent="foundry-iq">
+          <mxGeometry x="16" y="86" width="360" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- ================================================== Web IQ -->
+        <mxCell id="web-iq"
+                value="Web IQ"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#E8EEFC;strokeColor=#1D4ED8;strokeWidth=2;fontSize=13;fontStyle=1;fontColor=#1D4ED8;verticalAlign=top;spacingTop=8;container=1;collapsible=0;"
+                vertex="1" parent="1">
+          <mxGeometry x="940" y="550" width="380" height="120" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-bing" value="Grounding with Bing"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="web-iq">
+          <mxGeometry x="16" y="40" width="150" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-news" value="News · ratings"
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#FFFFFF;strokeColor=#1D4ED8;fontSize=11;fontColor=#39404A;"
+                vertex="1" parent="web-iq">
+          <mxGeometry x="176" y="40" width="120" height="34" as="geometry"/>
+        </mxCell>
+        <mxCell id="web-note"
+                value="Live public web — cited and dated, no cache"
+                style="text;html=1;strokeColor=none;fillColor=none;align=left;verticalAlign=middle;fontSize=10;fontColor=#6B7280;"
+                vertex="1" parent="web-iq">
+          <mxGeometry x="16" y="86" width="360" height="24" as="geometry"/>
+        </mxCell>
+
+        <!-- ================================================== Edges -->
+        <mxCell id="e-user-spa"
+                style="endArrow=classic;html=1;strokeColor=#39404A;strokeWidth=2;fontSize=11;fontColor=#39404A;endFill=1;"
+                edge="1" parent="1" source="user" target="spa">
+          <mxGeometry relative="1" as="geometry">
+            <Array as="points">
+              <mxPoint x="200" y="400"/>
+            </Array>
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="e-user-spa-label" value="sign in (MSAL)"
+                style="text;html=1;strokeColor=none;fillColor=#F7F9FC;align=center;verticalAlign=middle;fontSize=10;fontColor=#39404A;"
+                vertex="1" parent="1">
+          <mxGeometry x="150" y="360" width="86" height="18" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e-bff-agent"
+                style="endArrow=classic;html=1;strokeColor=#39404A;strokeWidth=2;fontSize=11;fontColor=#39404A;endFill=1;"
+                edge="1" parent="1" source="bff" target="agent">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-bff-agent-label" value="On-Behalf-Of&#10;as the user"
+                style="text;html=1;strokeColor=none;fillColor=#F7F9FC;align=center;verticalAlign=middle;fontSize=10;fontColor=#39404A;"
+                vertex="1" parent="1">
+          <mxGeometry x="486" y="480" width="90" height="26" as="geometry"/>
+        </mxCell>
+
+        <mxCell id="e-agent-work"
+                style="endArrow=classic;html=1;strokeColor=#7C3AED;strokeWidth=2;curved=1;endFill=1;"
+                edge="1" parent="1" source="agent" target="work-iq">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-agent-fabric"
+                style="endArrow=classic;html=1;strokeColor=#0F766E;strokeWidth=2;curved=1;endFill=1;"
+                edge="1" parent="1" source="agent" target="fabric-iq">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-agent-foundry"
+                style="endArrow=classic;html=1;strokeColor=#B45309;strokeWidth=2;curved=1;endFill=1;"
+                edge="1" parent="1" source="agent" target="foundry-iq">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+        <mxCell id="e-agent-web"
+                style="endArrow=classic;html=1;strokeColor=#1D4ED8;strokeWidth=2;curved=1;endFill=1;"
+                edge="1" parent="1" source="agent" target="web-iq">
+          <mxGeometry relative="1" as="geometry"/>
+        </mxCell>
+
+        <!-- ================================================== Bottom band -->
+        <mxCell id="footnote"
+                value="Every downstream call is made under the signed-in user&apos;s identity — the agent cannot see anything the user could not open themselves."
+                style="rounded=1;whiteSpace=wrap;html=1;fillColor=#F7F9FC;strokeColor=#E3E7EC;strokeWidth=1;fontSize=11;fontColor=#39404A;align=center;verticalAlign=middle;spacingLeft=16;spacingRight=16;"
+                vertex="1" parent="1">
+          <mxGeometry x="230" y="700" width="1090" height="44" as="geometry"/>
+        </mxCell>
+
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>

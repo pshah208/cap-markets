@@ -1,0 +1,138 @@
+{
+  "$schema_note": "Web IQ configuration for the Capital Markets Client Intelligence Agent. This layer is LIVE ONLY - there is no offline cache and no synthetic news file. If the Grounding with Bing Search connection is not configured on the Foundry project, the tool returns an explicit 'Web IQ unavailable' response so the agent never fabricates external facts about a real issuer.",
+  "$critical_guardrail": "Gibson Energy Inc. and every other issuer in this demo is a REAL public company. Web IQ returns real public information about them. Every other layer in this demo (Work IQ, Fabric IQ, Foundry IQ) is entirely synthetic. The agent must never blend a synthetic internal figure into a statement about the real issuer's actual finances, and must never attribute a synthetic internal view to a public source.",
+  "as_of": "2026-08-10",
+  "mode": "live_only",
+  "offline_cache": false,
+  "grounding": {
+    "type": "bing_grounding",
+    "connection_name_env": "BING_GROUNDING_CONNECTION",
+    "resource_type": "Microsoft.Bing/accounts",
+    "sku": "G1",
+    "foundry_project_env": "FOUNDRY_PROJECT_ENDPOINT",
+    "unavailable_behaviour": "Return {\"status\":\"unavailable\",\"layer\":\"Web IQ\",\"reason\":\"<detail>\"}. The agent must state plainly that Web IQ is unavailable and must not substitute internal data or model memory for external facts."
+  },
+  "defaults": {
+    "lookback_days": 30,
+    "max_results_per_query": 8,
+    "market": "en-CA",
+    "freshness": "Month",
+    "require_citation": true
+  },
+  "hero_client": {
+    "client_id": "CLI-1001",
+    "legal_name": "Gibson Energy Inc.",
+    "ticker": "TSX:GEI",
+    "aliases": ["Gibson Energy", "GEI.TO", "Gibson Energy Inc"],
+    "sector_terms": ["Canadian midstream", "energy infrastructure", "WCS differential", "heavy oil egress"]
+  },
+  "topics": [
+    {
+      "id": "news_and_earnings",
+      "label": "News, results and guidance",
+      "roles": ["relationship_manager", "analyst", "credit_risk", "trader"],
+      "query_templates": [
+        "{client} latest quarterly results and guidance",
+        "{client} {ticker} earnings release adjusted EBITDA segment results",
+        "{client} investor day guidance capital allocation update"
+      ],
+      "why_it_matters": "Establishes the public facts the meeting can be conducted on. Under the demo's information-barrier scenario this is the ONLY basis on which the pitch may proceed."
+    },
+    {
+      "id": "ratings_and_credit",
+      "label": "Rating agency actions and credit commentary",
+      "roles": ["credit_risk", "relationship_manager"],
+      "query_templates": [
+        "{client} credit rating action S&P DBRS Moody's outlook",
+        "{client} senior unsecured notes offering pricing coupon maturity",
+        "{client} leverage net debt to EBITDA deleveraging target"
+      ],
+      "why_it_matters": "Public rating actions and issuance terms are external corroboration for the internal risk rating trend and the covenant conversation."
+    },
+    {
+      "id": "capital_markets_activity",
+      "label": "Financing, M&A and competitor mandates",
+      "roles": ["relationship_manager", "analyst"],
+      "query_templates": [
+        "{client} credit facility amendment upsize syndicate banks",
+        "{client} acquisition divestiture announcement",
+        "{client} bookrunner underwriters {ticker} offering syndicate"
+      ],
+      "why_it_matters": "Shows who else is winning mandates on the name - the external check on the internal wallet-share view."
+    },
+    {
+      "id": "commodity_and_rates",
+      "label": "Commodity, differential and rates moves",
+      "roles": ["trader", "analyst", "credit_risk"],
+      "query_templates": [
+        "WCS WTI differential current level outlook egress capacity",
+        "Canadian crude differential forward curve hedging conditions",
+        "Bank of Canada policy rate CAD USD outlook corporate hedging"
+      ],
+      "why_it_matters": "The client's stated problem in the demo scenario is differential exposure. Market conditions are public and may be discussed even when a sized structure may not be solicited."
+    },
+    {
+      "id": "regulatory_and_enforcement",
+      "label": "Regulatory, permitting and enforcement",
+      "roles": ["credit_risk", "relationship_manager"],
+      "query_templates": [
+        "{client} regulatory approval permit pipeline terminal",
+        "{client} environmental incident spill regulatory penalty",
+        "Canadian midstream regulation methane emissions requirements"
+      ],
+      "why_it_matters": "Regulatory events are a credit driver for midstream and a standing watch item in the sector memo."
+    },
+    {
+      "id": "esg_and_controversy",
+      "label": "ESG performance and controversies",
+      "roles": ["relationship_manager", "analyst", "credit_risk"],
+      "query_templates": [
+        "{client} sustainability report emissions intensity targets",
+        "{client} ESG controversy community indigenous consultation",
+        "{client} safety record recordable injury performance"
+      ],
+      "why_it_matters": "Feeds the CP-011 test of whether a credible transition-linked KPI set exists. Public claims only - nothing may be labelled."
+    },
+    {
+      "id": "leadership_and_governance",
+      "label": "Executive and board changes",
+      "roles": ["relationship_manager"],
+      "query_templates": [
+        "{client} chief executive chief financial officer appointment departure",
+        "{client} board of directors changes annual meeting"
+      ],
+      "why_it_matters": "A CFO or Treasurer change is a relationship event and a KYC trigger under CP-006."
+    },
+    {
+      "id": "sector_and_peers",
+      "label": "Sector and peer comparison",
+      "roles": ["analyst", "trader"],
+      "query_templates": [
+        "Canadian midstream sector outlook contracted cash flow multiples",
+        "{peer_list} recent results comparison midstream",
+        "Canadian energy infrastructure M&A activity consolidation"
+      ],
+      "why_it_matters": "Positions the hero client against the rest of the coverage book."
+    }
+  ],
+  "role_default_topics": {
+    "relationship_manager": ["news_and_earnings", "capital_markets_activity", "leadership_and_governance", "esg_and_controversy"],
+    "trader": ["commodity_and_rates", "news_and_earnings", "sector_and_peers"],
+    "analyst": ["news_and_earnings", "sector_and_peers", "ratings_and_credit", "esg_and_controversy"],
+    "credit_risk": ["ratings_and_credit", "regulatory_and_enforcement", "news_and_earnings", "commodity_and_rates"]
+  },
+  "peer_list": [
+    "Keyera Corp.",
+    "Whitecap Resources Inc.",
+    "Secure Waste Infrastructure",
+    "Superior Plus Corp."
+  ],
+  "answer_rules": [
+    "Every external claim must carry a citation to the source returned by the grounding tool. An uncited external claim is not permitted.",
+    "State the retrieval date and the lookback window used, because the reader needs to know how fresh the answer is.",
+    "Never present an internal (synthetic) figure as if it came from a public source, and never present a public figure as an internal position.",
+    "Where the web returns nothing for a topic, say the topic returned nothing rather than filling the gap from model memory.",
+    "Where a public fact contradicts an internal record, surface the contradiction rather than reconciling it silently - it may be the most valuable thing in the brief.",
+    "In this demo's scenario a restriction is live on the hero client. Web IQ output is public information and may be used, but the agent must still repeat the CP-008 caveat that whether a given pitch touches the restricted subject matter is the Control Room's determination and not the business's."
+  ]
+}

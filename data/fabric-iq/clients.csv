@@ -1,0 +1,11 @@
+client_id,client_name,ticker,sector,sub_sector,hq_city,coverage_tier,relationship_since,relationship_years,public_ratings,internal_risk_rating,internal_risk_rating_prior,risk_trend,watchlist_flag,products_held,products_available,last_meeting_date,kyc_refresh_due,relationship_owner_alias,coverage_banker_alias
+CLI-1001,Gibson Energy Inc.,TSX:GEI,Energy,Midstream / Infrastructure,"Calgary, AB",Tier 1,2011,15,S&P BBB- / DBRS BBB (low),IG-6,IG-6,improving,N,7,11,2026-05-21,2026-09-30,sydney.mattos,sasha.ouellet
+CLI-1002,Keyera Corp.,TSX:KEY,Energy,Midstream / NGL,"Calgary, AB",Tier 1,2009,17,S&P BBB / DBRS BBB,IG-5,IG-5,stable,N,2,11,2026-03-11,2027-10-07,sydney.mattos,sasha.ouellet
+CLI-1003,Whitecap Resources Inc.,TSX:WCP,Energy,E&P - Light Oil,"Calgary, AB",Tier 2,2014,12,S&P BB+ / DBRS BB (high),IG-8,IG-8,improving,N,6,11,2026-07-17,2027-01-10,sydney.mattos,sasha.ouellet
+CLI-1004,Secure Waste Infrastructure,TSX:SES,Energy,Energy Services,"Calgary, AB",Tier 2,2016,10,S&P BB / DBRS BB,IG-9,IG-9,stable,N,6,11,2026-03-09,2026-09-30,sydney.mattos,sasha.ouellet
+CLI-1005,Stella-Jones Inc.,TSX:SJ,Materials,Wood Products,"Montreal, QC",Tier 2,2013,13,S&P BBB / DBRS BBB,IG-5,IG-5,stable,N,5,11,2026-07-08,2027-01-07,sydney.mattos,sasha.ouellet
+CLI-1006,Russel Metals Inc.,TSX:RUS,Materials,Metals Distribution,"Mississauga, ON",Tier 2,2010,16,S&P BBB- / DBRS BBB (low),IG-6,IG-6,stable,N,5,11,2026-05-31,2027-03-14,sydney.mattos,sasha.ouellet
+CLI-1007,Cascades Inc.,TSX:CAS,Materials,Packaging / Tissue,"Kingsey Falls, QC",Tier 3,2012,14,S&P BB- / DBRS BB (low),IG-10,IG-10,deteriorating,Y,2,11,2026-01-26,2027-08-11,sydney.mattos,sasha.ouellet
+CLI-1008,Ag Growth International Inc.,TSX:AFN,Industrials,Agricultural Equipment,"Winnipeg, MB",Tier 3,2017,9,S&P BB- / not rated,IG-10,IG-10,deteriorating,Y,2,11,2026-06-30,2026-11-13,sydney.mattos,sasha.ouellet
+CLI-1009,North West Company Inc.,TSX:NWC,Industrials,Retail Distribution,"Winnipeg, MB",Tier 3,2015,11,not rated,IG-7,IG-7,stable,N,4,11,2026-06-24,2027-01-29,sydney.mattos,sasha.ouellet
+CLI-1010,Superior Plus Corp.,TSX:SPB,Energy,Energy Distribution,"Toronto, ON",Tier 2,2011,15,S&P BB / DBRS BB (high),IG-8,IG-8,stable,N,3,11,2026-07-20,2027-08-16,sydney.mattos,sasha.ouellet

@@ -1,0 +1,10 @@
+# The image runs `npm ci` itself. Copying a host-built node_modules in breaks the
+# build: binaries built on Windows are not executable in the Linux image, which
+# surfaces as "sh: tsc: Permission denied".
+node_modules
+dist
+.env
+.env.*
+*.tsbuildinfo
+.vite
+npm-debug.log*

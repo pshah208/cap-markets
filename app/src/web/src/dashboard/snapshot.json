@@ -1,0 +1,778 @@
+{
+  "snapshotAsOf": "2026-08-10",
+  "units": "Source monetary values are CAD millions (revenue converted from CAD thousands). USD fields are unavailable: no CAD/USD conversion rate is supplied. Percentages are percentage points, not fractions.",
+  "disclaimer": "SYNTHETIC DEMO ONLY: issuer names are labels; all internal figures and evidence are invented, not real client relationships, credit positions or investment advice. Offline cached scope only; no API calls, live retrieval or external facts.",
+  "companies": [
+    {
+      "id": "CLI-1001",
+      "name": "Gibson Energy Inc.",
+      "sector": "Energy",
+      "asOf": "2026-08-10",
+      "exposure": null,
+      "commitment": null,
+      "revenue": null,
+      "limit": null,
+      "maturity": [],
+      "currency": "USD",
+      "fxRate": null,
+      "usdUnavailableReason": "CAD source values; no supported FX rate.",
+      "revenuePeriod": "FY26 YTD (2025-11-01 to 2026-08-10); not full year",
+      "walletPercent": 21.4,
+      "utilizationPercent": 68.3,
+      "exposureCad": 341.7,
+      "commitmentCad": 465.0,
+      "revenueCad": 8.42,
+      "limitCad": 500.0,
+      "limitUtilizedCad": 341.7,
+      "walletRevenueCad": 8.42,
+      "streetWalletCad": 39.35,
+      "maturityCad": [
+        {
+          "year": "2027",
+          "amount": 100.0
+        },
+        {
+          "year": "2028",
+          "amount": 60.0
+        },
+        {
+          "year": "2029",
+          "amount": 165.0
+        },
+        {
+          "year": "2030",
+          "amount": 140.0
+        }
+      ],
+      "maturityBasis": "Facility commitment_cad_m grouped by maturity calendar year, including letters of credit, uncommitted and derivative lines where present; not drawn exposure, issuer-wide debt or the proposed refinancing pipeline. Facility rows are undated and treated as the scenario snapshot, not historical observations.",
+      "commitmentBasis": "Sum of facility commitment_cad_m, including uncommitted and derivative risk lines; not all legally committed lending.",
+      "evidence": [
+        {
+          "iq": "Fabric IQ",
+          "status": "cached synthetic",
+          "text": "Local CSV snapshot only; no Fabric service query. Source monetary values are CAD millions (revenue converted from CAD thousands). USD fields are unavailable: no CAD/USD conversion rate is supplied. Percentages are percentage points, not fractions."
+        },
+        {
+          "iq": "Work IQ",
+          "status": "cached synthetic",
+          "text": "Illustrative local source EM-003: RE: Call report - Gibson Treasurer, 21 July - do not indicate a hold yet. Not a live retrieval."
+        },
+        {
+          "iq": "Foundry IQ",
+          "status": "cached synthetic",
+          "text": "Illustrative local source CP-012: Gibson Energy Inc. (TSX:GEI) - FY26 Account Plan and Pitch Book Extract. Not a live retrieval."
+        },
+        {
+          "iq": "Web IQ",
+          "status": "unavailable",
+          "text": "web_iq_queries.json declares no offline cache. No news, ratings or external facts retrieved."
+        }
+      ],
+      "opportunity": "Scenario proposals (not approved): OPP-4471 Revolver upsize + 1-year extension (decision needed by 2026-09-30); OPP-4472 Chauvin commodity + FX hedging overlay (decision needed by 2026-10-15); OPP-4473 2027 maturity refinancing - follow-on senior unsecured (decision needed by 2027-01-31). Revolver pitch requires Credit pro-forma testing; hedging solicitation requires Control Room clearance.",
+      "risk": "Single-name limit status Green: 68.3% utilised, CAD 341.7m of CAD 500.0m. Internal synthetic rating IG-6; trend improving; watchlist flag N. KYC refresh due 2026-09-30 (relative to cached date, not today). Headroom is not approval for new commitments. Scenario covenant Total Net Debt to Adjusted EBITDA: 4.18x against 4.50x; 0.32 turns headroom. CR-2026-0184: The revolver upsize pitch may proceed on public information only. The hedging overlay solicitation must be cleared by the Control Room before Thursday. Research may not publish or update the target price.",
+      "dataQuality": [],
+      "sources": [
+        "data/fabric-iq/clients.csv",
+        "data/fabric-iq/exposures.csv",
+        "data/fabric-iq/credit_facilities.csv",
+        "data/fabric-iq/revenue_by_product.csv",
+        "data/fabric-iq/wallet_share.csv",
+        "data/fabric-iq/limits_utilization.csv",
+        "data/scenario_facts.py",
+        "data/web-iq/web_iq_queries.json",
+        "data/work-iq/emails.json#EM-003",
+        "data/foundry-iq/cm_policies.json#CP-012"
+      ]
+    },
+    {
+      "id": "CLI-1002",
+      "name": "Keyera Corp.",
+      "sector": "Energy",
+      "asOf": "2026-08-10",
+      "exposure": null,
+      "commitment": null,
+      "revenue": null,
+      "limit": null,
+      "maturity": [],
+      "currency": "USD",
+      "fxRate": null,
+      "usdUnavailableReason": "CAD source values; no supported FX rate.",
+      "revenuePeriod": "FY26 YTD (2025-11-01 to 2026-08-10); not full year",
+      "walletPercent": 17.1,
+      "utilizationPercent": 85.8,
+      "exposureCad": 307.6,
+      "commitmentCad": 520.0,
+      "revenueCad": 8.58,
+      "limitCad": 600.0,
+      "limitUtilizedCad": 514.8,
+      "walletRevenueCad": 13.208,
+      "streetWalletCad": 77.0442,
+      "maturityCad": [
+        {
+          "year": "2027",
+          "amount": 156.0
+        },
+        {
+          "year": "2028",
+          "amount": 78.0
+        },
+        {
+          "year": "2030",
+          "amount": 286.0
+        }
+      ],
+      "maturityBasis": "Facility commitment_cad_m grouped by maturity calendar year, including letters of credit, uncommitted and derivative lines where present; not drawn exposure, issuer-wide debt or the proposed refinancing pipeline. Facility rows are undated and treated as the scenario snapshot, not historical observations.",
+      "commitmentBasis": "Sum of facility commitment_cad_m, including uncommitted and derivative risk lines; not all legally committed lending.",
+      "evidence": [
+        {
+          "iq": "Fabric IQ",
+          "status": "cached synthetic",
+          "text": "Local CSV snapshot only; no Fabric service query. Source monetary values are CAD millions (revenue converted from CAD thousands). USD fields are unavailable: no CAD/USD conversion rate is supplied. Percentages are percentage points, not fractions."
+        },
+        {
+          "iq": "Work IQ",
+          "status": "cached synthetic",
+          "text": "Illustrative local source EM-024: Keyera single-name limit is amber at 85.8 per cent - nothing new until it is forecast. Not a live retrieval."
+        },
+        {
+          "iq": "Foundry IQ",
+          "status": "cached synthetic",
+          "text": "Illustrative local policy CP-001: Corporate Credit Risk Appetite and Single-Name Limit Framework. Firm-wide standard applicable to this situation, not a company-specific document. Not a live retrieval."
+        },
+        {
+          "iq": "Web IQ",
+          "status": "unavailable",
+          "text": "web_iq_queries.json declares no offline cache. No news, ratings or external facts retrieved."
+        }
+      ],
+      "opportunity": "Review Corporate Loan - Revolving Credit Facility: largest recorded gap to the 25% wallet target is CAD 3.3462m in wallet_share.csv. This is an analytical lead, not an approved opportunity or revenue forecast.",
+      "risk": "Single-name limit status Amber: 85.8% utilised, CAD 514.8m of CAD 600.0m. Internal synthetic rating IG-5; trend stable; watchlist flag N. KYC refresh due 2027-10-07 (relative to cached date, not today). Headroom is not approval for new commitments.",
+      "dataQuality": [
+        "Exposure rows total CAD 307.6m, but the single-name limit reports CAD 514.8m utilised. The source mismatch is unresolved; utilization uses the limit row, not exposure divided by limit.",
+        "Wallet-table revenue CAD 13.208m differs from FY26 YTD revenue CAD 8.58m. Wallet share uses only wallet-table numerator and estimated street denominator; these sources are not reconciled."
+      ],
+      "sources": [
+        "data/fabric-iq/clients.csv",
+        "data/fabric-iq/exposures.csv",
+        "data/fabric-iq/credit_facilities.csv",
+        "data/fabric-iq/revenue_by_product.csv",
+        "data/fabric-iq/wallet_share.csv",
+        "data/fabric-iq/limits_utilization.csv",
+        "data/scenario_facts.py",
+        "data/web-iq/web_iq_queries.json",
+        "data/work-iq/emails.json#EM-024",
+        "data/foundry-iq/cm_policies.json#CP-001"
+      ]
+    },
+    {
+      "id": "CLI-1003",
+      "name": "Whitecap Resources Inc.",
+      "sector": "Energy",
+      "asOf": "2026-08-10",
+      "exposure": null,
+      "commitment": null,
+      "revenue": null,
+      "limit": null,
+      "maturity": [],
+      "currency": "USD",
+      "fxRate": null,
+      "usdUnavailableReason": "CAD source values; no supported FX rate.",
+      "revenuePeriod": "FY26 YTD (2025-11-01 to 2026-08-10); not full year",
+      "walletPercent": 17.9,
+      "utilizationPercent": 51.9,
+      "exposureCad": 154.3,
+      "commitmentCad": 310.0,
+      "revenueCad": 6.169,
+      "limitCad": 375.0,
+      "limitUtilizedCad": 194.6,
+      "walletRevenueCad": 6.789,
+      "streetWalletCad": 37.8807,
+      "maturityCad": [
+        {
+          "year": "2028",
+          "amount": 263.5
+        },
+        {
+          "year": "2029",
+          "amount": 46.5
+        }
+      ],
+      "maturityBasis": "Facility commitment_cad_m grouped by maturity calendar year, including letters of credit, uncommitted and derivative lines where present; not drawn exposure, issuer-wide debt or the proposed refinancing pipeline. Facility rows are undated and treated as the scenario snapshot, not historical observations.",
+      "commitmentBasis": "Sum of facility commitment_cad_m, including uncommitted and derivative risk lines; not all legally committed lending.",
+      "evidence": [
+        {
+          "iq": "Fabric IQ",
+          "status": "cached synthetic",
+          "text": "Local CSV snapshot only; no Fabric service query. Source monetary values are CAD millions (revenue converted from CAD thousands). USD fields are unavailable: no CAD/USD conversion rate is supplied. Percentages are percentage points, not fractions."
+        },
+        {
+          "iq": "Work IQ",
+          "status": "unavailable",
+          "text": "No company-specific Work evidence selected for this cache."
+        },
+        {
+          "iq": "Foundry IQ",
+          "status": "unavailable",
+          "text": "No company-specific Foundry evidence selected for this cache."
+        },
+        {
+          "iq": "Web IQ",
+          "status": "unavailable",
+          "text": "web_iq_queries.json declares no offline cache. No news, ratings or external facts retrieved."
+        }
+      ],
+      "opportunity": "Review Corporate Loan - Revolving Credit Facility: largest recorded gap to the 25% wallet target is CAD 1.5682m in wallet_share.csv. This is an analytical lead, not an approved opportunity or revenue forecast.",
+      "risk": "Single-name limit status Green: 51.9% utilised, CAD 194.6m of CAD 375.0m. Internal synthetic rating IG-8; trend improving; watchlist flag N. KYC refresh due 2027-01-10 (relative to cached date, not today). Headroom is not approval for new commitments.",
+      "dataQuality": [
+        "Exposure rows total CAD 154.3m, but the single-name limit reports CAD 194.6m utilised. The source mismatch is unresolved; utilization uses the limit row, not exposure divided by limit.",
+        "Wallet-table revenue CAD 6.789m differs from FY26 YTD revenue CAD 6.169m. Wallet share uses only wallet-table numerator and estimated street denominator; these sources are not reconciled."
+      ],
+      "sources": [
+        "data/fabric-iq/clients.csv",
+        "data/fabric-iq/exposures.csv",
+        "data/fabric-iq/credit_facilities.csv",
+        "data/fabric-iq/revenue_by_product.csv",
+        "data/fabric-iq/wallet_share.csv",
+        "data/fabric-iq/limits_utilization.csv",
+        "data/scenario_facts.py",
+        "data/web-iq/web_iq_queries.json"
+      ]
+    },
+    {
+      "id": "CLI-1004",
+      "name": "Secure Waste Infrastructure",
+      "sector": "Energy",
+      "asOf": "2026-08-10",
+      "exposure": null,
+      "commitment": null,
+      "revenue": null,
+      "limit": null,
+      "maturity": [],
+      "currency": "USD",
+      "fxRate": null,
+      "usdUnavailableReason": "CAD source values; no supported FX rate.",
+      "revenuePeriod": "FY26 YTD (2025-11-01 to 2026-08-10); not full year",
+      "walletPercent": 24.7,
+      "utilizationPercent": 83.5,
+      "exposureCad": 115.5,
+      "commitmentCad": 185.1,
+      "revenueCad": 2.6455,
+      "limitCad": 250.0,
+      "limitUtilizedCad": 208.8,
+      "walletRevenueCad": 5.0135,
+      "streetWalletCad": 20.3265,
+      "maturityCad": [
+        {
+          "year": "2027",
+          "amount": 101.8
+        },
+        {
+          "year": "2029",
+          "amount": 55.5
+        },
+        {
+          "year": "2030",
+          "amount": 27.8
+        }
+      ],
+      "maturityBasis": "Facility commitment_cad_m grouped by maturity calendar year, including letters of credit, uncommitted and derivative lines where present; not drawn exposure, issuer-wide debt or the proposed refinancing pipeline. Facility rows are undated and treated as the scenario snapshot, not historical observations.",
+      "commitmentBasis": "Sum of facility commitment_cad_m, including uncommitted and derivative risk lines; not all legally committed lending.",
+      "evidence": [
+        {
+          "iq": "Fabric IQ",
+          "status": "cached synthetic",
+          "text": "Local CSV snapshot only; no Fabric service query. Source monetary values are CAD millions (revenue converted from CAD thousands). USD fields are unavailable: no CAD/USD conversion rate is supplied. Percentages are percentage points, not fractions."
+        },
+        {
+          "iq": "Work IQ",
+          "status": "unavailable",
+          "text": "No company-specific Work evidence selected for this cache."
+        },
+        {
+          "iq": "Foundry IQ",
+          "status": "unavailable",
+          "text": "No company-specific Foundry evidence selected for this cache."
+        },
+        {
+          "iq": "Web IQ",
+          "status": "unavailable",
+          "text": "web_iq_queries.json declares no offline cache. No news, ratings or external facts retrieved."
+        }
+      ],
+      "opportunity": "Review Commodity Derivatives: largest recorded gap to the 25% wallet target is CAD 0.2481m in wallet_share.csv. This is an analytical lead, not an approved opportunity or revenue forecast.",
+      "risk": "Single-name limit status Green: 83.5% utilised, CAD 208.8m of CAD 250.0m. Internal synthetic rating IG-9; trend stable; watchlist flag N. KYC refresh due 2026-09-30 (relative to cached date, not today). Headroom is not approval for new commitments.",
+      "dataQuality": [
+        "Exposure rows total CAD 115.5m, but the single-name limit reports CAD 208.8m utilised. The source mismatch is unresolved; utilization uses the limit row, not exposure divided by limit.",
+        "Wallet-table revenue CAD 5.0135m differs from FY26 YTD revenue CAD 2.6455m. Wallet share uses only wallet-table numerator and estimated street denominator; these sources are not reconciled."
+      ],
+      "sources": [
+        "data/fabric-iq/clients.csv",
+        "data/fabric-iq/exposures.csv",
+        "data/fabric-iq/credit_facilities.csv",
+        "data/fabric-iq/revenue_by_product.csv",
+        "data/fabric-iq/wallet_share.csv",
+        "data/fabric-iq/limits_utilization.csv",
+        "data/scenario_facts.py",
+        "data/web-iq/web_iq_queries.json"
+      ]
+    },
+    {
+      "id": "CLI-1005",
+      "name": "Stella-Jones Inc.",
+      "sector": "Materials",
+      "asOf": "2026-08-10",
+      "exposure": null,
+      "commitment": null,
+      "revenue": null,
+      "limit": null,
+      "maturity": [],
+      "currency": "USD",
+      "fxRate": null,
+      "usdUnavailableReason": "CAD source values; no supported FX rate.",
+      "revenuePeriod": "FY26 YTD (2025-11-01 to 2026-08-10); not full year",
+      "walletPercent": 21.2,
+      "utilizationPercent": 68.8,
+      "exposureCad": 150.7,
+      "commitmentCad": 240.0,
+      "revenueCad": 2.9519,
+      "limitCad": 300.0,
+      "limitUtilizedCad": 206.4,
+      "walletRevenueCad": 6.504,
+      "streetWalletCad": 30.6411,
+      "maturityCad": [
+        {
+          "year": "2028",
+          "amount": 168.0
+        },
+        {
+          "year": "2030",
+          "amount": 72.0
+        }
+      ],
+      "maturityBasis": "Facility commitment_cad_m grouped by maturity calendar year, including letters of credit, uncommitted and derivative lines where present; not drawn exposure, issuer-wide debt or the proposed refinancing pipeline. Facility rows are undated and treated as the scenario snapshot, not historical observations.",
+      "commitmentBasis": "Sum of facility commitment_cad_m, including uncommitted and derivative risk lines; not all legally committed lending.",
+      "evidence": [
+        {
+          "iq": "Fabric IQ",
+          "status": "cached synthetic",
+          "text": "Local CSV snapshot only; no Fabric service query. Source monetary values are CAD millions (revenue converted from CAD thousands). USD fields are unavailable: no CAD/USD conversion rate is supplied. Percentages are percentage points, not fractions."
+        },
+        {
+          "iq": "Work IQ",
+          "status": "unavailable",
+          "text": "No company-specific Work evidence selected for this cache."
+        },
+        {
+          "iq": "Foundry IQ",
+          "status": "unavailable",
+          "text": "No company-specific Foundry evidence selected for this cache."
+        },
+        {
+          "iq": "Web IQ",
+          "status": "unavailable",
+          "text": "web_iq_queries.json declares no offline cache. No news, ratings or external facts retrieved."
+        }
+      ],
+      "opportunity": "Review Debt Capital Markets - Underwriting: largest recorded gap to the 25% wallet target is CAD 1.0017m in wallet_share.csv. This is an analytical lead, not an approved opportunity or revenue forecast.",
+      "risk": "Single-name limit status Green: 68.8% utilised, CAD 206.4m of CAD 300.0m. Internal synthetic rating IG-5; trend stable; watchlist flag N. KYC refresh due 2027-01-07 (relative to cached date, not today). Headroom is not approval for new commitments.",
+      "dataQuality": [
+        "Exposure rows total CAD 150.7m, but the single-name limit reports CAD 206.4m utilised. The source mismatch is unresolved; utilization uses the limit row, not exposure divided by limit.",
+        "Wallet-table revenue CAD 6.504m differs from FY26 YTD revenue CAD 2.9519m. Wallet share uses only wallet-table numerator and estimated street denominator; these sources are not reconciled."
+      ],
+      "sources": [
+        "data/fabric-iq/clients.csv",
+        "data/fabric-iq/exposures.csv",
+        "data/fabric-iq/credit_facilities.csv",
+        "data/fabric-iq/revenue_by_product.csv",
+        "data/fabric-iq/wallet_share.csv",
+        "data/fabric-iq/limits_utilization.csv",
+        "data/scenario_facts.py",
+        "data/web-iq/web_iq_queries.json"
+      ]
+    },
+    {
+      "id": "CLI-1006",
+      "name": "Russel Metals Inc.",
+      "sector": "Materials",
+      "asOf": "2026-08-10",
+      "exposure": null,
+      "commitment": null,
+      "revenue": null,
+      "limit": null,
+      "maturity": [],
+      "currency": "USD",
+      "fxRate": null,
+      "usdUnavailableReason": "CAD source values; no supported FX rate.",
+      "revenuePeriod": "FY26 YTD (2025-11-01 to 2026-08-10); not full year",
+      "walletPercent": 14.7,
+      "utilizationPercent": 77.4,
+      "exposureCad": 191.4,
+      "commitmentCad": 274.9,
+      "revenueCad": 3.41,
+      "limitCad": 350.0,
+      "limitUtilizedCad": 270.9,
+      "walletRevenueCad": 8.69,
+      "streetWalletCad": 58.9797,
+      "maturityCad": [
+        {
+          "year": "2027",
+          "amount": 233.7
+        },
+        {
+          "year": "2028",
+          "amount": 41.2
+        }
+      ],
+      "maturityBasis": "Facility commitment_cad_m grouped by maturity calendar year, including letters of credit, uncommitted and derivative lines where present; not drawn exposure, issuer-wide debt or the proposed refinancing pipeline. Facility rows are undated and treated as the scenario snapshot, not historical observations.",
+      "commitmentBasis": "Sum of facility commitment_cad_m, including uncommitted and derivative risk lines; not all legally committed lending.",
+      "evidence": [
+        {
+          "iq": "Fabric IQ",
+          "status": "cached synthetic",
+          "text": "Local CSV snapshot only; no Fabric service query. Source monetary values are CAD millions (revenue converted from CAD thousands). USD fields are unavailable: no CAD/USD conversion rate is supplied. Percentages are percentage points, not fractions."
+        },
+        {
+          "iq": "Work IQ",
+          "status": "unavailable",
+          "text": "No company-specific Work evidence selected for this cache."
+        },
+        {
+          "iq": "Foundry IQ",
+          "status": "unavailable",
+          "text": "No company-specific Foundry evidence selected for this cache."
+        },
+        {
+          "iq": "Web IQ",
+          "status": "unavailable",
+          "text": "web_iq_queries.json declares no offline cache. No news, ratings or external facts retrieved."
+        }
+      ],
+      "opportunity": "Review Debt Capital Markets - Underwriting: largest recorded gap to the 25% wallet target is CAD 2.9443m in wallet_share.csv. This is an analytical lead, not an approved opportunity or revenue forecast.",
+      "risk": "Single-name limit status Green: 77.4% utilised, CAD 270.9m of CAD 350.0m. Internal synthetic rating IG-6; trend stable; watchlist flag N. KYC refresh due 2027-03-14 (relative to cached date, not today). Headroom is not approval for new commitments.",
+      "dataQuality": [
+        "Exposure rows total CAD 191.4m, but the single-name limit reports CAD 270.9m utilised. The source mismatch is unresolved; utilization uses the limit row, not exposure divided by limit.",
+        "Wallet-table revenue CAD 8.69m differs from FY26 YTD revenue CAD 3.41m. Wallet share uses only wallet-table numerator and estimated street denominator; these sources are not reconciled."
+      ],
+      "sources": [
+        "data/fabric-iq/clients.csv",
+        "data/fabric-iq/exposures.csv",
+        "data/fabric-iq/credit_facilities.csv",
+        "data/fabric-iq/revenue_by_product.csv",
+        "data/fabric-iq/wallet_share.csv",
+        "data/fabric-iq/limits_utilization.csv",
+        "data/scenario_facts.py",
+        "data/web-iq/web_iq_queries.json"
+      ]
+    },
+    {
+      "id": "CLI-1007",
+      "name": "Cascades Inc.",
+      "sector": "Materials",
+      "asOf": "2026-08-10",
+      "exposure": null,
+      "commitment": null,
+      "revenue": null,
+      "limit": null,
+      "maturity": [],
+      "currency": "USD",
+      "fxRate": null,
+      "usdUnavailableReason": "CAD source values; no supported FX rate.",
+      "revenuePeriod": "FY26 YTD (2025-11-01 to 2026-08-10); not full year",
+      "walletPercent": 14.8,
+      "utilizationPercent": 80.6,
+      "exposureCad": 117.2,
+      "commitmentCad": 160.0,
+      "revenueCad": 3.0081,
+      "limitCad": 200.0,
+      "limitUtilizedCad": 161.2,
+      "walletRevenueCad": 4.8,
+      "streetWalletCad": 32.5057,
+      "maturityCad": [
+        {
+          "year": "2028",
+          "amount": 24.0
+        },
+        {
+          "year": "2029",
+          "amount": 48.0
+        },
+        {
+          "year": "2030",
+          "amount": 88.0
+        }
+      ],
+      "maturityBasis": "Facility commitment_cad_m grouped by maturity calendar year, including letters of credit, uncommitted and derivative lines where present; not drawn exposure, issuer-wide debt or the proposed refinancing pipeline. Facility rows are undated and treated as the scenario snapshot, not historical observations.",
+      "commitmentBasis": "Sum of facility commitment_cad_m, including uncommitted and derivative risk lines; not all legally committed lending.",
+      "evidence": [
+        {
+          "iq": "Fabric IQ",
+          "status": "cached synthetic",
+          "text": "Local CSV snapshot only; no Fabric service query. Source monetary values are CAD millions (revenue converted from CAD thousands). USD fields are unavailable: no CAD/USD conversion rate is supplied. Percentages are percentage points, not fractions."
+        },
+        {
+          "iq": "Work IQ",
+          "status": "cached synthetic",
+          "text": "Illustrative local source EM-027: Cascades stays on the watchlist - the covenant is the constraint, not the limit. Not a live retrieval."
+        },
+        {
+          "iq": "Foundry IQ",
+          "status": "cached synthetic",
+          "text": "Illustrative local policy CP-005: Financial Covenant Monitoring and Pro-Forma Testing Standard. Firm-wide standard applicable to this situation, not a company-specific document. Not a live retrieval."
+        },
+        {
+          "iq": "Web IQ",
+          "status": "unavailable",
+          "text": "web_iq_queries.json declares no offline cache. No news, ratings or external facts retrieved."
+        }
+      ],
+      "opportunity": "Review Corporate Loan - Revolving Credit Facility: largest recorded gap to the 25% wallet target is CAD 1.3642m in wallet_share.csv. This is an analytical lead, not an approved opportunity or revenue forecast.",
+      "risk": "Single-name limit status Green: 80.6% utilised, CAD 161.2m of CAD 200.0m. Internal synthetic rating IG-10; trend deteriorating; watchlist flag Y. KYC refresh due 2027-08-11 (relative to cached date, not today). Headroom is not approval for new commitments.",
+      "dataQuality": [
+        "Exposure rows total CAD 117.2m, but the single-name limit reports CAD 161.2m utilised. The source mismatch is unresolved; utilization uses the limit row, not exposure divided by limit.",
+        "Wallet-table revenue CAD 4.8m differs from FY26 YTD revenue CAD 3.0081m. Wallet share uses only wallet-table numerator and estimated street denominator; these sources are not reconciled."
+      ],
+      "sources": [
+        "data/fabric-iq/clients.csv",
+        "data/fabric-iq/exposures.csv",
+        "data/fabric-iq/credit_facilities.csv",
+        "data/fabric-iq/revenue_by_product.csv",
+        "data/fabric-iq/wallet_share.csv",
+        "data/fabric-iq/limits_utilization.csv",
+        "data/scenario_facts.py",
+        "data/web-iq/web_iq_queries.json",
+        "data/work-iq/emails.json#EM-027",
+        "data/foundry-iq/cm_policies.json#CP-005"
+      ]
+    },
+    {
+      "id": "CLI-1008",
+      "name": "Ag Growth International Inc.",
+      "sector": "Industrials",
+      "asOf": "2026-08-10",
+      "exposure": null,
+      "commitment": null,
+      "revenue": null,
+      "limit": null,
+      "maturity": [],
+      "currency": "USD",
+      "fxRate": null,
+      "usdUnavailableReason": "CAD source values; no supported FX rate.",
+      "revenuePeriod": "FY26 YTD (2025-11-01 to 2026-08-10); not full year",
+      "walletPercent": 14.6,
+      "utilizationPercent": 91.5,
+      "exposureCad": 67.2,
+      "commitmentCad": 120.0,
+      "revenueCad": 1.5119,
+      "limitCad": 150.0,
+      "limitUtilizedCad": 137.2,
+      "walletRevenueCad": 3.348,
+      "streetWalletCad": 22.9387,
+      "maturityCad": [
+        {
+          "year": "2027",
+          "amount": 66.0
+        },
+        {
+          "year": "2030",
+          "amount": 36.0
+        },
+        {
+          "year": "2031",
+          "amount": 18.0
+        }
+      ],
+      "maturityBasis": "Facility commitment_cad_m grouped by maturity calendar year, including letters of credit, uncommitted and derivative lines where present; not drawn exposure, issuer-wide debt or the proposed refinancing pipeline. Facility rows are undated and treated as the scenario snapshot, not historical observations.",
+      "commitmentBasis": "Sum of facility commitment_cad_m, including uncommitted and derivative risk lines; not all legally committed lending.",
+      "evidence": [
+        {
+          "iq": "Fabric IQ",
+          "status": "cached synthetic",
+          "text": "Local CSV snapshot only; no Fabric service query. Source monetary values are CAD millions (revenue converted from CAD thousands). USD fields are unavailable: no CAD/USD conversion rate is supplied. Percentages are percentage points, not fractions."
+        },
+        {
+          "iq": "Work IQ",
+          "status": "unavailable",
+          "text": "No company-specific Work evidence selected for this cache."
+        },
+        {
+          "iq": "Foundry IQ",
+          "status": "unavailable",
+          "text": "No company-specific Foundry evidence selected for this cache."
+        },
+        {
+          "iq": "Web IQ",
+          "status": "unavailable",
+          "text": "web_iq_queries.json declares no offline cache. No news, ratings or external facts retrieved."
+        }
+      ],
+      "opportunity": "Review Commodity Derivatives: largest recorded gap to the 25% wallet target is CAD 1.2201m in wallet_share.csv. This is an analytical lead, not an approved opportunity or revenue forecast.",
+      "risk": "Single-name limit status Amber: 91.5% utilised, CAD 137.2m of CAD 150.0m. Internal synthetic rating IG-10; trend deteriorating; watchlist flag Y. KYC refresh due 2026-11-13 (relative to cached date, not today). Headroom is not approval for new commitments.",
+      "dataQuality": [
+        "Exposure rows total CAD 67.2m, but the single-name limit reports CAD 137.2m utilised. The source mismatch is unresolved; utilization uses the limit row, not exposure divided by limit.",
+        "Wallet-table revenue CAD 3.348m differs from FY26 YTD revenue CAD 1.5119m. Wallet share uses only wallet-table numerator and estimated street denominator; these sources are not reconciled."
+      ],
+      "sources": [
+        "data/fabric-iq/clients.csv",
+        "data/fabric-iq/exposures.csv",
+        "data/fabric-iq/credit_facilities.csv",
+        "data/fabric-iq/revenue_by_product.csv",
+        "data/fabric-iq/wallet_share.csv",
+        "data/fabric-iq/limits_utilization.csv",
+        "data/scenario_facts.py",
+        "data/web-iq/web_iq_queries.json"
+      ]
+    },
+    {
+      "id": "CLI-1009",
+      "name": "North West Company Inc.",
+      "sector": "Industrials",
+      "asOf": "2026-08-10",
+      "exposure": null,
+      "commitment": null,
+      "revenue": null,
+      "limit": null,
+      "maturity": [],
+      "currency": "USD",
+      "fxRate": null,
+      "usdUnavailableReason": "CAD source values; no supported FX rate.",
+      "revenuePeriod": "FY26 YTD (2025-11-01 to 2026-08-10); not full year",
+      "walletPercent": 16.4,
+      "utilizationPercent": 45.6,
+      "exposureCad": 81.8,
+      "commitmentCad": 145.1,
+      "revenueCad": 2.2765,
+      "limitCad": 200.0,
+      "limitUtilizedCad": 91.2,
+      "walletRevenueCad": 3.1175,
+      "streetWalletCad": 18.957,
+      "maturityCad": [
+        {
+          "year": "2027",
+          "amount": 21.8
+        },
+        {
+          "year": "2030",
+          "amount": 123.3
+        }
+      ],
+      "maturityBasis": "Facility commitment_cad_m grouped by maturity calendar year, including letters of credit, uncommitted and derivative lines where present; not drawn exposure, issuer-wide debt or the proposed refinancing pipeline. Facility rows are undated and treated as the scenario snapshot, not historical observations.",
+      "commitmentBasis": "Sum of facility commitment_cad_m, including uncommitted and derivative risk lines; not all legally committed lending.",
+      "evidence": [
+        {
+          "iq": "Fabric IQ",
+          "status": "cached synthetic",
+          "text": "Local CSV snapshot only; no Fabric service query. Source monetary values are CAD millions (revenue converted from CAD thousands). USD fields are unavailable: no CAD/USD conversion rate is supplied. Percentages are percentage points, not fractions."
+        },
+        {
+          "iq": "Work IQ",
+          "status": "unavailable",
+          "text": "No company-specific Work evidence selected for this cache."
+        },
+        {
+          "iq": "Foundry IQ",
+          "status": "unavailable",
+          "text": "No company-specific Foundry evidence selected for this cache."
+        },
+        {
+          "iq": "Web IQ",
+          "status": "unavailable",
+          "text": "web_iq_queries.json declares no offline cache. No news, ratings or external facts retrieved."
+        }
+      ],
+      "opportunity": "Review FX - Forwards and Options: largest recorded gap to the 25% wallet target is CAD 0.8938m in wallet_share.csv. This is an analytical lead, not an approved opportunity or revenue forecast.",
+      "risk": "Single-name limit status Green: 45.6% utilised, CAD 91.2m of CAD 200.0m. Internal synthetic rating IG-7; trend stable; watchlist flag N. KYC refresh due 2027-01-29 (relative to cached date, not today). Headroom is not approval for new commitments.",
+      "dataQuality": [
+        "Exposure rows total CAD 81.8m, but the single-name limit reports CAD 91.2m utilised. The source mismatch is unresolved; utilization uses the limit row, not exposure divided by limit.",
+        "Wallet-table revenue CAD 3.1175m differs from FY26 YTD revenue CAD 2.2765m. Wallet share uses only wallet-table numerator and estimated street denominator; these sources are not reconciled."
+      ],
+      "sources": [
+        "data/fabric-iq/clients.csv",
+        "data/fabric-iq/exposures.csv",
+        "data/fabric-iq/credit_facilities.csv",
+        "data/fabric-iq/revenue_by_product.csv",
+        "data/fabric-iq/wallet_share.csv",
+        "data/fabric-iq/limits_utilization.csv",
+        "data/scenario_facts.py",
+        "data/web-iq/web_iq_queries.json"
+      ]
+    },
+    {
+      "id": "CLI-1010",
+      "name": "Superior Plus Corp.",
+      "sector": "Energy",
+      "asOf": "2026-08-10",
+      "exposure": null,
+      "commitment": null,
+      "revenue": null,
+      "limit": null,
+      "maturity": [],
+      "currency": "USD",
+      "fxRate": null,
+      "usdUnavailableReason": "CAD source values; no supported FX rate.",
+      "revenuePeriod": "FY26 YTD (2025-11-01 to 2026-08-10); not full year",
+      "walletPercent": 13.2,
+      "utilizationPercent": 66.8,
+      "exposureCad": 203.4,
+      "commitmentCad": 330.0,
+      "revenueCad": 4.356,
+      "limitCad": 400.0,
+      "limitUtilizedCad": 267.2,
+      "walletRevenueCad": 8.844,
+      "streetWalletCad": 66.8441,
+      "maturityCad": [
+        {
+          "year": "2028",
+          "amount": 181.5
+        },
+        {
+          "year": "2029",
+          "amount": 49.5
+        },
+        {
+          "year": "2030",
+          "amount": 99.0
+        }
+      ],
+      "maturityBasis": "Facility commitment_cad_m grouped by maturity calendar year, including letters of credit, uncommitted and derivative lines where present; not drawn exposure, issuer-wide debt or the proposed refinancing pipeline. Facility rows are undated and treated as the scenario snapshot, not historical observations.",
+      "commitmentBasis": "Sum of facility commitment_cad_m, including uncommitted and derivative risk lines; not all legally committed lending.",
+      "evidence": [
+        {
+          "iq": "Fabric IQ",
+          "status": "cached synthetic",
+          "text": "Local CSV snapshot only; no Fabric service query. Source monetary values are CAD millions (revenue converted from CAD thousands). USD fields are unavailable: no CAD/USD conversion rate is supplied. Percentages are percentage points, not fractions."
+        },
+        {
+          "iq": "Work IQ",
+          "status": "unavailable",
+          "text": "No company-specific Work evidence selected for this cache."
+        },
+        {
+          "iq": "Foundry IQ",
+          "status": "unavailable",
+          "text": "No company-specific Foundry evidence selected for this cache."
+        },
+        {
+          "iq": "Web IQ",
+          "status": "unavailable",
+          "text": "web_iq_queries.json declares no offline cache. No news, ratings or external facts retrieved."
+        }
+      ],
+      "opportunity": "Review Debt Capital Markets - Underwriting: largest recorded gap to the 25% wallet target is CAD 3.6019m in wallet_share.csv. This is an analytical lead, not an approved opportunity or revenue forecast.",
+      "risk": "Single-name limit status Green: 66.8% utilised, CAD 267.2m of CAD 400.0m. Internal synthetic rating IG-8; trend stable; watchlist flag N. KYC refresh due 2027-08-16 (relative to cached date, not today). Headroom is not approval for new commitments.",
+      "dataQuality": [
+        "Exposure rows total CAD 203.4m, but the single-name limit reports CAD 267.2m utilised. The source mismatch is unresolved; utilization uses the limit row, not exposure divided by limit.",
+        "Wallet-table revenue CAD 8.844m differs from FY26 YTD revenue CAD 4.356m. Wallet share uses only wallet-table numerator and estimated street denominator; these sources are not reconciled."
+      ],
+      "sources": [
+        "data/fabric-iq/clients.csv",
+        "data/fabric-iq/exposures.csv",
+        "data/fabric-iq/credit_facilities.csv",
+        "data/fabric-iq/revenue_by_product.csv",
+        "data/fabric-iq/wallet_share.csv",
+        "data/fabric-iq/limits_utilization.csv",
+        "data/scenario_facts.py",
+        "data/web-iq/web_iq_queries.json"
+      ]
+    }
+  ]
+}

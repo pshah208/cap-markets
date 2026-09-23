@@ -1,0 +1,11 @@
+# Device-code token cache written by data/work-iq/seed_work_iq.py
+.device_token_cache.json
+**/.msal_token_cache*
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# Compiled ARM from `az bicep build`
+infra/main.json

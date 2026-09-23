@@ -1,0 +1,25 @@
+client_id,client_name,covenant,test_type,threshold,actual,prior_quarter_actual,unit,headroom,utilisation_pct,status,test_frequency,source_facility,last_tested_date,next_test_date
+CLI-1001,Gibson Energy Inc.,Total Net Debt to Adjusted EBITDA,maximum,4.5,4.18,3.94,x,0.32,92.9,Amber,Quarterly,FAC-10011 / FAC-10012,2026-06-30,2026-09-30
+CLI-1001,Gibson Energy Inc.,Senior Secured Net Debt to Adjusted EBITDA,maximum,3.5,2.61,2.44,x,0.89,74.6,Green,Quarterly,FAC-10011,2026-06-30,2026-09-30
+CLI-1001,Gibson Energy Inc.,Interest Coverage (Adjusted EBITDA / Interest),minimum,2.5,4.12,4.38,x,1.62,60.7,Green,Quarterly,FAC-10011 / FAC-10012,2026-06-30,2026-09-30
+CLI-1001,Gibson Energy Inc.,Minimum Tangible Net Worth,minimum,1150.0,1486.0,1402.0,CAD m,336.0,77.4,Green,Quarterly,FAC-10012,2026-06-30,2026-09-30
+CLI-1001,Gibson Energy Inc.,Restricted Payments Basket Utilisation,maximum,100.0,63.4,58.1,%,36.6,63.4,Green,Quarterly,FAC-10012,2026-06-30,2026-09-30
+CLI-1001,Gibson Energy Inc.,Asset Disposal Threshold (trailing 12m),maximum,250.0,41.0,41.0,CAD m,209.0,16.4,Green,Annual,FAC-10011,2026-06-30,2026-09-30
+CLI-1002,Keyera Corp.,Total Net Debt to Adjusted EBITDA,maximum,4.0,3.27,3.27,x,0.73,81.8,Green,Quarterly,FAC-10021,2026-06-30,2026-09-30
+CLI-1002,Keyera Corp.,Interest Coverage (Adjusted EBITDA / Interest),minimum,2.5,5.13,5.13,x,2.63,48.7,Green,Quarterly,FAC-10021,2026-06-30,2026-09-30
+CLI-1003,Whitecap Resources Inc.,Total Net Debt to Adjusted EBITDA,maximum,4.0,3.42,3.42,x,0.58,85.5,Green,Quarterly,FAC-10031,2026-06-30,2026-09-30
+CLI-1003,Whitecap Resources Inc.,Interest Coverage (Adjusted EBITDA / Interest),minimum,2.5,3.97,3.97,x,1.47,63.0,Green,Quarterly,FAC-10031,2026-06-30,2026-09-30
+CLI-1004,Secure Waste Infrastructure,Total Net Debt to Adjusted EBITDA,maximum,4.0,2.93,2.93,x,1.07,73.2,Green,Quarterly,FAC-10041,2026-06-30,2026-09-30
+CLI-1004,Secure Waste Infrastructure,Interest Coverage (Adjusted EBITDA / Interest),minimum,2.5,3.77,3.77,x,1.27,66.3,Green,Quarterly,FAC-10041,2026-06-30,2026-09-30
+CLI-1005,Stella-Jones Inc.,Total Net Debt to Adjusted EBITDA,maximum,4.0,3.96,3.96,x,0.04,99.0,Amber,Quarterly,FAC-10051,2026-06-30,2026-09-30
+CLI-1005,Stella-Jones Inc.,Interest Coverage (Adjusted EBITDA / Interest),minimum,2.5,3.91,3.91,x,1.41,63.9,Green,Quarterly,FAC-10051,2026-06-30,2026-09-30
+CLI-1006,Russel Metals Inc.,Total Net Debt to Adjusted EBITDA,maximum,4.0,3.86,3.86,x,0.14,96.5,Amber,Quarterly,FAC-10061,2026-06-30,2026-09-30
+CLI-1006,Russel Metals Inc.,Interest Coverage (Adjusted EBITDA / Interest),minimum,2.5,4.51,4.51,x,2.01,55.4,Green,Quarterly,FAC-10061,2026-06-30,2026-09-30
+CLI-1007,Cascades Inc.,Total Net Debt to Adjusted EBITDA,maximum,4.0,3.35,3.35,x,0.65,83.8,Green,Quarterly,FAC-10071,2026-06-30,2026-09-30
+CLI-1007,Cascades Inc.,Interest Coverage (Adjusted EBITDA / Interest),minimum,2.5,3.4,3.4,x,0.9,73.5,Green,Quarterly,FAC-10071,2026-06-30,2026-09-30
+CLI-1008,Ag Growth International Inc.,Total Net Debt to Adjusted EBITDA,maximum,4.0,2.63,2.63,x,1.37,65.8,Green,Quarterly,FAC-10081,2026-06-30,2026-09-30
+CLI-1008,Ag Growth International Inc.,Interest Coverage (Adjusted EBITDA / Interest),minimum,2.5,5.08,5.08,x,2.58,49.2,Green,Quarterly,FAC-10081,2026-06-30,2026-09-30
+CLI-1009,North West Company Inc.,Total Net Debt to Adjusted EBITDA,maximum,4.0,2.9,2.9,x,1.1,72.5,Green,Quarterly,FAC-10091,2026-06-30,2026-09-30
+CLI-1009,North West Company Inc.,Interest Coverage (Adjusted EBITDA / Interest),minimum,2.5,3.13,3.13,x,0.63,79.9,Green,Quarterly,FAC-10091,2026-06-30,2026-09-30
+CLI-1010,Superior Plus Corp.,Total Net Debt to Adjusted EBITDA,maximum,4.0,3.19,3.19,x,0.81,79.8,Green,Quarterly,FAC-10101,2026-06-30,2026-09-30
+CLI-1010,Superior Plus Corp.,Interest Coverage (Adjusted EBITDA / Interest),minimum,2.5,5.18,5.18,x,2.68,48.3,Green,Quarterly,FAC-10101,2026-06-30,2026-09-30

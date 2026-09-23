@@ -1,0 +1,12 @@
+fastapi==0.115.6
+uvicorn[standard]==0.34.0
+pydantic==2.10.4
+httpx==0.28.1
+PyJWT[crypto]==2.10.1
+
+# Entra credentials for diagnostics and the optional app-identity path.
+azure-identity==1.19.0
+
+# NOTE: azure-ai-agents is deliberately NOT used. Portal-created Foundry agents
+# are "prompt agents" invoked through the OpenAI-compatible Responses API; the
+# assistants SDK does not list or run them. See agent_client.py.

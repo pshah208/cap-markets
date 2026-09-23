@@ -1,0 +1,48 @@
+client_id,client_name,product_id,product_name,bmo_revenue_cad_k,estimated_street_wallet_cad_k,bmo_wallet_share_pct,bmo_rank,lead_competitor,whitespace_flag,gap_to_25pct_target_cad_k,as_of_date
+CLI-1001,Gibson Energy Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,1240.0,4900.0,25.3,2,Competitor A,N,-15.0,2026-08-10
+CLI-1001,Gibson Energy Inc.,PRD-02,Corporate Loan - Term Loan,1015.0,3600.0,28.2,2,Competitor B,N,-115.0,2026-08-10
+CLI-1001,Gibson Energy Inc.,PRD-03,Letters of Credit,395.0,1450.0,27.2,3,Competitor A,N,-32.5,2026-08-10
+CLI-1001,Gibson Energy Inc.,PRD-04,Debt Capital Markets - Underwriting,2680.0,11200.0,23.9,2,Competitor C,N,120.0,2026-08-10
+CLI-1001,Gibson Energy Inc.,PRD-05,Equity Capital Markets - Underwriting,0.0,2800.0,0.0,6,Competitor C,Y,700.0,2026-08-10
+CLI-1001,Gibson Energy Inc.,PRD-06,M&A Advisory,450.0,4500.0,10.0,4,Competitor D,N,675.0,2026-08-10
+CLI-1001,Gibson Energy Inc.,PRD-07,FX - Forwards and Options,905.0,3900.0,23.2,2,Competitor B,N,70.0,2026-08-10
+CLI-1001,Gibson Energy Inc.,PRD-08,Interest Rate Derivatives,410.0,2050.0,20.0,3,Competitor B,N,102.5,2026-08-10
+CLI-1001,Gibson Energy Inc.,PRD-09,Commodity Derivatives,1010.0,3100.0,32.6,1,Competitor A,N,-235.0,2026-08-10
+CLI-1001,Gibson Energy Inc.,PRD-10,Cash Management & Treasury Services,315.0,1450.0,21.7,3,Competitor E,N,47.5,2026-08-10
+CLI-1001,Gibson Energy Inc.,PRD-11,Trade Finance,0.0,400.0,0.0,5,Competitor E,Y,100.0,2026-08-10
+CLI-1002,Keyera Corp.,PRD-01,Corporate Loan - Revolving Credit Facility,3432.0,27112.8,12.7,3,Competitor C,N,3346.2,2026-08-10
+CLI-1002,Keyera Corp.,PRD-04,Debt Capital Markets - Underwriting,4056.0,16994.6,23.9,3,Competitor B,N,192.6,2026-08-10
+CLI-1002,Keyera Corp.,PRD-07,FX - Forwards and Options,3900.0,26676.0,14.6,5,Competitor C,N,2769.0,2026-08-10
+CLI-1002,Keyera Corp.,PRD-09,Commodity Derivatives,1820.0,6260.8,29.1,3,Competitor D,N,-254.8,2026-08-10
+CLI-1003,Whitecap Resources Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,2201.0,15076.8,14.6,2,Competitor A,N,1568.2,2026-08-10
+CLI-1003,Whitecap Resources Inc.,PRD-04,Debt Capital Markets - Underwriting,2077.0,9907.3,21.0,6,Competitor C,N,399.8,2026-08-10
+CLI-1003,Whitecap Resources Inc.,PRD-07,FX - Forwards and Options,1240.0,4736.8,26.2,5,Competitor E,N,-55.8,2026-08-10
+CLI-1003,Whitecap Resources Inc.,PRD-09,Commodity Derivatives,1271.0,8159.8,15.6,3,Competitor D,N,769.0,2026-08-10
+CLI-1004,Secure Waste Infrastructure,PRD-01,Corporate Loan - Revolving Credit Facility,1628.0,7228.3,22.5,5,Competitor C,N,179.1,2026-08-10
+CLI-1004,Secure Waste Infrastructure,PRD-04,Debt Capital Markets - Underwriting,1406.0,4822.6,29.2,4,Competitor D,N,-200.3,2026-08-10
+CLI-1004,Secure Waste Infrastructure,PRD-07,FX - Forwards and Options,1443.0,5137.1,28.1,1,Competitor C,N,-158.7,2026-08-10
+CLI-1004,Secure Waste Infrastructure,PRD-09,Commodity Derivatives,536.5,3138.5,17.1,3,Competitor E,N,248.1,2026-08-10
+CLI-1005,Stella-Jones Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,2304.0,9769.0,23.6,1,Competitor B,N,138.2,2026-08-10
+CLI-1005,Stella-Jones Inc.,PRD-04,Debt Capital Markets - Underwriting,1512.0,10054.8,15.0,6,Competitor E,N,1001.7,2026-08-10
+CLI-1005,Stella-Jones Inc.,PRD-07,FX - Forwards and Options,1824.0,6238.1,29.2,1,Competitor A,N,-264.5,2026-08-10
+CLI-1005,Stella-Jones Inc.,PRD-09,Commodity Derivatives,864.0,4579.2,18.9,4,Competitor E,N,280.8,2026-08-10
+CLI-1006,Russel Metals Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,880.0,6793.6,13.0,2,Competitor B,N,818.4,2026-08-10
+CLI-1006,Russel Metals Inc.,PRD-04,Debt Capital Markets - Underwriting,2695.0,22557.1,11.9,6,Competitor B,N,2944.3,2026-08-10
+CLI-1006,Russel Metals Inc.,PRD-07,FX - Forwards and Options,2475.0,14528.2,17.0,2,Competitor E,N,1157.1,2026-08-10
+CLI-1006,Russel Metals Inc.,PRD-09,Commodity Derivatives,2640.0,15100.8,17.5,2,Competitor D,N,1135.2,2026-08-10
+CLI-1007,Cascades Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,1392.0,11024.6,12.6,5,Competitor E,N,1364.2,2026-08-10
+CLI-1007,Cascades Inc.,PRD-04,Debt Capital Markets - Underwriting,1520.0,10503.2,14.5,3,Competitor D,N,1105.8,2026-08-10
+CLI-1007,Cascades Inc.,PRD-07,FX - Forwards and Options,1136.0,4089.6,27.8,1,Competitor C,N,-113.6,2026-08-10
+CLI-1007,Cascades Inc.,PRD-09,Commodity Derivatives,752.0,6888.3,10.9,5,Competitor B,N,970.1,2026-08-10
+CLI-1008,Ag Growth International Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,720.0,2829.6,25.4,2,Competitor E,N,-12.6,2026-08-10
+CLI-1008,Ag Growth International Inc.,PRD-04,Debt Capital Markets - Underwriting,660.0,3313.2,19.9,5,Competitor D,N,168.3,2026-08-10
+CLI-1008,Ag Growth International Inc.,PRD-07,FX - Forwards and Options,972.0,7931.5,12.3,3,Competitor D,N,1010.9,2026-08-10
+CLI-1008,Ag Growth International Inc.,PRD-09,Commodity Derivatives,996.0,8864.4,11.2,1,Competitor E,N,1220.1,2026-08-10
+CLI-1009,North West Company Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,696.0,4614.5,15.1,4,Competitor C,N,457.6,2026-08-10
+CLI-1009,North West Company Inc.,PRD-04,Debt Capital Markets - Underwriting,638.0,2048.0,31.2,1,Competitor B,N,-126.0,2026-08-10
+CLI-1009,North West Company Inc.,PRD-07,FX - Forwards and Options,667.0,6243.1,10.7,6,Competitor D,N,893.8,2026-08-10
+CLI-1009,North West Company Inc.,PRD-09,Commodity Derivatives,1116.5,6051.4,18.5,5,Competitor D,N,396.3,2026-08-10
+CLI-1010,Superior Plus Corp.,PRD-01,Corporate Loan - Revolving Credit Facility,1122.0,9278.9,12.1,3,Competitor D,N,1197.7,2026-08-10
+CLI-1010,Superior Plus Corp.,PRD-04,Debt Capital Markets - Underwriting,2673.0,25099.5,10.6,1,Competitor D,N,3601.9,2026-08-10
+CLI-1010,Superior Plus Corp.,PRD-07,FX - Forwards and Options,2046.0,17841.1,11.5,1,Competitor A,N,2414.3,2026-08-10
+CLI-1010,Superior Plus Corp.,PRD-09,Commodity Derivatives,3003.0,14624.6,20.5,1,Competitor B,N,653.2,2026-08-10

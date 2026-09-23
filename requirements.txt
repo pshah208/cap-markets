@@ -1,0 +1,20 @@
+# BMO Capital Markets Client Intelligence - Python dependencies
+#
+#   pip install -r requirements.txt
+
+# Azure auth - used by every script
+azure-identity==1.19.0
+
+# Fabric deployment + Microsoft Graph seeding (REST over requests)
+requests>=2.32.0
+
+# Foundry IQ - AI Search index creation, upload and semantic query verification
+azure-search-documents==11.5.2
+
+# The Foundry agent and its four function tools
+azure-ai-agents==1.1.0
+
+# Optional: the agent's Fabric SQL analytics endpoint fallback path.
+# Only needed if you want SQL instead of the Direct Lake semantic model.
+# Also requires the "ODBC Driver 18 for SQL Server" on the host.
+# pyodbc==5.2.0

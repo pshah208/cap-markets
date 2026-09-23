@@ -1,0 +1,59 @@
+# nginx config for the SPA container.
+#
+# The web app is the only externally-reachable app; the BFF sits internal-only in
+# the Container Apps environment and is reached through this proxy. That keeps the
+# BFF off the public internet and avoids any CORS configuration.
+#
+# ${BFF_URL} is substituted at container start by envsubst.
+
+server {
+    listen       8080;
+    server_name  _;
+    root         /usr/share/nginx/html;
+    index        index.html;
+
+    gzip on;
+    gzip_types text/plain text/css application/json application/javascript;
+    gzip_min_length 1024;
+
+    # SPA routes: always serve index.html so deep links work.
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+
+    # Hashed assets are immutable.
+    location /assets/ {
+        expires 1y;
+        add_header Cache-Control "public, immutable";
+    }
+
+    location /health {
+        proxy_pass ${BFF_URL}/health;
+        proxy_set_header Host $proxy_host;
+        proxy_ssl_server_name on;
+    }
+
+    location /api/ {
+        proxy_pass ${BFF_URL};
+        proxy_http_version 1.1;
+
+        # The BFF has internal ingress with allowInsecure=false, so this hop is
+        # HTTPS. nginx must send SNI or the handshake fails and every /api call
+        # returns 502. Host must be the upstream name, not the client's.
+        proxy_ssl_server_name on;
+        proxy_set_header Host              $proxy_host;
+
+        proxy_set_header X-Real-IP         $remote_addr;
+        proxy_set_header X-Forwarded-For   $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Authorization     $http_authorization;
+
+        # Server-Sent Events: no buffering, no early close. Without these the IQ
+        # cards do not light up until the whole answer has been produced.
+        proxy_buffering     off;
+        proxy_cache         off;
+        chunked_transfer_encoding off;
+        proxy_read_timeout  300s;
+        proxy_send_timeout  300s;
+    }
+}
