@@ -11,10 +11,12 @@
  * and need no resize observer.
  */
 
-/* BMO blue leads, BMO red second, then the four IQ layer colours so a chart
-   drawn next to the IQ cards reads against them without a legend. */
+/* The deployment's primary colour leads and its accent second, then the four IQ
+   layer colours so a chart drawn
+   next to the IQ cards reads against them without a legend. Applied through
+   `style`, not SVG presentation attributes, so var() resolves. */
 const PALETTE = [
-  "#0079c2", "#ed1c24", "#0f766e", "#7c3aed",
+  "var(--brand)", "var(--accent)", "#0f766e", "#7c3aed",
   "#b45309", "#1d4ed8", "#be185d", "#4d7c0f",
 ];
 
@@ -80,7 +82,7 @@ export function BarChart({ data, caption }: { data: Datum[]; caption?: string })
               <rect x={gutter} y={y + 4} width={plot} height={rowH - 8}
                     rx={4} className="chart-track" />
               <rect x={gutter} y={y + 4} width={w} height={rowH - 8}
-                    rx={4} fill={PALETTE[i % PALETTE.length]} className="chart-fill">
+                    rx={4} style={{ fill: PALETTE[i % PALETTE.length] }} className="chart-fill">
                 <animate attributeName="width" from="0" to={w}
                          dur="0.5s" fill="freeze" />
               </rect>
@@ -142,7 +144,7 @@ export function DonutChart({ data, caption }: { data: Datum[]; caption?: string 
             <path
               key={`${s.d.label}-${s.i}`}
               d={arc(cx, cy, r, s.from, s.to)}
-              stroke={PALETTE[s.i % PALETTE.length]}
+              style={{ stroke: PALETTE[s.i % PALETTE.length] }}
               className="donut-arc"
             />
           ))}

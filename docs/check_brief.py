@@ -1,48 +1,77 @@
-"""Extract the brief's text so the content can be checked without Word."""
-import re
+"""Extract a selected briefing document and validate current synthetic facts."""
+
+from __future__ import annotations
+
+import argparse
+from pathlib import Path
+import sys
+from xml.etree import ElementTree
 import zipfile
 
-z = zipfile.ZipFile("BMO-Capital-Markets-Client-Intelligence-Brief.docx")
-x = z.read("word/document.xml").decode("utf-8")
+DATA = Path(__file__).resolve().parents[1] / "data"
+if str(DATA) not in sys.path:
+    sys.path.insert(0, str(DATA))
+from scenario_facts import FACTS
 
-paras = re.findall(r"<w:p[ >].*?</w:p>", x, re.S)
-out = []
-for pp in paras:
-    t = "".join(re.findall(r"<w:t[^>]*>(.*?)</w:t>", pp, re.S))
-    if t.strip():
-        out.append(t)
+NS = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
 
-print(f"paragraphs with text : {len(out)}")
-print(f"tables               : {x.count('<w:tbl>')}")
-print(f"page breaks          : {x.count('w:br w:type=')}")
 
-quotes = [t for t in out if t.startswith("\u201c")]
-print(f"\nDEMO QUESTIONS ({len(quotes)}):")
-for q in quotes:
-    print(f"  - {q[:110]}")
+def check_document(path: Path) -> int:
+    with zipfile.ZipFile(path) as archive:
+        root = ElementTree.fromstring(archive.read("word/document.xml"))
+    paragraphs = [
+        "".join(node.text or "" for node in paragraph.findall(".//w:t", NS)).strip()
+        for paragraph in root.findall(".//w:p", NS)
+    ]
+    paragraphs = [text for text in paragraphs if text]
+    print(f"paragraphs with text : {len(paragraphs)}")
+    print(f"tables               : {len(root.findall('.//w:tbl', NS))}")
+    print(f"page breaks          : {len(root.findall('.//w:br[@w:type=\"page\"]', NS))}")
+    print("\nDEMO QUESTIONS:")
+    for text in paragraphs:
+        if text.startswith("\u201c"):
+            print(f"  - {text[:110]}")
+    print("\nHEADINGS:")
+    for paragraph in root.findall(".//w:p", NS):
+        style = paragraph.find("w:pPr/w:pStyle", NS)
+        level = style.get(f"{{{NS['w']}}}val", "") if style is not None else ""
+        if level in ("Heading1", "Heading2", "Heading3"):
+            heading = "".join(node.text or "" for node in paragraph.findall(".//w:t", NS))
+            print(f"  {'  ' * (int(level[-1]) - 1)}{level[-1]}. {heading}")
+    text = " ".join(paragraphs)
+    hero = FACTS["hero_metrics"]
+    expected = [
+        ("single-name limit", f"{hero['single_name_limit_m']:,.0f}"),
+        ("total exposure", f"{hero['total_exposure_m']:,.1f}"),
+        ("limit utilisation", f"{hero['limit_utilisation_pct']}%"),
+        ("wallet share", f"{hero['wallet_share_pct']}%"),
+        ("internal risk rating", hero["internal_risk_rating"]),
+        ("covenant actual", f"{FACTS['covenant_tension']['actual']:.2f}"),
+        ("covenant threshold", f"{FACTS['covenant_tension']['threshold']:.2f}"),
+        ("disclaimer", "Synthetic demonstration data"),
+    ]
+    failed = []
+    print("\nFACT CHECK:")
+    for label, needle in expected:
+        present = needle.casefold() in text.casefold()
+        print(f"  {'OK' if present else 'MISSING'} {label}: {needle}")
+        if not present:
+            failed.append(label)
+    return 1 if failed else 0
 
-heads = re.findall(r'<w:pStyle w:val="(Heading[123])"/>.*?<w:t[^>]*>(.*?)</w:t>', x, re.S)
-print(f"\nHEADINGS ({len(heads)}):")
-for lvl, txt in heads:
-    print(f"  {'  ' * (int(lvl[-1]) - 1)}{lvl[-1]}. {txt}")
 
-blob = " ".join(out)
-print("\nFACT CHECK:")
-for label, needle in [
-    ("country limit 2,400", "2,400m"),
-    ("utilised 2,196", "2,196m"),
-    ("headroom 204", "204m"),
-    ("demand 246", "246m"),
-    ("shortfall 42", "42m"),
-    ("91.5%", "91.5%"),
-    ("72.2%", "72.2%"),
-    ("72.6%", "72.6%"),
-    ("58.5%", "58.5%"),
-    ("IG-5", "IG-5"),
-    ("CRC ref", "CRC-2026-0412"),
-    ("14.8% wallet", "14.8%"),
-    ("86.7% PSE", "86.7%"),
-    ("1.98x", "1.98x"),
-    ("disclaimer", "Synthetic demonstration data"),
-]:
-    print(f"  {'OK ' if needle in blob else 'MISSING'} {label}")
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("document", type=Path, help="local .docx brief to inspect")
+    args = parser.parse_args(argv)
+    if not args.document.is_file():
+        parser.error(f"brief not found: {args.document}")
+    try:
+        return check_document(args.document)
+    except (OSError, zipfile.BadZipFile, KeyError, ElementTree.ParseError) as exc:
+        print(f"Cannot check brief: {exc}")
+        return 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

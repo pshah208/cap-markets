@@ -18,9 +18,9 @@ vm.runInNewContext(compiled, {
   },
 });
 
-// Companies whose Work IQ and Foundry IQ cards are backed by a cached local
+// Companies whose Work IQ and Foundry IQ cards are backed by a local synthetic
 // record. Everything else must stay honestly "unavailable".
-const CACHED_IQ_EVIDENCE = {
+const LOCAL_IQ_EVIDENCE = {
   "CLI-1001": { email: "EM-003", policy: "CP-012" },
   "CLI-1002": { email: "EM-024", policy: "CP-001" },
   "CLI-1007": { email: "EM-027", policy: "CP-005" },
@@ -38,35 +38,35 @@ test("ten distinct companies, explicit CAD units and reconciled maturity", () =>
     assert.ok(Math.abs(company.maturityCad.reduce((s, m) => s + m.amount, 0) - company.commitmentCad) < .0001);
     assert.equal(company.evidence.length, 4);
     assert.deepEqual(company.evidence.map(e => e.iq), ["Fabric IQ", "Work IQ", "Foundry IQ", "Web IQ"]);
-    // Web IQ has no offline cache by design and must never be presented as available.
+    // Web IQ has no offline record by design and must never be presented as available.
     assert.equal(iq(company, "Web IQ").status, "unavailable");
-    // Fabric IQ is cached for every company and must not regress.
-    assert.equal(iq(company, "Fabric IQ").status, "cached synthetic");
+    // Fabric IQ is held locally for every company and must not regress.
+    assert.equal(iq(company, "Fabric IQ").status, "synthetic");
   }
 });
 
-test("exactly three companies carry cached Work IQ and Foundry IQ evidence", () => {
-  const cached = exports.companies
-    .filter(c => iq(c, "Work IQ").status === "cached synthetic")
+test("exactly three companies carry local Work IQ and Foundry IQ evidence", () => {
+  const held = exports.companies
+    .filter(c => iq(c, "Work IQ").status === "synthetic")
     .map(c => c.id);
-  assert.deepEqual(cached, Object.keys(CACHED_IQ_EVIDENCE));
+  assert.deepEqual(held, Object.keys(LOCAL_IQ_EVIDENCE));
   assert.deepEqual(
-    exports.companies.filter(c => iq(c, "Foundry IQ").status === "cached synthetic").map(c => c.id),
-    Object.keys(CACHED_IQ_EVIDENCE),
+    exports.companies.filter(c => iq(c, "Foundry IQ").status === "synthetic").map(c => c.id),
+    Object.keys(LOCAL_IQ_EVIDENCE),
   );
 });
 
 for (const company of exports.companies) {
-  const expected = CACHED_IQ_EVIDENCE[company.id];
-  test(`${company.name}: Work IQ and Foundry IQ evidence is ${expected ? "cached and cited" : "honestly unavailable"}`, () => {
+  const expected = LOCAL_IQ_EVIDENCE[company.id];
+  test(`${company.name}: Work IQ and Foundry IQ evidence is ${expected ? "held locally and cited" : "honestly unavailable"}`, () => {
     for (const name of ["Work IQ", "Foundry IQ"]) {
       const card = iq(company, name);
       if (!expected) {
         assert.equal(card.status, "unavailable");
-        assert.match(card.text, /No company-specific .* evidence selected for this cache\./);
+        assert.match(card.text, /No company-specific .* evidence selected for this snapshot\./);
         continue;
       }
-      assert.equal(card.status, "cached synthetic");
+      assert.equal(card.status, "synthetic");
       // Never imply live retrieval, and always name the local record shown.
       assert.match(card.text, /Not a live retrieval\.$/);
       assert.match(card.text, /Illustrative local/);
@@ -87,7 +87,7 @@ for (const company of exports.companies) {
       assert.ok(!policyText.includes(company.name));
       assert.match(policyText, /not a company-specific document/);
     }
-    // The cached evidence has to reach the answers the dashboard actually serves.
+    // The local evidence has to reach the answers the dashboard actually serves.
     for (const topic of ["briefing", "risks", "opportunities"]) {
       const answer = exports.answerQuestion(company, topic);
       assert.ok(answer.includes(expected.email));
@@ -109,7 +109,7 @@ for (const company of exports.companies) {
       assert.ok(!answer.includes("undefined"));
     }
     for (const unsupported of ["latest news", "risks and buy recommendation", "transfer this to live chat"]) {
-      assert.ok(exports.answerQuestion(company, unsupported).includes("Cached scope:"));
+      assert.ok(exports.answerQuestion(company, unsupported).includes("Supported topics:"));
     }
     const spoofed = { ...company, exposureCad: 9999999 };
     assert.equal(exports.answerQuestion(spoofed, "briefing"), exports.answerQuestion(company.id, "briefing"));
@@ -145,4 +145,29 @@ test("answers are sectioned, and provenance is disclosed once rather than per li
   const unsupported = exports.buildAnswer(exports.companies[0], "latest news");
   assert.equal(unsupported.supported, false);
   assert.equal(unsupported.blocks.map(b => b.title).join(" | "), "Supported questions | Sources");
+});
+
+test("no 'cached' label survives anywhere the dashboard is rendered or printed", () => {
+  // Every string the dashboard can show: the snapshot it renders from, and the
+  // flattened transcript of every supported and unsupported answer.
+  const rendered = [
+    JSON.stringify(snapshot),
+    ...exports.companies.flatMap(company => [
+      "briefing", "opportunities", "risks", "maturity", "latest news",
+    ].map(topic => exports.answerQuestion(company, topic))),
+    exports.answerQuestion("CLI-0000", "briefing"),
+    exports.snapshotDisclaimer,
+    exports.snapshotUnits,
+  ].join("\n");
+  assert.equal(rendered.match(/cach(e|ed|ing)/gi), null);
+  // Removing the label must not have removed the honesty it sat next to.
+  assert.match(rendered, /SYNTHETIC DEMO ONLY/);
+  // The banner no longer advertises the snapshot's plumbing ("local", "no API
+  // calls"); the per-answer evidence caveat below still says it is not live.
+  assert.doesNotMatch(exports.snapshotDisclaimer, /local snapshot|no API calls/i);
+  for (const company of exports.companies) {
+    const answer = exports.answerQuestion(company, "briefing");
+    assert.equal(answer.match(/SYNTHETIC/g).length, 1);
+    assert.match(answer, /not live retrievals/);
+  }
 });

@@ -1,10 +1,8 @@
 // =============================================================================
 // Capital Markets Client Intelligence Agent - Azure control-plane infrastructure
 // =============================================================================
-// SYNTHETIC DEMO DATA. BMO Capital Markets is used only as a branding label.
-// Gibson Energy Inc. is a real public company used only so the Web IQ layer's
-// live grounding returns genuine public news; every internal exposure, limit,
-// revenue, rating, covenant and policy in this solution is invented for a demo.
+// SYNTHETIC DEMO DATA. All internal exposures, limits, revenues, ratings,
+// covenants and policies in this solution are invented for a demo.
 //
 // SCOPE OF THIS TEMPLATE
 // Bicep can only express ARM control-plane resources. This template deploys:
@@ -13,47 +11,43 @@
 //   * Azure AI Foundry account       (agent host)
 //   * Foundry project                (agent container)
 //   * Model deployment               (the reasoning model)
-//   * Grounding with Bing Search     (Web IQ)  + its Foundry connection
-//   * Microsoft Fabric capacity      (Fabric IQ compute)      -- optional
-//   * Role assignments               (least-privilege access)
+//   * Grounding with Bing Search     (Web IQ) + its Foundry connection
+//   * Microsoft Fabric capacity      (Fabric IQ compute) -- optional
+//   * Role assignments               (explicitly selected principals)
 //
-// The following are DATA-PLANE or Microsoft Graph objects with no ARM provider,
-// and are created by the scripts in ../data and ../agent instead:
-//
+// DATA-PLANE and Microsoft Graph objects are created by separate scripts:
 //   * Fabric workspace, lakehouse, notebooks, Delta tables, semantic model
 //                                    -> data/fabric-iq/deploy_fabric.py
-//   * AI Search index + the 14 policy documents
+//   * AI Search index and policy documents
 //                                    -> data/foundry-iq/index_cm_policies.py
-//   * Entra app registration + Graph permission grants
+//   * Entra app registration and Graph permission grants
 //                                    -> data/work-iq/provision_seeder_app.py
 //   * M365 mail, Teams messages, SharePoint files, persona job titles
 //                                    -> data/work-iq/seed_work_iq.py
-//   * The Foundry agent and its four function tools
+//   * Classic Foundry agent and function tools
 //                                    -> agent/create_agent.py
 //
-// Every `create*` flag can be set false to REFERENCE an existing resource rather
-// than create one, so the template can be pointed at an estate stood up by hand.
-//
-// PRE-FLIGHT NOTES (MCAPS tenant, subscription ME-M365CPI65678641-shahpar-1)
-//   * MCAPSGovDenyPolicies blocks classic resource types and OpenAI PROVISIONED
-//     capacity. The model deployment below uses GlobalStandard, which is allowed.
-//   * Microsoft.Bing/accounts is a GLOBAL resource type - see bing-grounding.bicep.
-//   * The Fabric capacity fabcap26 already exists in rg-Fabric (Central US) and is
-//     referenced rather than recreated; it must be in the Active state.
+// Packaging only: validate policy, RBAC, naming, region and SKU against the
+// selected target before deployment. No tenant-specific approval is implied.
+// Microsoft.Bing/accounts is global; all regional resources use location.
 // =============================================================================
-
 targetScope = 'resourceGroup'
+
+@minLength(1)
+type principalObjectId = string
 
 // ---------------------------------------------------------------- naming ----
 @description('Workload name used in CAF-style resource names.')
+@minLength(1)
 param workload string = 'cmintel'
 
 @description('Environment: dev | test | prod.')
 @allowed([ 'dev', 'test', 'prod' ])
 param environmentName string = 'dev'
 
-@description('Azure region for resources created by this template.')
-param location string = resourceGroup().location
+@description('Explicit Azure region for resources created by this template.')
+@minLength(1)
+param location string
 
 @description('Additional tags merged onto every resource.')
 param extraTags object = {}
@@ -62,7 +56,7 @@ param extraTags object = {}
 @description('Create a new Azure AI Search service. False = reference an existing one.')
 param createSearch bool = true
 
-@description('Search service name. Required when createSearch = false.')
+@description('Search service name. Blank generates a workload-based name only when createSearch = true; otherwise required.')
 param searchServiceName string = ''
 
 @description('Search SKU.')
@@ -76,29 +70,31 @@ param searchSemanticTier string = 'free'
 @description('''
 Create a CognitiveSearch connection on the Foundry account pointing at the search
 service. Custom function tools cannot execute in the Foundry portal playground, so
-attaching the index as a portal-native knowledge source is what makes a portal
-demo path possible at all. The scripted agent uses a function tool against the
-same index, so this changes nothing about how the CLI path behaves.
+attaching the index as a portal-native knowledge source enables the portal path.
+The scripted agent uses a function tool against the same index.
 ''')
 param createSearchConnection bool = true
 
-@description('Name of the AI Search connection as it appears in the Foundry portal.')
-param searchConnectionName string = 'srchcminteldevy5rrn4c55tgi7'
+@description('AI Search connection name. Blank uses the resolved Search service name, never a preselected service.')
+param searchConnectionName string = ''
 
 // --------------------------------------------------------------- Foundry ----
 @description('Create a new Foundry (AIServices) account. False = reference an existing one.')
 param createFoundry bool = true
 
-@description('Foundry account name. Required when createFoundry = false.')
-param foundryAccountName string = 'cmintel-foundry'
+@description('Explicit Foundry account name, for both creation and reuse.')
+@minLength(2)
+param foundryAccountName string
 
-@description('Foundry project name.')
-param foundryProjectName string = 'proj-client-intelligence'
+@description('Explicit Foundry project name.')
+@minLength(2)
+param foundryProjectName string
 
 @description('Deploy the reasoning model. False if it already exists or quota is short.')
 param deployModel bool = true
 
 @description('Model deployment name the agent calls.')
+@minLength(1)
 param modelDeploymentName string = 'gpt-5.4'
 
 @description('Model name.')
@@ -121,41 +117,41 @@ param versionUpgradeOption string = 'OnceNewDefaultVersionAvailable'
 @description('Create the Grounding with Bing Search account and its Foundry connection.')
 param createBingGrounding bool = true
 
-@description('Bing grounding account name. Global resource - must be globally unique.')
+@description('Bing grounding account name. Blank generates a globally unique workload-based name.')
 param bingAccountName string = ''
 
 @description('Connection name the agent resolves at run time. Set as BING_GROUNDING_CONNECTION.')
-param bingConnectionName string = 'bing-grounding-cmintel'
+@minLength(1)
+param bingConnectionName string = 'bing-grounding-${workload}'
 
 // ---------------------------------------------------------------- Fabric ----
-@description('Create a Microsoft Fabric capacity. False = use an existing capacity (the default - fabcap26).')
+@description('Create a Microsoft Fabric capacity. False = use an explicitly selected existing capacity for Fabric stages.')
 param createFabricCapacity bool = false
 
-@description('Fabric capacity name. Required when createFabricCapacity = true.')
+@description('Explicit Fabric capacity name. Required for creation or any downstream Fabric stage; blank only when Fabric is not used.')
 param fabricCapacityName string = ''
 
 @description('Fabric SKU.')
 @allowed([ 'F2', 'F4', 'F8', 'F16', 'F32', 'F64' ])
 param fabricSkuName string = 'F4'
 
-@description('Entra object IDs set as Fabric capacity admins. Required when createFabricCapacity = true.')
-param fabricAdminMembers array = []
+@description('Entra object IDs set as Fabric capacity admins. At least one is required when createFabricCapacity = true.')
+param fabricAdminMembers principalObjectId[] = []
 
 // ------------------------------------------------------------------ RBAC ----
-@description('Entra object ID of the principal that will run the agent. Blank = skip role assignments.')
+@description('Entra object ID of the principal that will run the agent. Blank skips operator grants; no signed-in caller is selected automatically.')
 param agentPrincipalId string = ''
 
-@description('Principal type for the role assignments.')
+@description('Principal type for the operator role assignments.')
 @allowed([ 'User', 'Group', 'ServicePrincipal' ])
 param agentPrincipalType string = 'User'
 
 @description('''
-Entra object IDs of the Work IQ demo personas. Each is granted Foundry User at
-project scope so they can sign in to the Foundry portal and run the agent. The
-demo driver must be in this list - Work IQ only grounds on content the signed-in
-user can access, so the demo is driven as the relationship owner, not as admin.
+Explicit Entra object IDs of Work IQ demo personas. Each is granted Foundry User
+at project scope. An empty array grants no persona access. Work IQ only grounds
+on content accessible to the signed-in user.
 ''')
-param demoUserPrincipalIds array = []
+param demoUserPrincipalIds principalObjectId[] = []
 
 // ============================================================== variables ====
 var tags = union({
@@ -167,12 +163,11 @@ var tags = union({
 }, extraTags)
 
 var suffix = uniqueString(resourceGroup().id)
-var resolvedSearchName = createSearch ? toLower('srch-${workload}-${environmentName}-${suffix}') : searchServiceName
-var resolvedFoundryName = createFoundry ? foundryAccountName : foundryAccountName
+var resolvedSearchName = createSearch && empty(searchServiceName) ? toLower('srch-${workload}-${environmentName}-${suffix}') : searchServiceName
+var resolvedSearchConnectionName = empty(searchConnectionName) ? resolvedSearchName : searchConnectionName
 var resolvedBingName = empty(bingAccountName) ? toLower('bing-${workload}-${environmentName}-${suffix}') : bingAccountName
 
 // ============================================================== resources ====
-
 module search 'modules/search.bicep' = if (createSearch) {
   name: 'search'
   params: {
@@ -187,7 +182,7 @@ module search 'modules/search.bicep' = if (createSearch) {
 module foundry 'modules/foundry.bicep' = if (createFoundry) {
   name: 'foundry'
   params: {
-    accountName: resolvedFoundryName
+    accountName: foundryAccountName
     projectName: foundryProjectName
     projectDisplayName: 'Capital Markets Client Intelligence'
     projectDescription: 'SYNTHETIC DEMO DATA. Client meeting preparation agent grounded across Work IQ, Fabric IQ, Foundry IQ and Web IQ for a Capital Markets coverage relationship.'
@@ -222,14 +217,13 @@ resource existingAccountModel 'Microsoft.CognitiveServices/accounts/deployments@
   }
 }
 
-// Web IQ. Depends on the Foundry account existing, because the connection is a
-// child of it.
+// The connection is a child of the Foundry account.
 module bingGrounding 'modules/bing-grounding.bicep' = if (createBingGrounding) {
   name: 'bing-grounding'
   params: {
     name: resolvedBingName
     tags: tags
-    foundryAccountName: resolvedFoundryName
+    foundryAccountName: foundryAccountName
     connectionName: bingConnectionName
   }
   dependsOn: [ foundry ]
@@ -246,24 +240,23 @@ module fabricCapacity 'modules/fabric-capacity.bicep' = if (createFabricCapacity
   }
 }
 
-// The AI Search connection is what makes a portal-native demo path possible. The
-// scripted agent uses a function tool instead; both point at the same index.
+// The portal-native path and scripted function tool use the same Search index.
 module searchConnection 'modules/search-connection.bicep' = if (createSearchConnection && createSearch) {
   name: 'search-connection'
   params: {
-    foundryAccountName: resolvedFoundryName
+    foundryAccountName: foundryAccountName
     searchServiceName: resolvedSearchName
-    connectionName: searchConnectionName
+    connectionName: resolvedSearchConnectionName
   }
   dependsOn: [ search, foundry ]
 }
 
-module rbac 'modules/rbac.bicep' = if (!empty(agentPrincipalId)) {
+module rbac 'modules/rbac.bicep' = if (!empty(agentPrincipalId) || !empty(demoUserPrincipalIds)) {
   name: 'rbac'
   params: {
     principalId: agentPrincipalId
     principalType: agentPrincipalType
-    foundryAccountName: resolvedFoundryName
+    foundryAccountName: foundryAccountName
     foundryProjectName: foundryProjectName
     searchServiceName: resolvedSearchName
     demoUserPrincipalIds: demoUserPrincipalIds
@@ -272,19 +265,12 @@ module rbac 'modules/rbac.bicep' = if (!empty(agentPrincipalId)) {
 }
 
 // ================================================================ outputs ====
-// These feed the environment variables the data-plane scripts and the agent read.
-
 @description('Set as SEARCH_ENDPOINT.')
 output searchEndpoint string = createSearch ? search!.outputs.endpoint : 'https://${searchServiceName}.search.windows.net'
 
 output searchServiceName string = resolvedSearchName
 
-@description('''
-AI Search connection name. Attach this as a knowledge source in the Foundry portal
-to demo Foundry IQ natively - custom function tools cannot execute in the portal
-playground, so this is the portal path. The scripted agent uses a function tool
-against the same index.
-''')
+@description('AI Search connection name for the portal-native knowledge source. The scripted agent uses a function tool against the same index.')
 output searchConnectionName string = createSearchConnection && createSearch ? searchConnection!.outputs.connectionName : 'not-deployed'
 
 @description('Set as SEARCH_INDEX. Created by index_cm_policies.py, not by Bicep.')
@@ -295,7 +281,8 @@ output foundryProjectEndpoint string = createFoundry
   ? foundry!.outputs.projectEndpoint
   : 'https://${foundryAccountName}.services.ai.azure.com/api/projects/${foundryProjectName}'
 
-output foundryAccountName string = resolvedFoundryName
+output foundryAccountName string = foundryAccountName
+output foundryProjectName string = foundryProjectName
 
 @description('Set as FOUNDRY_MODEL.')
 output modelDeploymentName string = modelDeploymentName
@@ -304,17 +291,20 @@ output modelDeploymentName string = modelDeploymentName
 output bingConnectionName string = createBingGrounding ? bingGrounding!.outputs.connectionName : 'not-deployed'
 
 output bingAccountName string = createBingGrounding ? bingGrounding!.outputs.bingAccountName : 'not-deployed'
-
 output fabricCapacityName string = createFabricCapacity ? fabricCapacity!.outputs.name : fabricCapacityName
 
-@description('Fabric workspace/lakehouse/semantic model are data plane - run deploy_fabric.py next.')
-output nextSteps array = [
-  'python data/fabric-iq/deploy_fabric.py --capacity fabcap26'
-  'python data/foundry-iq/index_cm_policies.py'
-  'python data/work-iq/provision_seeder_app.py'
-  'python data/work-iq/seed_work_iq.py --auth cli --map-users'
-  'python data/work-iq/seed_work_iq.py --only mail'
-  'python data/work-iq/seed_work_iq.py --only teams'
-  'python data/work-iq/seed_work_iq.py --only files'
-  'python agent/create_agent.py --create'
-]
+@description('Data-plane follow-up commands. Run only after target governance and required environment values are validated.')
+output nextSteps array = concat(
+  empty(fabricCapacityName) ? [] : [
+    'python data/fabric-iq/deploy_fabric.py --capacity ${fabricCapacityName}'
+  ],
+  [
+    'python data/foundry-iq/index_cm_policies.py'
+    'python data/work-iq/provision_seeder_app.py'
+    'python data/work-iq/seed_work_iq.py --auth cli --map-users'
+    'python data/work-iq/seed_work_iq.py --only mail'
+    'python data/work-iq/seed_work_iq.py --only teams'
+    'python data/work-iq/seed_work_iq.py --only files'
+    'python agent/create_agent.py --create'
+  ]
+)

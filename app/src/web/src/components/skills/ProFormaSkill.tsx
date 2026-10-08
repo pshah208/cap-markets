@@ -21,13 +21,14 @@ const PAD = { l: 44, r: 92, t: 16, b: 26 };
 export function ProFormaSkill({ catalogue, result, onRun }: {
   catalogue: SkillCatalogue;
   result: ProFormaResult | null;
-  onRun: (incrementalM: number) => Promise<ProFormaResult>;
+  onRun: (incrementalM: number, ebitdaShockPct: number) => Promise<ProFormaResult>;
 }) {
   const rev = catalogue.opportunities.revolver_upsize as Record<string, number>;
   const proposed = Number(rev?.proposed_commitment_total_m ?? 0)
     - Number(rev?.current_commitment_total_m ?? 0);
 
   const [inc, setInc] = useState<number>(proposed || 250);
+  const [shock, setShock] = useState<number>(0);
   const [res, setRes] = useState<ProFormaResult | null>(result);
   const [busy, setBusy] = useState(false);
 
@@ -36,14 +37,14 @@ export function ProFormaSkill({ catalogue, result, onRun }: {
     let alive = true;
     setBusy(true);
     const t = setTimeout(() => {
-      onRun(inc)
+      onRun(inc, shock)
         .then((r) => { if (alive) setRes(r); })
         .catch(() => { /* leave the last good result on screen */ })
         .finally(() => { if (alive) setBusy(false); });
     }, 180);
     return () => { alive = false; clearTimeout(t); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [inc]);
+  }, [inc, shock]);
 
   const hist = catalogue.leverage_history;
   const threshold = catalogue.covenant.threshold;
@@ -133,6 +134,21 @@ export function ProFormaSkill({ catalogue, result, onRun }: {
         <button onClick={() => setInc(0)}>No change</button>
       </div>
 
+      <div className="pf-stress" role="group" aria-label="Adjusted EBITDA stress">
+        <span className="pf-stress-label">
+          Stress Adjusted EBITDA
+          <em>the "soft quarter in Marketing"</em>
+        </span>
+        {[0, -5, -10, -15, -20].map((s) => (
+          <button
+            key={s}
+            className={shock === s ? "on" : ""}
+            aria-pressed={shock === s}
+            onClick={() => setShock(s)}
+          >{s === 0 ? "Base" : `${s}%`}</button>
+        ))}
+      </div>
+
       {res && (
         <div className={`pf-verdict tone-${res.tone}${busy ? " busy" : ""}`}>
           <div className="pf-verdict-head">
@@ -147,8 +163,56 @@ export function ProFormaSkill({ catalogue, result, onRun }: {
               <span>turns headroom</span>
             </div>
             <div><b>{res.pro_forma_net_debt_m.toFixed(1)}</b><span>pro-forma net debt</span></div>
+            {res.ebitda_cushion_pct !== undefined && (
+              <div>
+                <b>{res.ebitda_cushion_pct > 0 ? `${res.ebitda_cushion_pct.toFixed(1)}%` : "none"}</b>
+                <span>EBITDA cushion</span>
+              </div>
+            )}
           </div>
           <p className="pf-statement">{res.verdict}</p>
+        </div>
+      )}
+
+      {catalogue.stress && (
+        <div className="pf-grid-wrap">
+          <div className="pf-grid-title">
+            Stress grid — pro-forma leverage, fully drawn, against {catalogue.stress.threshold.toFixed(2)}x
+          </div>
+          <table className="pf-grid">
+            <thead>
+              <tr>
+                <th scope="col">Facility</th>
+                <th scope="col">Cushion</th>
+                {catalogue.stress.shocks.map((s) => (
+                  <th scope="col" key={s}>{s === 0 ? "Base" : `EBITDA ${s}%`}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {catalogue.stress.rows.map((r) => (
+                <tr key={r.incremental_m}>
+                  <th scope="row">
+                    CAD {r.facility_m.toLocaleString()}m
+                    <em>+{r.incremental_m}m</em>
+                  </th>
+                  <td className={r.ebitda_cushion_pct > 0 ? "" : "tone-bad"}>
+                    {r.ebitda_cushion_pct > 0 ? `${r.ebitda_cushion_pct.toFixed(1)}%` : "none"}
+                  </td>
+                  {r.cells.map((c) => (
+                    <td key={c.shock} className={`tone-${c.tone}`} title={`${c.band}, ${c.headroom} turns`}>
+                      {c.leverage.toFixed(2)}x
+                    </td>
+                  ))}
+                </tr>
+              ))}
+            </tbody>
+          </table>
+          <p className="pf-grid-note">
+            Cushion = how far LTM Adjusted EBITDA can fall before that size breaches.
+            A resized facility clears today but has almost no cushion; a covenant
+            reset negotiated alongside the upsize is the path that survives a bad quarter.
+          </p>
         </div>
       )}
 

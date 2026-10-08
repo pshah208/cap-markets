@@ -9,3 +9,65 @@ __pycache__/
 
 # Compiled ARM from `az bicep build`
 infra/main.json
+app/infra/main.json
+**/infra/modules/*.json
+
+# Frontend dependencies and build artifacts
+node_modules/
+dist/
+*.tsbuildinfo
+
+# Environment and credential material (examples are intentionally tracked)
+.env
+.env.*
+!.env.example
+!.env.*.example
+**/.azure/
+**/.identity/
+**/*token_cache*
+**/*token-cache*
+**/*token.cache*
+**/.tokens*
+
+# Deployer-owned target configuration, governance evidence and mappings
+*.local.json
+*.local.ps1
+*.local.config
+*.local.yaml
+*.local.yml
+infra/main.parameters.json
+app/infra/main.parameters.json
+user_mapping*.json
+!user_mapping.example.json
+*_mapping.local.*
+*.restore.json
+*.restore-state.json
+*.restore-state.*
+restore-state/
+.local/
+.deployment-checks*/
+
+# Deployment/diagnostic output is local, never an approved target default
+*deploy*output*.json
+*deployment*output*.json
+deployment-outputs/
+deploy-outputs/
+*.log
+logs/
+screenshots/
+*.docx
+.bank-config-test-*/
+playwright-report/
+test-results/
+.playwright-mcp/
+screenshot*.png
+screenshot*.jpg
+screenshot*.webp
+
+# Bank setup output and customer-supplied artwork
+app/src/web/public/brand/bank.json
+app/src/web/public/brand/logo.png
+app/src/web/public/brand/user-logo.*
+app/src/web/public/brand/bank-logo.*
+app/src/web/public/brand/logo.local.*
+app/src/web/public/brand/uploads/

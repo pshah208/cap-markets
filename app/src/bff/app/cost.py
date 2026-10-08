@@ -142,6 +142,7 @@ async def _access_token() -> str:
     this image does not carry (see the same note in telemetry.py).
     """
     global _token
+    _require_configured()
     async with _token_lock:
         if _token and _token[1] - 120 > time.time():
             return _token[0]
@@ -160,8 +161,19 @@ async def _access_token() -> str:
         return tok.token
 
 
+def _require_configured() -> None:
+    if settings.mock_mode:
+        raise RuntimeError("Billed cost access is disabled in MOCK_MODE.")
+    error = settings.cost_config_error()
+    if error:
+        raise ValueError(error)
+
+
 async def _fetch(window_days: int) -> dict:
     """Actual cost for the resource group, grouped by resource."""
+    _require_configured()
+    if window_days <= 0:
+        raise ValueError("Cost window days must be a positive integer.")
     token = await _access_token()
     end = date.today()
     start = end - timedelta(days=window_days)
@@ -262,10 +274,13 @@ async def snapshot() -> dict:
     """Billed Azure cost for the demo, cached. Never raises."""
     global _cache
 
-    if not settings.cost_scope:
+    if settings.mock_mode:
+        return _unavailable("Billed cost is disabled in MOCK_MODE.")
+    error = settings.cost_config_error()
+    if error:
         return _unavailable(
             "Billed cost is not wired up here.",
-            "Set COST_SCOPE to the resource group the demo runs in.")
+            error)
 
     async with _cache_lock:
         if _cache and time.time() - _cache[1] < CACHE_SECONDS:

@@ -26,7 +26,7 @@ That requires the standard OBO pair:
 USAGE
 -----
     pip install azure-identity requests
-    az login                      # as an Application Administrator
+    # Authenticate Azure CLI separately as an Application Administrator.
 
     python provision_app_registrations.py --spa-redirect http://localhost:5173
     python provision_app_registrations.py --show
@@ -34,24 +34,34 @@ USAGE
     python provision_app_registrations.py --delete
 
 The BFF client secret is printed once and is never written to disk by this script.
+
+Required environment in all modes: AZURE_TENANT_ID (tenant GUID), INFRA_SPA_NAME
+and INFRA_BFF_NAME (distinct, unique app display names). No optional environment
+settings. Provisioning requires one or more explicit --spa-redirect URIs.
+--add-redirect only updates existing SPA redirects; it never provisions apps or
+secrets. --show and --delete take no redirect arguments. --no-secret skips secret
+creation on provisioning. HTTPS is required except for explicit HTTP localhost
+development redirects. No endpoint or identity is inferred from the CLI session.
 """
 
 from __future__ import annotations
 
 import argparse
-import json
-import subprocess
-import sys
 import time
-from typing import Any
 
-import requests
+if __package__:
+    from .portability_config import (
+        ConfigurationError, GraphClient, app_names, environment, eq_filter,
+        find_app, find_sp, redirect_uri, tenant_grant, tenant_id,
+    )
+else:
+    from portability_config import (
+        ConfigurationError, GraphClient, app_names, environment, eq_filter,
+        find_app, find_sp, redirect_uri, tenant_grant, tenant_id,
+    )
 
-GRAPH = "https://graph.microsoft.com/v1.0"
 GRAPH_APP_ID = "00000003-0000-0000-c000-000000000000"
 
-SPA_NAME = "cm-client-intelligence-spa"
-BFF_NAME = "cm-client-intelligence-bff"
 SCOPE_NAME = "access_as_user"
 
 # Delegated Graph scopes the BFF needs.
@@ -74,44 +84,7 @@ AML_APP_ID = "18a66f5f-dbdf-4c17-9dd7-1634712a9cbe"
 AML_USER_IMPERSONATION_SCOPE = "1a7925b5-f871-417a-9b8b-303f9f29fa10"
 
 
-def token() -> str:
-    out = subprocess.run(
-        ["az", "account", "get-access-token", "--resource",
-         "https://graph.microsoft.com", "--query", "accessToken", "-o", "tsv"],
-        capture_output=True, text=True, shell=True,
-    )
-    if out.returncode != 0:
-        sys.exit(f"az token failed - run `az login`: {out.stderr}")
-    return out.stdout.strip()
-
-
-class G:
-    def __init__(self) -> None:
-        self.h = {"Authorization": f"Bearer {token()}",
-                  "Content-Type": "application/json"}
-
-    def call(self, method: str, path: str, body: Any = None,
-             ok: tuple[int, ...] = (200, 201, 204)) -> Any:
-        r = requests.request(method, f"{GRAPH}{path}", headers=self.h,
-                             json=body, timeout=90)
-        if r.status_code not in ok:
-            raise RuntimeError(f"{method} {path} -> {r.status_code}: {r.text[:700]}")
-        if r.content and "json" in r.headers.get("Content-Type", ""):
-            return r.json()
-        return None
-
-
-def find_app(g: G, name: str) -> dict | None:
-    r = g.call("GET", f"/applications?$filter=displayName eq '{name}'")
-    return (r.get("value") or [None])[0]
-
-
-def find_sp(g: G, app_id: str) -> dict | None:
-    r = g.call("GET", f"/servicePrincipals?$filter=appId eq '{app_id}'")
-    return (r.get("value") or [None])[0]
-
-
-def ensure_sp(g: G, app_id: str) -> dict:
+def ensure_sp(g: GraphClient, app_id: str) -> dict:
     sp = find_sp(g, app_id)
     if sp:
         return sp
@@ -121,21 +94,21 @@ def ensure_sp(g: G, app_id: str) -> dict:
 
 
 # --------------------------------------------------------------------------- #
-def ensure_bff(g: G) -> dict:
+def ensure_bff(g: GraphClient, name: str) -> dict:
     """Confidential client that exposes the API scope and performs OBO."""
-    app = find_app(g, BFF_NAME)
+    app = find_app(g, name)
     if app:
-        print(f"= {BFF_NAME} ({app['appId']})")
+        print(f"= {name} ({app['appId']})")
     else:
         app = g.call("POST", "/applications", {
-            "displayName": BFF_NAME,
-            "description": "BMO Capital Markets Client Intelligence BFF. Exchanges the signed-in "
+            "displayName": name,
+            "description": "The Bank's Capital Markets Client Intelligence BFF. Exchanges the signed-in "
                            "user's token for downstream tokens (On-Behalf-Of) so the "
                            "Foundry agent grounds Work IQ under the user's identity.",
             "signInAudience": "AzureADMyOrg",
             "requiredResourceAccess": [],
         })
-        print(f"+ {BFF_NAME} ({app['appId']})")
+        print(f"+ {name} ({app['appId']})")
         time.sleep(10)
 
     app_id = app["appId"]
@@ -154,40 +127,48 @@ def ensure_bff(g: G) -> dict:
             "value": SCOPE_NAME,
             "type": "User",
             "isEnabled": True,
-            "adminConsentDisplayName": "Access the BMO Capital Markets Client Intelligence as you",
+            "adminConsentDisplayName": "Access the Bank's Capital Markets Client Intelligence as you",
             "adminConsentDescription": "Allows the app to call the Foundry agent and "
                                        "its grounded data sources on behalf of the "
                                        "signed-in user.",
-            "userConsentDisplayName": "Access the BMO Capital Markets Client Intelligence as you",
+            "userConsentDisplayName": "Access the Bank's Capital Markets Client Intelligence as you",
             "userConsentDescription": "Allows the app to retrieve your client "
                                       "coverage email, Teams and document context.",
         })
+        api = dict(current.get("api", {}))
+        api.update({"oauth2PermissionScopes": scopes, "requestedAccessTokenVersion": 2})
         g.call("PATCH", f"/applications/{obj_id}", {
-            "identifierUris": [f"api://{app_id}"],
-            "api": {
-                "oauth2PermissionScopes": scopes,
-                "requestedAccessTokenVersion": 2,
-            },
+            "identifierUris": sorted(set(current.get("identifierUris", []) + [f"api://{app_id}"])),
+            "api": api,
         }, ok=(204,))
         print(f"  + exposed api://{app_id}/{SCOPE_NAME}")
     else:
         print(f"  = api://{app_id}/{SCOPE_NAME} already exposed")
 
     # Delegated permissions the BFF needs on downstream APIs.
-    gsp = g.call("GET", f"/servicePrincipals?$filter=appId eq '{GRAPH_APP_ID}'"
-                        "&$select=id,oauth2PermissionScopes")["value"][0]
-    ids = {s["value"]: s["id"] for s in gsp["oauth2PermissionScopes"]}
-    graph_access = [{"id": ids[s], "type": "Scope"}
-                    for s in BFF_GRAPH_SCOPES if s in ids]
+    gsp = find_sp(g, GRAPH_APP_ID)
+    if not gsp:
+        raise RuntimeError("The Microsoft Graph service principal must exist in the configured tenant.")
+    ids = {s["value"]: s["id"] for s in gsp["oauth2PermissionScopes"] if s.get("isEnabled", False)}
+    missing = set(BFF_GRAPH_SCOPES) - ids.keys()
+    if missing:
+        raise RuntimeError(f"Microsoft Graph is missing enabled delegated scopes: {', '.join(sorted(missing))}")
+    graph_access = [{"id": ids[s], "type": "Scope"} for s in BFF_GRAPH_SCOPES]
 
     aml_sp = ensure_sp(g, AML_APP_ID)
     aml_access = [{"id": AML_USER_IMPERSONATION_SCOPE, "type": "Scope"}]
 
+    blocks = current.get("requiredResourceAccess", [])
+    for resource_id, access in ((GRAPH_APP_ID, graph_access), (AML_APP_ID, aml_access)):
+        block = next((b for b in blocks if b["resourceAppId"] == resource_id), None)
+        if block is None:
+            blocks.append({"resourceAppId": resource_id, "resourceAccess": access})
+        else:
+            for permission in access:
+                if permission not in block["resourceAccess"]:
+                    block["resourceAccess"].append(permission)
     g.call("PATCH", f"/applications/{obj_id}", {
-        "requiredResourceAccess": [
-            {"resourceAppId": GRAPH_APP_ID, "resourceAccess": graph_access},
-            {"resourceAppId": AML_APP_ID, "resourceAccess": aml_access},
-        ],
+        "requiredResourceAccess": blocks,
         "web": {"implicitGrantSettings": {"enableIdTokenIssuance": False,
                                           "enableAccessTokenIssuance": False}},
     }, ok=(204,))
@@ -195,8 +176,8 @@ def ensure_bff(g: G) -> dict:
     sp = ensure_sp(g, app_id)
 
     # Pre-consent the delegated Graph scopes so users are not prompted.
-    grants = g.call("GET", f"/oauth2PermissionGrants?$filter=clientId eq '{sp['id']}'")
-    grant = next((x for x in grants["value"] if x["resourceId"] == gsp["id"]), None)
+    grants = g.collection(f"/oauth2PermissionGrants?{eq_filter('clientId', sp['id'])}")
+    grant = tenant_grant(grants, gsp["id"])
     if grant:
         merged = " ".join(sorted(set(grant["scope"].split()) | set(BFF_GRAPH_SCOPES)))
         g.call("PATCH", f"/oauth2PermissionGrants/{grant['id']}", {"scope": merged},
@@ -211,8 +192,7 @@ def ensure_bff(g: G) -> dict:
     # Pre-consent user_impersonation on Azure Machine Learning Services. Without
     # this, the OBO exchange for https://ai.azure.com/.default returns
     # AADSTS65001, no matter what the SPA has consented.
-    aml_grant = next((x for x in grants["value"]
-                      if x["resourceId"] == aml_sp["id"]), None)
+    aml_grant = tenant_grant(grants, aml_sp["id"])
     if aml_grant:
         merged = " ".join(sorted(set(aml_grant["scope"].split())
                                  | {"user_impersonation"}))
@@ -227,23 +207,24 @@ def ensure_bff(g: G) -> dict:
     return {"appId": app_id, "objectId": obj_id, "spId": sp["id"]}
 
 
-def ensure_spa(g: G, bff: dict, redirects: list[str]) -> dict:
+def ensure_spa(g: GraphClient, name: str, bff: dict, redirects: list[str]) -> dict:
     """Public client the browser uses. PKCE, no secret."""
-    app = find_app(g, SPA_NAME)
+    app = find_app(g, name)
     if app:
-        print(f"= {SPA_NAME} ({app['appId']})")
+        print(f"= {name} ({app['appId']})")
         existing = g.call("GET", f"/applications/{app['id']}")
         uris = sorted(set(existing.get("spa", {}).get("redirectUris", []) + redirects))
     else:
         app = g.call("POST", "/applications", {
-            "displayName": SPA_NAME,
-            "description": "BMO Capital Markets Client Intelligence single-page app. Signs the "
+            "displayName": name,
+            "description": "The Bank's Capital Markets Client Intelligence single-page app. Signs the "
                            "user in and calls the BFF.",
             "signInAudience": "AzureADMyOrg",
         })
-        print(f"+ {SPA_NAME} ({app['appId']})")
+        print(f"+ {name} ({app['appId']})")
         time.sleep(10)
-        uris = redirects
+        uris = sorted(set(redirects))
+        existing = app
 
     scope_id = next(
         s["id"] for s in
@@ -251,31 +232,44 @@ def ensure_spa(g: G, bff: dict, redirects: list[str]) -> dict:
         if s["value"] == SCOPE_NAME
     )
 
+    blocks = existing.get("requiredResourceAccess", [])
+    block = next((b for b in blocks if b["resourceAppId"] == bff["appId"]), None)
+    permission = {"id": scope_id, "type": "Scope"}
+    if block is None:
+        blocks.append({"resourceAppId": bff["appId"], "resourceAccess": [permission]})
+    elif permission not in block["resourceAccess"]:
+        block["resourceAccess"].append(permission)
     g.call("PATCH", f"/applications/{app['id']}", {
         "spa": {"redirectUris": uris},
-        "requiredResourceAccess": [
-            {"resourceAppId": bff["appId"],
-             "resourceAccess": [{"id": scope_id, "type": "Scope"}]}
-        ],
+        "requiredResourceAccess": blocks,
     }, ok=(204,))
     print(f"  + redirect URIs: {', '.join(uris)}")
 
     sp = ensure_sp(g, app["appId"])
 
     # Pre-consent the SPA -> BFF scope so the user sees no prompt.
-    grants = g.call("GET", f"/oauth2PermissionGrants?$filter=clientId eq '{sp['id']}'")
-    if not any(x["resourceId"] == bff["spId"] for x in grants["value"]):
+    grants = g.collection(f"/oauth2PermissionGrants?{eq_filter('clientId', sp['id'])}")
+    grant = tenant_grant(grants, bff["spId"])
+    if grant:
+        if SCOPE_NAME not in grant["scope"].split():
+            merged = " ".join(sorted(set(grant["scope"].split()) | {SCOPE_NAME}))
+            g.call("PATCH", f"/oauth2PermissionGrants/{grant['id']}", {"scope": merged}, ok=(204,))
+    else:
         g.call("POST", "/oauth2PermissionGrants", {
             "clientId": sp["id"], "consentType": "AllPrincipals",
             "resourceId": bff["spId"], "scope": SCOPE_NAME,
         })
-    print(f"  + consented {SPA_NAME} -> api://{bff['appId']}/{SCOPE_NAME}")
+    print(f"  + consented {name} -> api://{bff['appId']}/{SCOPE_NAME}")
 
     # Let the BFF accept tokens from the SPA without a second consent prompt.
     cur = g.call("GET", f"/applications/{bff['objectId']}")
     pre = cur.get("api", {}).get("preAuthorizedApplications", [])
-    if not any(p["appId"] == app["appId"] for p in pre):
-        pre.append({"appId": app["appId"], "delegatedPermissionIds": [scope_id]})
+    authorized = next((p for p in pre if p["appId"] == app["appId"]), None)
+    if authorized is None or scope_id not in authorized.get("delegatedPermissionIds", []):
+        if authorized is None:
+            pre.append({"appId": app["appId"], "delegatedPermissionIds": [scope_id]})
+        else:
+            authorized.setdefault("delegatedPermissionIds", []).append(scope_id)
         api = dict(cur["api"])
         api["preAuthorizedApplications"] = pre
         g.call("PATCH", f"/applications/{bff['objectId']}", {"api": api}, ok=(204,))
@@ -285,47 +279,72 @@ def ensure_spa(g: G, bff: dict, redirects: list[str]) -> dict:
 
 
 # --------------------------------------------------------------------------- #
-def main() -> None:
-    ap = argparse.ArgumentParser()
+def main(argv=None, environ=None) -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--spa-redirect", action="append", default=[],
                     help="SPA redirect URI; repeatable")
     ap.add_argument("--add-redirect", action="append", default=[],
                     help="add a redirect URI to the existing SPA (e.g. the deployed FQDN)")
-    ap.add_argument("--show", action="store_true")
-    ap.add_argument("--delete", action="store_true")
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument("--show", action="store_true")
+    mode.add_argument("--delete", action="store_true")
     ap.add_argument("--no-secret", action="store_true")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
+    env = environment(environ)
+    try:
+        tenant = tenant_id(env)
+        spa_name, bff_name = app_names(env)
+        if args.spa_redirect and args.add_redirect:
+            raise ConfigurationError("Use either --spa-redirect or --add-redirect, not both.")
+        if (args.show or args.delete) and (args.spa_redirect or args.add_redirect or args.no_secret):
+            raise ConfigurationError("--show and --delete cannot be combined with redirects or --no-secret.")
+        if args.add_redirect and args.no_secret:
+            raise ConfigurationError("--add-redirect never creates a secret; omit --no-secret.")
+        redirects = [
+            redirect_uri(value, "--spa-redirect" if args.spa_redirect else "--add-redirect")
+            for value in args.spa_redirect + args.add_redirect
+        ]
+        if not args.show and not args.delete and not redirects:
+            raise ConfigurationError("Explicit --spa-redirect URI(s) are required to provision; no localhost default.")
+    except ConfigurationError as exc:
+        ap.error(str(exc))
 
-    g = G()
+    g = GraphClient(tenant)
 
     if args.delete:
-        for n in (SPA_NAME, BFF_NAME):
-            a = find_app(g, n)
+        apps = [(name, find_app(g, name)) for name in (spa_name, bff_name)]
+        for n, a in apps:
             if a:
                 g.call("DELETE", f"/applications/{a['id']}", ok=(204,))
                 print(f"deleted {n}")
         return
 
-    tenant = g.call("GET", "/organization?$select=id")["value"][0]["id"]
-
     if args.show:
-        for n in (SPA_NAME, BFF_NAME):
+        for n in (spa_name, bff_name):
             a = find_app(g, n)
             print(f"{n}: {a['appId'] if a else 'NOT CREATED'}")
-            if a and n == SPA_NAME:
+            if a and n == spa_name:
                 cur = g.call("GET", f"/applications/{a['id']}")
                 print(f"   redirects: {cur.get('spa', {}).get('redirectUris', [])}")
         return
 
-    redirects = args.spa_redirect or args.add_redirect or ["http://localhost:5173"]
+    if args.add_redirect:
+        app = find_app(g, spa_name)
+        if not app:
+            raise RuntimeError(f"{spa_name} not found; provision it before adding redirect URIs.")
+        current = g.call("GET", f"/applications/{app['id']}")
+        uris = sorted(set(current.get("spa", {}).get("redirectUris", []) + redirects))
+        g.call("PATCH", f"/applications/{app['id']}", {"spa": {"redirectUris": uris}}, ok=(204,))
+        print(f"+ redirect URIs: {', '.join(uris)}")
+        return
 
     print("== BFF (confidential client, performs OBO) ==")
-    bff = ensure_bff(g)
+    bff = ensure_bff(g, bff_name)
     print("\n== SPA (public client, PKCE) ==")
-    spa = ensure_spa(g, bff, redirects)
+    spa = ensure_spa(g, spa_name, bff, redirects)
 
     secret = None
-    if not args.no_secret and not args.add_redirect:
+    if not args.no_secret:
         cred = g.call("POST", f"/applications/{bff['objectId']}/addPassword", {
             "passwordCredential": {"displayName": f"bff-{int(time.time())}"}
         })

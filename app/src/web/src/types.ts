@@ -61,7 +61,7 @@ export interface Chapter {
   title: string;
   kicker: string;
   layout: "persona" | "architecture" | "iq" | "metrics" | "reveal" | "diagram"
-    | "telemetry";
+    | "telemetry" | "path";
   body: string;
   points?: string[];
   columns?: StoryColumn[];
@@ -73,8 +73,55 @@ export interface Chapter {
   iq?: IQId | "all";
   prompt: string | null;
   expect?: string[];
+  /** Replaces the IQ cards and expect list with a per-layer comparison. */
+  layerTable?: LayerTable;
+  /** Gates on the path to yes, rendered by the "path" layout. */
+  pathSteps?: PathStep[];
   /** Optional jargon-free retelling, rendered under the slide. */
   plain?: PlainEnglish;
+}
+
+export interface LayerTableRow {
+  iq: IQId;
+  holds: string;
+  tells: string;
+  cannot: string;
+}
+
+export interface LayerTable {
+  headers: [string, string, string, string];
+  rows: LayerTableRow[];
+}
+
+/** State of the Fabric capacity behind Fabric IQ, from /api/fabric-capacity. */
+export interface FabricCapacity {
+  configured: boolean;
+  name?: string;
+  sku?: string;
+  region?: string;
+  rawState?: string;
+  state: "active" | "paused" | "resuming" | "pausing" | "unknown";
+  canOperate: boolean;
+  error?: string;
+}
+
+/** Live, cached Web IQ answer from /api/web-pulse. */
+export interface WebPulse {
+  status: "live" | "unavailable";
+  text?: string;
+  citations?: Citation[];
+  webUsed?: boolean;
+  fetchedAt?: string;
+  stale?: boolean;
+  detail?: string;
+}
+
+/** One gate on the path to yes: what blocks, what clears it, who decides. */
+export interface PathStep {
+  constraint: string;
+  clears: string;
+  owner: string;
+  tone?: "ok" | "warn" | "bad";
 }
 
 export interface Persona {
@@ -135,6 +182,49 @@ export interface ProFormaResult {
   max_clearing_m: number;
   shrink_required_m: number;
   verdict?: string;
+  ebitda_shock_pct?: number;
+  base_ebitda_m?: number;
+  ebitda_cushion_pct?: number;
+}
+
+export interface StressCell { shock: number; leverage: number; headroom: number; band: string; tone: "ok" | "warn" | "bad" }
+export interface StressRow { incremental_m: number; facility_m: number; ebitda_cushion_pct: number; cells: StressCell[] }
+export interface StressGrid { shocks: number[]; rows: StressRow[]; threshold: number }
+
+export interface PaperSection {
+  heading: string;
+  rows?: [string, string, string][];
+  table?: { head: string[]; rows: string[][] };
+  source?: string;
+  lines?: [string, string][];
+}
+export interface Paper {
+  id: "cc" | "pm" | "cr";
+  title: string;
+  addressee: string;
+  policies: string[];
+  sections: PaperSection[];
+  signoff: { role: string; decision: string; name: string; date: string }[];
+}
+export interface PaperBundle {
+  as_of: string;
+  inputs: { incrementalM?: number; incremental_m?: number; facility_m?: number; hold_m?: number; final_hold_m?: number; client_id?: string };
+  status: string;
+  confidential: string;
+  papers: Paper[];
+  kind?: "deal" | "review";
+  notes?: string[];
+}
+
+export interface ClientStressCell { shock: number; value: number; headroom: number; band: string; tone: "ok" | "warn" | "bad" }
+export interface ClientStressRow {
+  covenant: string; kind: "leverage" | "coverage"; test: string; threshold: number; actual: number;
+  prior: number; trend: string; cushion_pct: number; cells: ClientStressCell[];
+}
+export interface ClientStress {
+  client: string; id: string; shocks: number[]; rows: ClientStressRow[];
+  binding?: string; binding_cushion_pct?: number; debt_capacity_turns?: number | null;
+  headline: string; basis?: string; hero?: boolean;
 }
 
 export interface LeveragePoint {
@@ -190,6 +280,7 @@ export interface SkillCatalogue {
   opportunities: Record<string, Record<string, unknown>>;
   roomcard: RoomCard;
   radar: { as_of: string; entries: RadarEntry[]; tight_count: number; hero_id: string; note: string };
+  stress?: StressGrid;
 }
 
 /* ------------------------------------------------- plain-English panel --- */

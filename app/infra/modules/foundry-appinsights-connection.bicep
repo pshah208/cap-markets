@@ -2,8 +2,8 @@
 //
 // This is what lets the Foundry portal show tracing and evaluation telemetry for
 // the project alongside the app's own telemetry, rather than the two living in
-// separate places. RBC's project has the equivalent connection; without it the
-// Monitoring blade in the portal has nothing to bind to.
+// separate places. Without this connection, the Monitoring blade in the portal
+// has no Application Insights component to bind to.
 //
 // Note the scope: unlike the AI Search connection (which hangs off the ACCOUNT),
 // this one hangs off the PROJECT - `accounts/projects/connections`. Creating it
@@ -15,9 +15,11 @@
 // "Credentials Property can't be empty for auth type ApiKey" on create.
 
 @description('Foundry (AIServices) account name.')
+@minLength(2)
 param foundryAccountName string
 
 @description('Foundry project name the connection is created on.')
+@minLength(2)
 param foundryProjectName string
 
 @description('Application Insights component name.')

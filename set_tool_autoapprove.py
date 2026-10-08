@@ -7,6 +7,9 @@ arrives, with no obvious error - it simply looks like the agent hung.
 Only the approval flag is changed; instructions, model and tool wiring are
 preserved exactly.
 
+Requires FOUNDRY_PROJECT_ENDPOINT, FOUNDRY_AGENT_NAME and AZURE_AUTH_MODE, plus
+the selected mode's Azure identity environment fields.
+
     python set_tool_autoapprove.py            # dry run
     python set_tool_autoapprove.py --apply
 """
@@ -14,14 +17,14 @@ preserved exactly.
 from __future__ import annotations
 
 import argparse
-import subprocess
-import sys
 
-import requests
+from agent.portability import (
+    ConfigurationError,
+    agent_url,
+    foundry_token,
+    load_foundry_config,
+)
 
-ENDPOINT = ("https://cmintel-foundry.services.ai.azure.com"
-            "/api/projects/proj-client-intelligence")
-AGENT = "Agent-cap-market"
 API = "2025-05-15-preview"
 
 # Only MCP-style tools take require_approval. bing_grounding and web_search do
@@ -29,14 +32,8 @@ API = "2025-05-15-preview"
 APPROVABLE = {"mcp", "fabric_iq_preview", "work_iq_preview"}
 
 
-def token() -> str:
-    out = subprocess.run(
-        ["az", "account", "get-access-token", "--resource",
-         "https://ai.azure.com", "--query", "accessToken", "-o", "tsv"],
-        capture_output=True, text=True, shell=True)
-    if out.returncode != 0:
-        sys.exit(f"az token failed: {out.stderr[:300]}")
-    return out.stdout.strip()
+def token(config: dict[str, str]) -> str:
+    return foundry_token(config)
 
 
 def label(tool: dict) -> str:
@@ -45,15 +42,22 @@ def label(tool: dict) -> str:
             or tool.get("type", "?"))
 
 
-def main() -> int:
+def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
-    h = {"Authorization": "Bearer " + token(),
+    try:
+        config = load_foundry_config()
+    except ConfigurationError as exc:
+        ap.error(str(exc))
+
+    import requests
+
+    h = {"Authorization": "Bearer " + token(config),
          "Content-Type": "application/json"}
 
-    r = requests.get(f"{ENDPOINT}/agents/{AGENT}?api-version={API}",
+    r = requests.get(f"{agent_url(config)}?api-version={API}",
                      headers=h, timeout=60)
     r.raise_for_status()
     latest = r.json()["versions"]["latest"]
@@ -86,7 +90,7 @@ def main() -> int:
 
     new_def = dict(definition)
     new_def["tools"] = tools
-    r = requests.post(f"{ENDPOINT}/agents/{AGENT}/versions?api-version={API}",
+    r = requests.post(f"{agent_url(config)}/versions?api-version={API}",
                       headers=h, json={"definition": new_def}, timeout=120)
     if r.status_code >= 400:
         print(f"\nFAILED {r.status_code}: {r.text[:800]}")

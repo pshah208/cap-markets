@@ -1,73 +1,48 @@
-"""Audit the Teams channels backing this demo for stray messages.
+"""Audit the configured team's channel names, messages and replies.
 
-This demo deliberately posts no native channel messages, so any message here is
-foreign - most likely left over from a previous demo that used the same team.
+Requires WORKIQ_TENANT_ID/CLIENT_ID/CLIENT_SECRET, WORKIQ_TEAM_ID and
+WORKIQ_FORBIDDEN_TERMS (nonempty JSON string array). All pages are required;
+missing/inaccessible channels or replies are inconclusive, never clean.
 """
-
 from __future__ import annotations
 
-import os
-import re
+from urllib.parse import quote
 
-import requests
-
-G = "https://graph.microsoft.com/v1.0"
-TEAM = "47b3de02-2462-443b-a8f5-a29d8d45acdd"
-# "bmo" and "gibson" are THIS demo's own content - not leakage.
-TOKENS = ["scotiabank", "scotia", "rbc", "royal bank", "contoso",
-          "vale", "teck", "freeport",
-          "mortgage", "renewal", "concierge", "heloc"]
-RX = [(t, re.compile(r"\b" + re.escape(t), re.I)) for t in TOKENS]
+from diagnostic_support import (
+    GRAPH, AuditError, ConfigurationError, GraphClient, LeakageScanner,
+    body_text, identifier, load_audit_config, report_error,
+)
 
 
 def main() -> int:
-    tid = os.environ["WORKIQ_TENANT_ID"]
-    tok = requests.post(
-        f"https://login.microsoftonline.com/{tid}/oauth2/v2.0/token",
-        data={
-            "client_id": os.environ["WORKIQ_CLIENT_ID"],
-            "client_secret": os.environ["WORKIQ_CLIENT_SECRET"],
-            "scope": "https://graph.microsoft.com/.default",
-            "grant_type": "client_credentials",
-        }, timeout=60).json()["access_token"]
-    h = {"Authorization": "Bearer " + tok}
-
-    r = requests.get(f"{G}/teams/{TEAM}/channels", headers=h, timeout=60)
-    if r.status_code != 200:
-        print(f"channels -> HTTP {r.status_code}: {r.text[:200]}")
-        return 2
-
-    total, leaks, errors = 0, [], []
-    for c in r.json().get("value", []):
-        m = requests.get(
-            f"{G}/teams/{TEAM}/channels/{c['id']}/messages?$top=50",
-            headers=h, timeout=60)
-        if m.status_code != 200:
-            errors.append(f"{c['displayName']} -> HTTP {m.status_code}")
-            print(f"  {c['displayName']:<40} HTTP {m.status_code}")
-            continue
-        msgs = m.json().get("value", [])
-        total += len(msgs)
-        print(f"  {c['displayName']:<40} messages={len(msgs)}")
-        for msg in msgs:
-            body = (msg.get("body") or {}).get("content") or ""
-            for t, rx in RX:
-                if rx.search(body):
-                    leaks.append((c["displayName"], t, body[:80]))
-
-    print()
-    if errors:
-        print("REQUEST FAILURES - inconclusive:")
-        for e in errors:
-            print(f"  ! {e}")
-        return 2
-    if leaks:
-        print(f"LEAKS ({len(leaks)}):")
-        for ch, t, snip in leaks:
-            print(f"  [{t}] {ch}: {snip}")
-        return 1
-    print(f"CLEAN - {total} channel message(s), none foreign.")
-    return 0
+    try:
+        config = load_audit_config(users=False, team=True)
+        scanner = LeakageScanner(config.forbidden_terms)
+        graph = GraphClient.authenticate(config)
+        total = 0
+        base = f"{GRAPH}/teams/{config.team_id}/channels"
+        for channel in graph.collection(base, "team channels"):
+            channel_id = identifier(channel, "id", "team channel")
+            name = identifier(channel, "displayName", "team channel")
+            scanner.scan(f"channel {name}", name)
+            messages = f"{base}/{quote(channel_id, safe='')}/messages"
+            count = 0
+            for message in graph.collection(f"{messages}?$top=50", f"{name} messages"):
+                mid = identifier(message, "id", f"{name} message")
+                scanner.scan(f"{name}/message/{mid}", body_text(message, f"{name} message"))
+                count += 1
+                for reply in graph.collection(
+                    f"{messages}/{quote(mid, safe='')}/replies?$top=50", f"{name} replies",
+                ):
+                    rid = identifier(reply, "id", f"{name} reply")
+                    scanner.scan(f"{name}/reply/{rid}", body_text(reply, f"{name} reply"))
+                    count += 1
+            print(f"{name}: {count} message(s), including replies")
+            total += count
+        print(f"{total} channel message(s), including replies")
+        return scanner.report("configured team channels, messages and replies")
+    except (ConfigurationError, AuditError) as error:
+        return report_error(error)
 
 
 if __name__ == "__main__":

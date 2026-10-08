@@ -1,0 +1,218 @@
+{
+  "$schema_note": "Agent-mission correspondence for the nine non-hero clients. Same schema as emails.json; seed with SEED_FILE=mission_emails.json python seed_work_iq.py --only mail.",
+  "scenario": "The Bank Capital Markets - preparation for the 8 October 2026 Gibson Energy (TSX:GEI) CFO/Treasurer coverage meeting",
+  "as_of": "2026-10-05",
+  "categories": [
+    "client_interaction",
+    "credit_and_limits",
+    "market_and_hedging",
+    "compliance_and_control",
+    "executive_guidance"
+  ],
+  "people": [
+    {
+      "alias": "sydney.mattos",
+      "displayName": "Sydney Mattos",
+      "title": "Managing Director, Corporate Coverage - Energy",
+      "role": "relationship_owner"
+    },
+    {
+      "alias": "sasha.ouellet",
+      "displayName": "Sasha Ouellet",
+      "title": "Director, Corporate Banking & DCM Origination",
+      "role": "relationship_manager"
+    },
+    {
+      "alias": "robin.kline",
+      "displayName": "Robin Kline",
+      "title": "Executive Director, Equity Research - Energy Infrastructure",
+      "role": "research_analyst"
+    },
+    {
+      "alias": "quinn.campbell",
+      "displayName": "Quinn Campbell",
+      "title": "Director, Commodities & FX Corporate Sales",
+      "role": "trader"
+    },
+    {
+      "alias": "vance.deleon",
+      "displayName": "Vance DeLeon",
+      "title": "Director, Credit Risk - Energy & Midstream",
+      "role": "credit_risk"
+    },
+    {
+      "alias": "admin",
+      "displayName": "CM Operations (demo)",
+      "title": "Demo operator",
+      "role": "ops"
+    }
+  ],
+  "emails": [
+    {
+      "id": "EM-M01",
+      "client_id": "CLI-1002",
+      "category": "compliance_and_control",
+      "from": "sasha.ouellet",
+      "to": [
+        "sydney.mattos"
+      ],
+      "cc": [
+        "admin"
+      ],
+      "sentDateTime": "2026-10-01T14:20:00Z",
+      "importance": "high",
+      "subject": "Keyera - something their CFO said on Tuesday's call; I have gone to the Control Room",
+      "body": "Sydney,\n\nOn Tuesday's call Keyera's CFO said, unprompted, that they are 'looking at something much bigger in NGL in Q1' and would want us 'close to it'. That may be material non-public information, so I reported it to the Control Room the same afternoon (they opened inquiry CRI-2026-0207) and I have not written it down anywhere else.\n\nPractical effect: please do not use it in the revolver pitch, and do not repeat it in any client email. The pitch stays on the public numbers - the wallet gap on the revolver - and any limit question goes to Vance first because the single name is already Amber.\n\nSasha"
+    },
+    {
+      "id": "EM-M02",
+      "client_id": "CLI-1003",
+      "category": "credit_and_limits",
+      "from": "vance.deleon",
+      "to": [
+        "sasha.ouellet"
+      ],
+      "cc": [
+        "sydney.mattos",
+        "admin"
+      ],
+      "sentDateTime": "2026-10-05T12:05:00Z",
+      "importance": "high",
+      "subject": "Whitecap - covenant first, not the upsize",
+      "body": "Sasha,\n\nOn this morning's oil move Whitecap's leverage covenant goes from 3.42x to the 4.00x maximum on our shocked EBITDA. Their treasurer already asked on last month's call whether we would 'look at a reset if crude rolls over' - so they are expecting the conversation.\n\nPlease lead with covenant headroom and a reset discussion with Credit in the room. No upsize or extension pitch until that is settled. Quinn's collar idea is sensible in principle but it goes through the appropriateness process, not into the same meeting as a covenant ask.\n\nVance"
+    },
+    {
+      "id": "EM-M03",
+      "client_id": "CLI-1004",
+      "category": "compliance_and_control",
+      "from": "sydney.mattos",
+      "to": [
+        "quinn.campbell"
+      ],
+      "cc": [
+        "vance.deleon",
+        "admin"
+      ],
+      "sentDateTime": "2026-10-02T15:40:00Z",
+      "importance": "normal",
+      "subject": "Secure Waste - hold the derivatives ISDA until KYC is done",
+      "body": "Quinn,\n\nKYC Ops tell me Secure Waste reported a new shareholder above 10% last month and the beneficial-ownership documents are still outstanding; the periodic refresh is due 25 November anyway.\n\nPlease park the commodity derivatives schedule until the refresh is complete. We can tell the client the paperwork is the gating item - that is true and it is not sensitive - but no product proposal before it clears.\n\nSydney"
+    },
+    {
+      "id": "EM-M04",
+      "client_id": "CLI-1005",
+      "category": "client_interaction",
+      "from": "sasha.ouellet",
+      "to": [
+        "sydney.mattos"
+      ],
+      "cc": [
+        "admin"
+      ],
+      "sentDateTime": "2026-09-29T18:10:00Z",
+      "importance": "normal",
+      "subject": "Stella-Jones - they want a green bond; their SLL KPI verification is still missing",
+      "body": "Sydney,\n\nStella-Jones' treasurer asked whether we would lead a green bond in Q1. Two problems before we pitch:\n\n1. Their sustainability-linked loan KPI verification for 2025 has not come in, so the margin step-up applies and the Sustainable Finance desk will not put a green label on anything until the framework is reviewed.\n2. Leverage is 3.96x against a 4.00x covenant - any new debt has to be pro-formed with Credit first.\n\nI'd rather offer to help them fix the verification first. Thoughts?\n\nSasha"
+    },
+    {
+      "id": "EM-M05",
+      "client_id": "CLI-1006",
+      "category": "credit_and_limits",
+      "from": "vance.deleon",
+      "to": [
+        "sydney.mattos"
+      ],
+      "cc": [
+        "robin.kline",
+        "admin"
+      ],
+      "sentDateTime": "2026-10-02T13:30:00Z",
+      "importance": "normal",
+      "subject": "Russel Metals - acquisition financing ask must come through Credit",
+      "body": "Sydney,\n\nThe acquisition is public now, so Robin can publish, and Sasha is keen to pitch the financing. Before anyone does: on today's scenario their leverage goes to 4.02x against a 4.00x maximum before a single dollar of acquisition debt. Any financing ask is a Credit conversation first, with an equity or asset-sale component on the table.\n\nSeparately - please keep Research and the deal team apart on this one. Robin's note is public-side.\n\nVance"
+    },
+    {
+      "id": "EM-M06",
+      "client_id": "CLI-1007",
+      "category": "market_and_hedging",
+      "from": "quinn.campbell",
+      "to": [
+        "sydney.mattos"
+      ],
+      "cc": [
+        "vance.deleon",
+        "admin"
+      ],
+      "sentDateTime": "2026-09-23T16:00:00Z",
+      "importance": "normal",
+      "subject": "Cascades - FX forwards, and the complaint from last year",
+      "body": "Sydney,\n\nCascades would benefit from a USD/CAD forwards programme. One caution: they complained last year that an option structure we sold them was more complex than they needed, so the appropriateness file needs to be clean and simple this time.\n\nAlso - they are on the credit watchlist and Vance does not want new money until the mill-closure plan is reviewed. FX forwards add PSE, so this may need to wait too.\n\nQuinn"
+    },
+    {
+      "id": "EM-M07",
+      "client_id": "CLI-1007",
+      "category": "client_interaction",
+      "from": "sasha.ouellet",
+      "to": [
+        "sydney.mattos"
+      ],
+      "cc": [
+        "admin"
+      ],
+      "sentDateTime": "2026-09-18T20:15:00Z",
+      "importance": "normal",
+      "subject": "Cascades - they missed the water-intensity KPI and want to reset it",
+      "body": "Sydney,\n\nCascades missed the water-intensity KPI on their sustainability-linked loan; the margin step-up kicks in. Their CFO asked whether we would 'just reset the KPI' as part of the revolver renewal. That is a Sustainable Finance framework decision, not something we can trade for a renewal - I said we'd come back.\n\nSasha"
+    },
+    {
+      "id": "EM-M08",
+      "client_id": "CLI-1008",
+      "category": "compliance_and_control",
+      "from": "sydney.mattos",
+      "to": [
+        "quinn.campbell"
+      ],
+      "cc": [
+        "vance.deleon",
+        "admin"
+      ],
+      "sentDateTime": "2026-10-02T17:25:00Z",
+      "importance": "high",
+      "subject": "Ag Growth - pause the commodity hedge proposal (screening alert)",
+      "body": "Quinn,\n\nSanctions screening raised alert SA-2026-077 on one of Ag Growth's payment counterparties - a dealer in a jurisdiction on the watch list. Compliance is working the disposition. Until it clears, no new products, and please do not mention the alert to the client - that is Compliance's call.\n\nOn top of that the single name is at 91.5% and they are on the watchlist, so the PSE would need a limit review anyway.\n\nSydney"
+    },
+    {
+      "id": "EM-M09",
+      "client_id": "CLI-1009",
+      "category": "client_interaction",
+      "from": "quinn.campbell",
+      "to": [
+        "sydney.mattos"
+      ],
+      "cc": [
+        "admin"
+      ],
+      "sentDateTime": "2026-09-28T14:45:00Z",
+      "importance": "normal",
+      "subject": "North West Company - forwards renewal, all straightforward",
+      "body": "Sydney,\n\nNorth West asked us to renew their USD/CAD forward programme on the same terms as last year. Credit is fine with it (single name at 45.6%), KYC is current, and nothing else is going on with the name. I'll send the renewal through the usual appropriateness check.\n\nQuinn"
+    },
+    {
+      "id": "EM-M10",
+      "client_id": "CLI-1010",
+      "category": "client_interaction",
+      "from": "sydney.mattos",
+      "to": [
+        "sasha.ouellet"
+      ],
+      "cc": [
+        "quinn.campbell",
+        "admin"
+      ],
+      "sentDateTime": "2026-09-19T19:30:00Z",
+      "importance": "normal",
+      "subject": "Superior Plus - fix the propane hedge complaint before we pitch the bond",
+      "body": "Sasha,\n\nSuperior Plus' CFO is unhappy about how we executed their propane hedges in Q2 and has asked for a pricing review. Quinn has the review open. I don't want us walking in with a bond mandate pitch while that is unresolved - close out the review, then talk about the bond.\n\nSydney"
+    }
+  ]
+}

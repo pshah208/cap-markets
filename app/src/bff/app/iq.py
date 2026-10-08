@@ -16,6 +16,8 @@ import re
 from dataclasses import dataclass, asdict
 from typing import Any, Literal
 
+from .bank_name import normalize_bank_text, normalize_citations
+
 IQId = Literal["work", "fabric", "foundry", "web"]
 
 
@@ -63,9 +65,9 @@ IQS: dict[str, IQMeta] = {
 # lit the Fabric card for a Work IQ call. Anchoring on the label removes the
 # ambiguity wherever a label exists - which, on this agent, is everywhere.
 #
-# Connection labels on the live BMO agent:
+# Connection label conventions:
 #   smclientintel               -> Fabric semantic model / data agent
-#   kb-knowledgebase201-5tgi7   -> Azure AI Search knowledge base (cm-client-policies)
+#   kb-* / knowledgebase       -> Azure AI Search knowledge base
 #   bing_grounding / web_search -> Grounding with Bing
 #   WorkIQMail · WorkIQTeams · WorkIQSharePoint · WorkIQOneDrive ·
 #   WorkIQWord · WorkIQCopilot  -> per-service managed MCP connections
@@ -79,7 +81,9 @@ _LABEL_PATTERNS: list[tuple[re.Pattern[str], IQId]] = [
     # Work IQ first here: every one of its labels starts `WorkIQ`, and matching
     # it before the others means no Fabric or Foundry term in a mail body can
     # ever steal the attribution.
-    (re.compile(r"^\s*workiq|agent365|mcp_(mail|teams|word|sharepoint|onedrive|m365copilot)",
+    # `_tool_label` prefixes the item type ("mcp_call WorkIQTeams"), so match the label as a word,
+    # not only at the start - otherwise a Teams search mentioning "covenant" lights the Fabric card.
+    (re.compile(r"(?:^|\s)workiq|agent365|mcp_(mail|teams|word|sharepoint|onedrive|m365copilot)",
                 re.I), "work"),
     (re.compile(r"smclientintel|sm_client_intel|lh_client_intel|fabric_iq|fabricaihub"
                 r"|ws-capital-markets-client-intel", re.I), "fabric"),
@@ -201,11 +205,14 @@ def iq_event(iq: IQId, status: str, detail: str = "") -> str:
 
 
 def token_event(text: str) -> str:
+    # Deltas may split a label, URL or citation ID. Normalize the final message,
+    # never isolated chunks, which have no sentence or Markdown context.
     return sse("token", {"text": text})
 
 
 def message_event(text: str, citations: list[dict] | None = None) -> str:
-    return sse("message", {"text": text, "citations": citations or []})
+    return sse("message", {"text": normalize_bank_text(text),
+                           "citations": normalize_citations(citations)})
 
 
 def status_event(text: str) -> str:

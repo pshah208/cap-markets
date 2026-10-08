@@ -48,13 +48,23 @@ class User:
 
 def _jwks() -> PyJWKClient:
     global _jwk_client
+    _require_auth(require_secret=False)
     if _jwk_client is None:
         _jwk_client = PyJWKClient(settings.jwks_uri, cache_keys=True)
     return _jwk_client
 
 
+def _require_auth(*, require_secret: bool = True) -> None:
+    if settings.mock_mode:
+        raise HTTPException(status_code=503, detail="Authentication is disabled in MOCK_MODE.")
+    error = settings.auth_config_error(require_secret=require_secret)
+    if error:
+        raise HTTPException(status_code=500, detail=f"Auth is not configured: {error}")
+
+
 def validate_token(raw: str) -> User:
     """Verify the SPA's access token against Entra's published signing keys."""
+    _require_auth(require_secret=False)
     try:
         key = _jwks().get_signing_key_from_jwt(raw).key
         claims = jwt.decode(
@@ -66,8 +76,8 @@ def validate_token(raw: str) -> User:
             options={"verify_exp": True},
         )
     except Exception as exc:  # noqa: BLE001
-        logger.warning("token validation failed: %s", exc)
-        raise HTTPException(status_code=401, detail=f"Invalid token: {exc}") from exc
+        logger.warning("token validation failed (%s)", type(exc).__name__)
+        raise HTTPException(status_code=401, detail="Invalid token.") from None
 
     scopes = (claims.get("scp") or "").split()
     if "access_as_user" not in scopes:
@@ -82,8 +92,8 @@ async def current_user(request: Request) -> User:
     """FastAPI dependency. Mock mode bypasses auth for local UI work only."""
     if settings.mock_mode:
         return User(
-            {"oid": "mock", "preferred_username": "sydney.mattos@demo",
-             "name": "Sydney Mattos (mock)", "roles": ["Coverage"]},
+            {"oid": "mock", "preferred_username": "demo.user@example.invalid",
+             "name": "Demo User (mock)", "roles": ["Coverage"]},
             "",
         )
     header = request.headers.get("Authorization", "")
@@ -98,18 +108,16 @@ async def exchange_obo(user: User, scope: str | None = None) -> str:
     RFC 8693 token exchange, as implemented by the Microsoft identity platform.
     Cached per (user, scope) until shortly before expiry.
     """
-    scope = scope or settings.foundry_scope
+    _require_auth()
+    scope = settings.foundry_scope if scope is None else scope
+    if not scope.strip():
+        raise HTTPException(status_code=500, detail="Set FOUNDRY_SCOPE or a non-empty downstream scope.")
+    if not user.raw_token.strip():
+        raise HTTPException(status_code=401, detail="A user bearer token is required for On-Behalf-Of.")
     cache_key = f"{user.oid}:{scope}"
     hit = _obo_cache.get(cache_key)
     if hit and hit[1] > time.time() + 120:
         return hit[0]
-
-    if not settings.configured():
-        raise HTTPException(
-            status_code=500,
-            detail="Auth is not configured: set AAD_TENANT_ID, AAD_CLIENT_ID and "
-                   "AAD_CLIENT_SECRET on the BFF.",
-        )
 
     data = {
         "grant_type": "urn:ietf:params:oauth:grant-type:jwt-bearer",
@@ -125,7 +133,7 @@ async def exchange_obo(user: User, scope: str | None = None) -> str:
 
     if resp.status_code != 200:
         body = resp.text[:600]
-        logger.error("OBO exchange failed (%s): %s", resp.status_code, body)
+        logger.error("OBO exchange failed (%s)", resp.status_code)
         # AADSTS65001 = the user or admin has not consented to the downstream API.
         hint = ""
         if "65001" in body:
@@ -134,7 +142,7 @@ async def exchange_obo(user: User, scope: str | None = None) -> str:
                     "interactively to consent.")
         raise HTTPException(
             status_code=502,
-            detail=f"On-Behalf-Of exchange failed for scope '{scope}'.{hint} {body}",
+            detail=f"On-Behalf-Of exchange failed (HTTP {resp.status_code}).{hint}",
         )
 
     payload = resp.json()

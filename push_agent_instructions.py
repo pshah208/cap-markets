@@ -7,6 +7,9 @@ built to expose - so it must not be the demo's own behaviour.
 
 Creates a new agent version, preserving the existing tool wiring verbatim.
 
+Requires FOUNDRY_PROJECT_ENDPOINT, FOUNDRY_AGENT_NAME and AZURE_AUTH_MODE, plus
+the selected mode's Azure identity environment fields.
+
     python push_agent_instructions.py            # show what would change
     python push_agent_instructions.py --apply
 """
@@ -14,56 +17,56 @@ Creates a new agent version, preserving the existing tool wiring verbatim.
 from __future__ import annotations
 
 import argparse
-import json
-import subprocess
-import sys
 from pathlib import Path
 
-import requests
+from agent.portability import (
+    ConfigurationError,
+    agent_url,
+    foundry_token,
+    load_foundry_config,
+    require_file,
+)
 
 HERE = Path(__file__).parent
-ENDPOINT = ("https://cmintel-foundry.services.ai.azure.com"
-            "/api/projects/proj-client-intelligence")
-AGENT = "Agent-cap-market"
 API = "2025-05-15-preview"
 INSTRUCTIONS = HERE / "agent" / "agent_instructions.portal.md"
 
 
-def token() -> str:
-    out = subprocess.run(
-        ["az", "account", "get-access-token", "--resource",
-         "https://ai.azure.com", "--query", "accessToken", "-o", "tsv"],
-        capture_output=True, text=True, shell=True)
-    if out.returncode != 0:
-        sys.exit(f"az token failed: {out.stderr[:300]}")
-    return out.stdout.strip()
+def token(config: dict[str, str]) -> str:
+    return foundry_token(config)
 
 
-def main() -> int:
+def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--effort", default="medium",
                     choices=["low", "medium", "high"])
-    args = ap.parse_args()
-
-    body = INSTRUCTIONS.read_text(encoding="utf-8")
+    args = ap.parse_args(argv)
 
     # The file is a document *about* the instructions; only the fenced region is
     # the prompt itself. The preamble explains to a human why this variant
     # exists and must not be sent to the model.
-    START, END = "<!-- INSTRUCTIONS-START -->", "<!-- INSTRUCTIONS-END -->"
-    if START not in body:
-        sys.exit(f"{INSTRUCTIONS.name} is missing {START}")
-    body = body.split(START, 1)[1]
-    if END in body:
-        body = body.split(END, 1)[0]
-    body = body.strip()
+    try:
+        config = load_foundry_config()
+        path = require_file(INSTRUCTIONS, "portal instructions")
+        body = path.read_text(encoding="utf-8")
+        start, end = "<!-- INSTRUCTIONS-START -->", "<!-- INSTRUCTIONS-END -->"
+        if body.count(start) != 1 or body.count(end) != 1 or body.index(start) >= body.index(end):
+            raise ConfigurationError(f"{path} must contain one ordered pair of {start} and {end}")
+        body = body.split(start, 1)[1].split(end, 1)[0].strip()
+        if not body:
+            raise ConfigurationError(f"{path} contains empty portal instructions")
+    except (ConfigurationError, OSError, UnicodeError) as exc:
+        ap.error(str(exc))
+
+    import requests
+
     print(f"instructions: {len(body)} chars, starts: {body[:70]!r}\n")
 
-    h = {"Authorization": "Bearer " + token(),
+    h = {"Authorization": "Bearer " + token(config),
          "Content-Type": "application/json"}
 
-    r = requests.get(f"{ENDPOINT}/agents/{AGENT}/versions?api-version={API}",
+    r = requests.get(f"{agent_url(config)}/versions?api-version={API}",
                      headers=h, timeout=60)
     r.raise_for_status()
     versions = r.json()["data"]
@@ -78,7 +81,7 @@ def main() -> int:
 
     new_def = dict(definition)
     new_def["instructions"] = body
-    new_def["reasoning"] = {"effort": args.effort}
+    new_def["reasoning"] = {**(definition.get("reasoning") or {}), "effort": args.effort}
 
     print(f"\nwould create a new version with "
           f"{len(body)} chars of instructions and effort={args.effort}, "
@@ -89,7 +92,7 @@ def main() -> int:
         return 0
 
     r = requests.post(
-        f"{ENDPOINT}/agents/{AGENT}/versions?api-version={API}",
+        f"{agent_url(config)}/versions?api-version={API}",
         headers=h, json={"definition": new_def}, timeout=120)
     if r.status_code >= 400:
         print(f"\nFAILED {r.status_code}: {r.text[:900]}")

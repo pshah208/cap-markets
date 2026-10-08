@@ -84,21 +84,21 @@ export interface Answer {
   footnote: string;
 }
 
-const SCOPE = "Cached scope: briefing, opportunities, risks and maturity only. Ask for one supported topic; freeform analysis, live news and external facts are unavailable.";
+const SCOPE = "Supported topics: briefing, opportunities, risks and maturity only. Ask for one supported topic; freeform analysis, live news and external facts are unavailable.";
 // Stated once per answer instead of on every line, so the reader can actually
 // see the numbers. The dashboard header carries the full disclaimer.
-const EVIDENCE_NOTE = "Records held in the local snapshot; not live retrievals.";
+const EVIDENCE_NOTE = "Records held in the snapshot; not live retrievals.";
 const FOOTNOTE = "SYNTHETIC DEMO ONLY: every figure and record is invented. Not investment advice.";
 const stripLiveNote = (text: string): string => text.replace(/\s*Not a live retrieval\.\s*$/, "");
 
 /** Pure local lookup: no model, service, simulated tool execution or current clock. */
 export function buildAnswer(company: Company | string, question: string): Answer {
-  // Resolve the canonical cache entry, never trust caller-supplied financial fields.
+  // Resolve the canonical snapshot entry, never trust caller-supplied financial fields.
   const id = typeof company === "string" ? company : company.id;
   const cached = snapshot.companies.find((entry) => entry.id === id || entry.name === id);
   if (!cached) {
     return {
-      company: "Company not in this cache", asOf: snapshotAsOf, supported: false,
+      company: "Company not in this snapshot", asOf: snapshotAsOf, supported: false,
       blocks: [
         { title: "Supported questions", lines: [SCOPE] },
         { title: "Sources", collapsible: true, lines: ["local snapshot.json generated from data/fabric-iq CSVs and data/scenario_facts.py", snapshotUnits] },

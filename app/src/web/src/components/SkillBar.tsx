@@ -1,9 +1,7 @@
 /**
  * Chat skills - actions offered under an agent answer.
  *
- * The Scotia demo puts a "Flyer" button on a customer row, because there the
- * artifact is per-customer and the table is the natural place for it. This book
- * is one relationship at a time, so the skills hang off the ANSWER instead: the
+ * This book is one relationship at a time, so the skills hang off the answer: the
  * agent finishes, and the bar offers the two or three things a banker would
  * actually reach for next.
  *
@@ -16,10 +14,11 @@ import { useEffect, useState } from "react";
 import { apiGet, apiPost } from "../api";
 import type { SkillCatalogue, ProFormaResult } from "../types";
 import { ProFormaSkill } from "./skills/ProFormaSkill";
+import { PapersSkill } from "./skills/PapersSkill";
 import { RoomCardSkill } from "./skills/RoomCardSkill";
 import { RadarSkill } from "./skills/RadarSkill";
 
-export type SkillId = "proforma" | "roomcard" | "radar";
+export type SkillId = "proforma" | "papers" | "roomcard" | "radar";
 
 interface SkillDef {
   id: SkillId;
@@ -37,6 +36,13 @@ const SKILLS: SkillDef[] = [
     hint: "CP-005 covenant test, fully drawn",
     glyph: "\u25EB",
     match: /covenant|leverage|ebitda|pro-?forma|upsize|hold|headroom|CP-005/i,
+  },
+  {
+    id: "papers",
+    label: "Draft the approval papers",
+    hint: "Credit Committee, Portfolio Management, Control Room",
+    glyph: "\u2398",
+    match: /upsize|hold|credit committee|approval|path to yes|resiz|sell-?down|control room/i,
   },
   {
     id: "roomcard",
@@ -83,9 +89,9 @@ export function SkillBar({ answer }: { answer: string }) {
   const offered = SKILLS.filter((s) => !s.match || s.match.test(answer));
   if (!offered.length) return null;
 
-  async function runProForma(incrementalM: number) {
+  async function runProForma(incrementalM: number, ebitdaShockPct: number) {
     const r = await apiPost<ProFormaResult>(
-      "/api/skills/proforma", { incrementalM },
+      "/api/skills/proforma", { incrementalM, ebitdaShockPct },
     );
     setPf(r);
     return r;
@@ -114,6 +120,11 @@ export function SkillBar({ answer }: { answer: string }) {
       {open === "proforma" && (
         <SkillModal title="CP-005 pro-forma covenant test" onClose={() => setOpen(null)}>
           <ProFormaSkill catalogue={catalogue} result={pf} onRun={runProForma} />
+        </SkillModal>
+      )}
+      {open === "papers" && (
+        <SkillModal title="Approval papers — drafts" onClose={() => setOpen(null)} wide>
+          <PapersSkill catalogue={catalogue} />
         </SkillModal>
       )}
       {open === "roomcard" && (

@@ -1,0 +1,78 @@
+scenario_id,scenario_name,factor,value,note,as_of_date
+oil-shock,Overnight oil supply shock,oil_pct,-14.2,Today's scenario (SCN-2026-10-05-OIL).,2026-10-05
+oil-shock,Overnight oil supply shock,gas_pct,-4.0,Today's scenario (SCN-2026-10-05-OIL).,2026-10-05
+oil-shock,Overnight oil supply shock,rates_bp,-9,Today's scenario (SCN-2026-10-05-OIL).,2026-10-05
+oil-shock,Overnight oil supply shock,spreads_bp,14,Today's scenario (SCN-2026-10-05-OIL).,2026-10-05
+oil-shock,Overnight oil supply shock,usdcad_pct,1.4,Today's scenario (SCN-2026-10-05-OIL).,2026-10-05
+oil-shock,Overnight oil supply shock,demand_pct,0,Today's scenario (SCN-2026-10-05-OIL).,2026-10-05
+oil-shock,Overnight oil supply shock,tariff_pct,0.0,Today's scenario (SCN-2026-10-05-OIL).,2026-10-05
+oil-rebound,Oil rebound,oil_pct,18.0,Supply discipline returns; crude recovers.,2026-10-05
+oil-rebound,Oil rebound,gas_pct,6.0,Supply discipline returns; crude recovers.,2026-10-05
+oil-rebound,Oil rebound,rates_bp,6,Supply discipline returns; crude recovers.,2026-10-05
+oil-rebound,Oil rebound,spreads_bp,-8,Supply discipline returns; crude recovers.,2026-10-05
+oil-rebound,Oil rebound,usdcad_pct,-1.5,Supply discipline returns; crude recovers.,2026-10-05
+oil-rebound,Oil rebound,demand_pct,0.5,Supply discipline returns; crude recovers.,2026-10-05
+oil-rebound,Oil rebound,tariff_pct,0.0,Supply discipline returns; crude recovers.,2026-10-05
+recession,Canadian recession,oil_pct,-25.0,"Demand contraction, oil lower, spreads wider, BoC eases.",2026-10-05
+recession,Canadian recession,gas_pct,-10.0,"Demand contraction, oil lower, spreads wider, BoC eases.",2026-10-05
+recession,Canadian recession,rates_bp,-75,"Demand contraction, oil lower, spreads wider, BoC eases.",2026-10-05
+recession,Canadian recession,spreads_bp,60,"Demand contraction, oil lower, spreads wider, BoC eases.",2026-10-05
+recession,Canadian recession,usdcad_pct,4.0,"Demand contraction, oil lower, spreads wider, BoC eases.",2026-10-05
+recession,Canadian recession,demand_pct,-4.0,"Demand contraction, oil lower, spreads wider, BoC eases.",2026-10-05
+recession,Canadian recession,tariff_pct,0.0,"Demand contraction, oil lower, spreads wider, BoC eases.",2026-10-05
+higher-for-longer,Rates higher for longer,oil_pct,0.0,Sticky inflation; no cuts.,2026-10-05
+higher-for-longer,Rates higher for longer,gas_pct,0.0,Sticky inflation; no cuts.,2026-10-05
+higher-for-longer,Rates higher for longer,rates_bp,100,Sticky inflation; no cuts.,2026-10-05
+higher-for-longer,Rates higher for longer,spreads_bp,25,Sticky inflation; no cuts.,2026-10-05
+higher-for-longer,Rates higher for longer,usdcad_pct,-1.0,Sticky inflation; no cuts.,2026-10-05
+higher-for-longer,Rates higher for longer,demand_pct,-1.0,Sticky inflation; no cuts.,2026-10-05
+higher-for-longer,Rates higher for longer,tariff_pct,0.0,Sticky inflation; no cuts.,2026-10-05
+spread-shock,Credit spread shock,oil_pct,-5.0,Risk-off repricing across credit.,2026-10-05
+spread-shock,Credit spread shock,gas_pct,0.0,Risk-off repricing across credit.,2026-10-05
+spread-shock,Credit spread shock,rates_bp,-20,Risk-off repricing across credit.,2026-10-05
+spread-shock,Credit spread shock,spreads_bp,80,Risk-off repricing across credit.,2026-10-05
+spread-shock,Credit spread shock,usdcad_pct,2.0,Risk-off repricing across credit.,2026-10-05
+spread-shock,Credit spread shock,demand_pct,-1.5,Risk-off repricing across credit.,2026-10-05
+spread-shock,Credit spread shock,tariff_pct,0.0,Risk-off repricing across credit.,2026-10-05
+mideast-war,Middle East conflict escalation,oil_pct,22.0,Supply-route risk lifts crude and gas; risk-off widens credit; CAD firms with oil.,2026-10-05
+mideast-war,Middle East conflict escalation,gas_pct,10.0,Supply-route risk lifts crude and gas; risk-off widens credit; CAD firms with oil.,2026-10-05
+mideast-war,Middle East conflict escalation,rates_bp,15,Supply-route risk lifts crude and gas; risk-off widens credit; CAD firms with oil.,2026-10-05
+mideast-war,Middle East conflict escalation,spreads_bp,35,Supply-route risk lifts crude and gas; risk-off widens credit; CAD firms with oil.,2026-10-05
+mideast-war,Middle East conflict escalation,usdcad_pct,-1.5,Supply-route risk lifts crude and gas; risk-off widens credit; CAD firms with oil.,2026-10-05
+mideast-war,Middle East conflict escalation,demand_pct,-1.5,Supply-route risk lifts crude and gas; risk-off widens credit; CAD firms with oil.,2026-10-05
+mideast-war,Middle East conflict escalation,tariff_pct,0.0,Supply-route risk lifts crude and gas; risk-off widens credit; CAD firms with oil.,2026-10-05
+japan-rate-spike,Japan interest rate spike,oil_pct,-6.0,JGB yields jump and the yen carry trade unwinds; global term premium and spreads reprice.,2026-10-05
+japan-rate-spike,Japan interest rate spike,gas_pct,0.0,JGB yields jump and the yen carry trade unwinds; global term premium and spreads reprice.,2026-10-05
+japan-rate-spike,Japan interest rate spike,rates_bp,45,JGB yields jump and the yen carry trade unwinds; global term premium and spreads reprice.,2026-10-05
+japan-rate-spike,Japan interest rate spike,spreads_bp,50,JGB yields jump and the yen carry trade unwinds; global term premium and spreads reprice.,2026-10-05
+japan-rate-spike,Japan interest rate spike,usdcad_pct,2.5,JGB yields jump and the yen carry trade unwinds; global term premium and spreads reprice.,2026-10-05
+japan-rate-spike,Japan interest rate spike,demand_pct,-1.0,JGB yields jump and the yen carry trade unwinds; global term premium and spreads reprice.,2026-10-05
+japan-rate-spike,Japan interest rate spike,tariff_pct,0.0,JGB yields jump and the yen carry trade unwinds; global term premium and spreads reprice.,2026-10-05
+extreme-weather,Extreme weather disruption,oil_pct,7.0,"Hurricanes, wildfires or a severe winter shut in production and spike gas demand.",2026-10-05
+extreme-weather,Extreme weather disruption,gas_pct,28.0,"Hurricanes, wildfires or a severe winter shut in production and spike gas demand.",2026-10-05
+extreme-weather,Extreme weather disruption,rates_bp,0,"Hurricanes, wildfires or a severe winter shut in production and spike gas demand.",2026-10-05
+extreme-weather,Extreme weather disruption,spreads_bp,12,"Hurricanes, wildfires or a severe winter shut in production and spike gas demand.",2026-10-05
+extreme-weather,Extreme weather disruption,usdcad_pct,0.0,"Hurricanes, wildfires or a severe winter shut in production and spike gas demand.",2026-10-05
+extreme-weather,Extreme weather disruption,demand_pct,-1.5,"Hurricanes, wildfires or a severe winter shut in production and spike gas demand.",2026-10-05
+extreme-weather,Extreme weather disruption,tariff_pct,0.0,"Hurricanes, wildfires or a severe winter shut in production and spike gas demand.",2026-10-05
+food-shortage,Global food supply shock,oil_pct,6.0,Crop failures and export bans push food inflation; fertiliser and diesel demand rise.,2026-10-05
+food-shortage,Global food supply shock,gas_pct,15.0,Crop failures and export bans push food inflation; fertiliser and diesel demand rise.,2026-10-05
+food-shortage,Global food supply shock,rates_bp,30,Crop failures and export bans push food inflation; fertiliser and diesel demand rise.,2026-10-05
+food-shortage,Global food supply shock,spreads_bp,20,Crop failures and export bans push food inflation; fertiliser and diesel demand rise.,2026-10-05
+food-shortage,Global food supply shock,usdcad_pct,0.5,Crop failures and export bans push food inflation; fertiliser and diesel demand rise.,2026-10-05
+food-shortage,Global food supply shock,demand_pct,-2.0,Crop failures and export bans push food inflation; fertiliser and diesel demand rise.,2026-10-05
+food-shortage,Global food supply shock,tariff_pct,0.0,Crop failures and export bans push food inflation; fertiliser and diesel demand rise.,2026-10-05
+pandemic,Deadly disease outbreak,oil_pct,-30.0,A fast-spreading outbreak triggers travel curbs and a demand collapse; central banks ease.,2026-10-05
+pandemic,Deadly disease outbreak,gas_pct,-10.0,A fast-spreading outbreak triggers travel curbs and a demand collapse; central banks ease.,2026-10-05
+pandemic,Deadly disease outbreak,rates_bp,-90,A fast-spreading outbreak triggers travel curbs and a demand collapse; central banks ease.,2026-10-05
+pandemic,Deadly disease outbreak,spreads_bp,95,A fast-spreading outbreak triggers travel curbs and a demand collapse; central banks ease.,2026-10-05
+pandemic,Deadly disease outbreak,usdcad_pct,5.0,A fast-spreading outbreak triggers travel curbs and a demand collapse; central banks ease.,2026-10-05
+pandemic,Deadly disease outbreak,demand_pct,-6.0,A fast-spreading outbreak triggers travel curbs and a demand collapse; central banks ease.,2026-10-05
+pandemic,Deadly disease outbreak,tariff_pct,0.0,A fast-spreading outbreak triggers travel curbs and a demand collapse; central banks ease.,2026-10-05
+us-canada-tariffs,US-Canada tariff escalation,oil_pct,-4.0,Broad US tariffs on Canadian goods with retaliation; CAD weakens and trade-exposed names re-rate.,2026-10-05
+us-canada-tariffs,US-Canada tariff escalation,gas_pct,0.0,Broad US tariffs on Canadian goods with retaliation; CAD weakens and trade-exposed names re-rate.,2026-10-05
+us-canada-tariffs,US-Canada tariff escalation,rates_bp,-15,Broad US tariffs on Canadian goods with retaliation; CAD weakens and trade-exposed names re-rate.,2026-10-05
+us-canada-tariffs,US-Canada tariff escalation,spreads_bp,20,Broad US tariffs on Canadian goods with retaliation; CAD weakens and trade-exposed names re-rate.,2026-10-05
+us-canada-tariffs,US-Canada tariff escalation,usdcad_pct,3.0,Broad US tariffs on Canadian goods with retaliation; CAD weakens and trade-exposed names re-rate.,2026-10-05
+us-canada-tariffs,US-Canada tariff escalation,demand_pct,-1.5,Broad US tariffs on Canadian goods with retaliation; CAD weakens and trade-exposed names re-rate.,2026-10-05
+us-canada-tariffs,US-Canada tariff escalation,tariff_pct,25.0,Broad US tariffs on Canadian goods with retaliation; CAD weakens and trade-exposed names re-rate.,2026-10-05

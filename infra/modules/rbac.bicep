@@ -3,14 +3,18 @@
 // Scoped per-resource rather than at the resource group, so the principal gets
 // only what it needs (least privilege).
 
-@description('Entra object ID of the principal running the agent (user or managed identity).')
-param principalId string
+@minLength(1)
+type principalObjectId = string
+
+@description('Explicit Entra object ID of the agent operator. Blank skips operator grants without selecting the signed-in caller.')
+param principalId string = ''
 
 @description('Principal type. Use ServicePrincipal for managed identities.')
 @allowed([ 'User', 'Group', 'ServicePrincipal' ])
 param principalType string = 'User'
 
 @description('Foundry (AIServices) account name to grant data-plane access on.')
+@minLength(2)
 param foundryAccountName string
 
 @description('Search service name. Blank to skip the search grants.')
@@ -25,7 +29,7 @@ drive the agent. Each is granted Foundry User at PROJECT scope - the role a huma
 needs to open the project, create a thread and run the agent. Granting at project
 rather than account scope keeps the personas out of the account's other projects.
 ''')
-param demoUserPrincipalIds array = []
+param demoUserPrincipalIds principalObjectId[] = []
 
 // Azure AI User - create threads, run agents, call tools on a Foundry project.
 var azureAiUserRoleId = '53ca6127-db72-4b80-b1b0-d745d6d5456d'
@@ -49,7 +53,7 @@ resource search 'Microsoft.Search/searchServices@2024-06-01-preview' existing = 
   name: searchServiceName
 }
 
-resource foundryRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
+resource foundryRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId)) {
   scope: foundryAccount
   name: guid(foundryAccount.id, principalId, azureAiUserRoleId)
   properties: {
@@ -59,7 +63,7 @@ resource foundryRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = {
   }
 }
 
-resource searchReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(searchServiceName)) {
+resource searchReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId) && !empty(searchServiceName)) {
   scope: search
   name: guid(search.id, principalId, searchIndexDataReaderRoleId)
   properties: {
@@ -69,7 +73,7 @@ resource searchReaderRole 'Microsoft.Authorization/roleAssignments@2022-04-01' =
   }
 }
 
-resource searchContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(searchServiceName)) {
+resource searchContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId) && !empty(searchServiceName)) {
   scope: search
   name: guid(search.id, principalId, searchServiceContributorRoleId)
   properties: {
@@ -79,7 +83,7 @@ resource searchContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-
   }
 }
 
-resource searchDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(searchServiceName)) {
+resource searchDataContributorRole 'Microsoft.Authorization/roleAssignments@2022-04-01' = if (!empty(principalId) && !empty(searchServiceName)) {
   scope: search
   name: guid(search.id, principalId, searchIndexDataContributorRoleId)
   properties: {

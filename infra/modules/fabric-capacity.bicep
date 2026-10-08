@@ -8,9 +8,12 @@
 //   az rest --method post --url "https://management.azure.com<id>/suspend?api-version=2023-11-01"
 
 @description('Capacity name (lowercase alphanumeric, 3-63 chars).')
+@minLength(3)
+@maxLength(63)
 param name string
 
 @description('Azure region.')
+@minLength(1)
 param location string
 
 @description('Resource tags.')
@@ -21,6 +24,7 @@ param tags object
 param skuName string = 'F2'
 
 @description('Entra object IDs (users or groups) set as capacity administrators. Must contain at least one.')
+@minLength(1)
 param adminMembers array
 
 resource capacity 'Microsoft.Fabric/capacities@2023-11-01' = {

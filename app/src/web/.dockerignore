@@ -8,3 +8,6 @@ dist
 *.tsbuildinfo
 .vite
 npm-debug.log*
+.bank-config-test-*
+.bank-build-test-*
+# Deliberately include public/brand: Docker validates the deployment-local config.

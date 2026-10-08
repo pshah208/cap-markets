@@ -50,6 +50,7 @@ from .iq import (
     iq_event,
     is_invocation,
     message_event,
+    sse,
     status_event,
     summarise_call,
     token_event,
@@ -61,6 +62,9 @@ API_VERSION = "2025-05-15-preview"
 
 
 def responses_url() -> str:
+    error = settings.project_config_error()
+    if error:
+        raise ValueError(error)
     base = settings.project_endpoint.rstrip("/")
     return f"{base}/openai/responses?api-version={API_VERSION}"
 
@@ -147,6 +151,80 @@ def _strip_markers(text: str) -> str:
     )
 
     return text
+
+
+def _loads(text: str) -> Any:
+    """Parse the first JSON value in an MCP tool output (tools append trailers such as
+    'CorrelationId: ...' or a second structuredResponse object)."""
+    text = (text or "").strip()
+    try:
+        return json.JSONDecoder().raw_decode(text)[0]
+    except (ValueError, TypeError):
+        return None
+
+
+def tool_evidence(item: dict) -> list[dict]:
+    """What a tool call actually returned, reduced to metadata safe to show on screen.
+
+    Work IQ: subject, sender and date only - never bodies or previews (information barrier).
+    Foundry IQ: policy id and title. Fabric IQ: the DAX result (columns + first rows).
+    Web IQ: the search queries or the page opened (cited URLs arrive with the final message).
+    """
+    out: list[dict] = []
+    label = str(item.get("server_label") or item.get("name") or "")
+    try:
+        if item.get("type") == "web_search_call":
+            act = item.get("action") or {}
+            if act.get("url"):
+                out.append({"title": act["url"], "meta": "page opened"})
+            for q in (act.get("queries") or ([act["query"]] if act.get("query") else []))[:3]:
+                out.append({"title": q, "meta": "search"})
+            return out
+        data = _loads(str(item.get("output") or ""))
+        if data is None:
+            return out
+        if label.lower().startswith("workiq"):
+            raw = data.get("rawResponse") if isinstance(data, dict) else None
+            body = _loads(raw) if isinstance(raw, str) else data
+            msgs = (body or {}).get("value", []) if isinstance(body, dict) else []
+            for m in msgs[:6]:
+                if not isinstance(m, dict):
+                    continue
+                if "hitsContainers" in m:
+                    for c in m.get("hitsContainers") or []:
+                        for hit in (c.get("hits") or [])[:6]:
+                            res = hit.get("resource") or {}
+                            frm = ((res.get("from") or {}).get("emailAddress") or {}).get("name") or \
+                                  (((res.get("from") or {}).get("user") or {}).get("displayName")) or ""
+                            out.append({"title": re.sub(r"<[^>]+>", "", res.get("subject") or hit.get("summary") or "Teams message")[:140],
+                                        "meta": " · ".join(x for x in (frm, (res.get("createdDateTime") or "")[:10]) if x)})
+                    continue
+                frm = ((m.get("from") or {}).get("emailAddress") or {}).get("name") or ""
+                out.append({"title": (m.get("subject") or m.get("name") or m.get("title") or "item")[:140],
+                            "meta": " · ".join(x for x in (frm, (m.get("receivedDateTime") or m.get("lastModifiedDateTime") or "")[:10]) if x)})
+            return out
+        if label.lower().startswith("kb-") or "knowledgebase" in label.lower():
+            seen: set[str] = set()
+            for d in (data.get("documents") or [])[:8] if isinstance(data, dict) else []:
+                doc = _loads(d.get("content") or "") if isinstance(d, dict) else None
+                pid = (doc or {}).get("id") or ""
+                if pid and pid not in seen:
+                    seen.add(pid)
+                    out.append({"title": f"{pid} - {(doc or {}).get('title', '')}"[:140], "meta": "policy"})
+            return out
+        if isinstance(data, dict) and data.get("executionResult"):
+            for t in (data["executionResult"].get("tables") or [])[:1]:
+                cols = [c.get("name") for c in t.get("columns") or []]
+                for row in (t.get("rows") or [])[:3]:
+                    out.append({"title": ", ".join(f"{c}: {v}" for c, v in zip(cols, row))[:200], "meta": "DAX result"})
+            return out
+        if isinstance(data, dict) and data.get("Results"):
+            out.append({"title": "Search: " + ", ".join(list(data["Results"].keys())[:4]), "meta": "model search"})
+        elif isinstance(data, dict) and data.get("schema"):
+            out.append({"title": "Semantic model schema read", "meta": "schema"})
+    except Exception:  # noqa: BLE001 - evidence is best-effort, never fatal
+        return out
+    return out
 
 
 def _tool_label(item: dict) -> tuple[str, str]:
@@ -278,7 +356,9 @@ _RETRY_BACKOFF_SECONDS = 6
 
 
 async def run_agent(user: User, question: str,
-                    thread_id: str | None = None) -> AsyncGenerator[str, None]:
+                    thread_id: str | None = None,
+                    agent_name: str | None = None,
+                    trace: bool = False) -> AsyncGenerator[str, None]:
     """Yield SSE frames for one question, retrying transient tool failures.
 
     A single failing tool aborts the WHOLE response rather than degrading to the
@@ -306,7 +386,7 @@ async def run_agent(user: User, question: str,
         streaming = False
         failed_transiently = False
 
-        async for frame in _run_agent_once(user, question, thread_id):
+        async for frame in _run_agent_once(user, question, thread_id, agent_name, trace):
             if streaming:
                 yield frame
                 continue
@@ -345,8 +425,21 @@ async def run_agent(user: User, question: str,
 
 
 async def _run_agent_once(user: User, question: str,
-                          thread_id: str | None = None) -> AsyncGenerator[str, None]:
+                          thread_id: str | None = None,
+                          agent_name: str | None = None,
+                          trace: bool = False) -> AsyncGenerator[str, None]:
     """One attempt at answering. See run_agent for the retry policy."""
+    if settings.mock_mode:
+        async for frame in _mock(question):
+            yield frame
+        return
+    try:
+        selected_agent = settings.require_agent_configured(agent_name)
+    except ValueError as exc:
+        yield error_event("The agent is not configured.", str(exc))
+        yield done_event(ok=False)
+        return
+
     try:
         yield status_event("Authenticating on your behalf…")
         token = await exchange_obo(user)
@@ -363,7 +456,7 @@ async def _run_agent_once(user: User, question: str,
         # omitting it returns 400 invalid_payload.
         "agent_reference": {
             "type": "agent_reference",
-            "name": settings.agent_name,
+            "name": selected_agent,
         },
         "input": question,
         "stream": True,
@@ -376,6 +469,7 @@ async def _run_agent_once(user: User, question: str,
 
     active: set[str] = set()
     seen_calls: set[str] = set()
+    traced: set[str] = set()
     # item_id -> (name, payload). Populated when a tool is first announced via
     # response.output_item.added; consulted when a subsequent .in_progress event
     # tells us that same tool has actually started running. Without this map,
@@ -514,6 +608,14 @@ async def _run_agent_once(user: User, question: str,
                                 # Cache before the corresponding .in_progress
                                 # event might land.
                                 item_labels[item["id"]] = (name, payload)
+                            # Mission harness trace: one frame per tool call, on
+                            # `.done` because `.added` often carries no arguments yet.
+                            if trace and etype.endswith("output_item.done") and key not in traced:
+                                traced.add(key)
+                                yield sse("tool_call", {"iq": classify(name, payload),
+                                                        "tool": item.get("server_label") or item.get("name") or item_type,
+                                                        "detail": summarise_call(name, payload), "error": err,
+                                                        "results": tool_evidence(item)})
                             if key not in seen_calls:
                                 seen_calls.add(key)
                                 iq = classify(name, payload)

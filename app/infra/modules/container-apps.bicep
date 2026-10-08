@@ -4,7 +4,9 @@
 // reached via nginx inside the environment. That keeps the BFF and its client
 // secret off the public internet, and removes CORS from the picture entirely.
 
+@minLength(1)
 param namePrefix string
+@minLength(1)
 param location string
 param tags object
 
@@ -19,16 +21,25 @@ param webImage string
 param bffImage string
 
 // --- Entra / OBO ---
+@minLength(1)
 param aadTenantId string
+@minLength(1)
 param aadClientId string
 @secure()
+@minLength(1)
 param aadClientSecret string
+@minLength(1)
 param aadApiScope string
 
 // --- Foundry ---
+@minLength(1)
 param foundryProjectEndpoint string
 param foundryAccountName string = ''
-param foundryAgentName string = 'Agent-cap-market'
+@minLength(1)
+param foundryAgentName string
+param scenarioAgentName string = ''
+param missionAgentName string = ''
+param barrierAgentName string = ''
 param mockMode bool = false
 
 @description('Log Analytics workspace name, so the BFF can read the Foundry traces it holds.')
@@ -39,6 +50,30 @@ param telemetryWindowDays int = 7
 
 @description('Days of billed Azure cost the agent-economics slide reports on.')
 param costWindowDays int = 30
+
+@description('Explicit Fabric workspace ID.')
+@minLength(1)
+param fabricWorkspaceId string
+
+@description('Explicit Fabric lakehouse ID.')
+@minLength(1)
+param fabricLakehouseId string
+
+@description('Explicit Fabric semantic model ID.')
+@minLength(1)
+param fabricSemanticModelId string
+
+@description('Full ARM resource ID of the Fabric capacity. Blank hides the control.')
+param fabricCapacityResourceId string = ''
+
+@description('Comma-separated UPNs allowed to pause/resume. Blank disables control unless all-user access is explicitly enabled.')
+param fabricCapacityOperators string = ''
+
+@description('Explicit opt-in to let all signed-in app users operate the capacity.')
+param allowAllFabricCapacityOperators bool = false
+
+var hasFabricCapacityOperators = !empty(filter(split(fabricCapacityOperators, ','), operator => !empty(trim(operator))))
+var fabricCapacityControlEnabled = !empty(fabricCapacityResourceId) && (hasFabricCapacityOperators || allowAllFabricCapacityOperators)
 
 resource uami 'Microsoft.ManagedIdentity/userAssignedIdentities@2023-01-31' = {
   name: 'id-${namePrefix}'
@@ -162,6 +197,9 @@ resource bff 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'AAD_API_SCOPE', value: aadApiScope }
             { name: 'FOUNDRY_PROJECT_ENDPOINT', value: foundryProjectEndpoint }
             { name: 'FOUNDRY_AGENT_NAME', value: foundryAgentName }
+            { name: 'SCENARIO_AGENT_NAME', value: scenarioAgentName }
+            { name: 'MISSION_AGENT_NAME', value: missionAgentName }
+            { name: 'BARRIER_AGENT_NAME', value: barrierAgentName }
             { name: 'MOCK_MODE', value: string(mockMode) }
             { name: 'AZURE_CLIENT_ID', value: uami.properties.clientId }
             { name: 'APPLICATIONINSIGHTS_CONNECTION_STRING', value: appInsightsConnectionString }
@@ -169,6 +207,11 @@ resource bff 'Microsoft.App/containerApps@2024-03-01' = {
             { name: 'TELEMETRY_WINDOW_DAYS', value: string(telemetryWindowDays) }
             { name: 'COST_SCOPE', value: resourceGroup().id }
             { name: 'COST_WINDOW_DAYS', value: string(costWindowDays) }
+            { name: 'FABRIC_WORKSPACE_ID', value: fabricWorkspaceId }
+            { name: 'FABRIC_LAKEHOUSE_ID', value: fabricLakehouseId }
+            { name: 'FABRIC_SEMANTIC_MODEL_ID', value: fabricSemanticModelId }
+            { name: 'FABRIC_CAPACITY_ID', value: fabricCapacityControlEnabled ? fabricCapacityResourceId : '' }
+            { name: 'FABRIC_CAPACITY_OPERATORS', value: fabricCapacityOperators }
           ]
           probes: [
             {

@@ -4,17 +4,21 @@ import { SkillBar } from "./SkillBar";
 import type { ChatMessage } from "../types";
 
 interface Props {
+  id?: string;
+  hidden?: boolean;
+  onCollapse?: () => void;
   messages: ChatMessage[];
   busy: boolean;
   status: string;
   suggestions: string[];
   agentName: string;
+  bankName: string;
   onSend: (q: string) => void;
   onStop: () => void;
 }
 
 export function ChatPanel({
-  messages, busy, status, suggestions, agentName, onSend, onStop,
+  id, hidden, onCollapse, messages, busy, status, suggestions, agentName, bankName, onSend, onStop,
 }: Props) {
   const [draft, setDraft] = useState("");
   const endRef = useRef<HTMLDivElement>(null);
@@ -32,12 +36,12 @@ export function ChatPanel({
   }
 
   return (
-    <section className="chat-panel">
+    <section className="chat-panel" id={id} hidden={hidden}>
       <header className="chat-head">
         <div className="chat-brand">
           <span className="chat-mark" aria-hidden>◆</span>
           <div>
-            <div className="chat-title">BMO Capital Markets Client Intelligence</div>
+            <div className="chat-title">{bankName} Client Intelligence</div>
             <div className="chat-sub">
               Ask about exposure, limits, approvals and external signal
             </div>
@@ -46,6 +50,11 @@ export function ChatPanel({
         <span className="chat-agent" title={`Foundry agent: ${agentName}`}>
           Foundry agent
         </span>
+        {onCollapse && (
+          <button type="button" className="chat-collapse" onClick={onCollapse} aria-label="Collapse chat" title="Collapse chat">
+            <svg viewBox="0 0 16 16" width="14" height="14" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" aria-hidden><path d="M6 3.5 10.5 8 6 12.5" /></svg>
+          </button>
+        )}
       </header>
 
       <div className="chat-body">

@@ -1,0 +1,250 @@
+{
+  "purpose": "Configuration reference for portable Python operations. This is documentation, not a runtime configuration file.",
+  "paths_relative_to": "repository root",
+  "configuration_rules": [
+    "Required values must be explicitly supplied and nonblank before credentials, network access or writes.",
+    "Standard public Microsoft API endpoints and first-party resource application IDs are protocol constants, not tenant configuration.",
+    "No .env file is loaded automatically by these entrypoints; export the required environment explicitly.",
+    "No cloud validation was performed. Offline tests use fake identities and mocked service clients.",
+    "The frontend owns display branding. Neither operations nor the BFF needs a bank-name environment variable.",
+    "The offline --local-smoke action on agent\\create_agent.py requires no environment variables."
+  ],
+  "authentication_profiles": {
+    "agent_explicit": {
+      "selector": "AZURE_AUTH_MODE",
+      "required_by_value": {
+        "azure_cli": ["AZURE_TENANT_ID", "AZURE_SUBSCRIPTION_ID"],
+        "service_principal": ["AZURE_TENANT_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET"],
+        "managed_identity": ["AZURE_CLIENT_ID"]
+      },
+      "notes": "Managed identity requires an explicitly selected user-assigned identity. No credential chain."
+    },
+    "search_explicit": {
+      "selector": "AZURE_AUTH_MODE",
+      "required_by_value": {
+        "azure_cli": ["AZURE_TENANT_ID", "AZURE_SUBSCRIPTION_ID"],
+        "service_principal": ["AZURE_TENANT_ID", "AZURE_CLIENT_ID", "AZURE_CLIENT_SECRET"],
+        "managed_identity": ["AZURE_CLIENT_ID"],
+        "admin_key": ["SEARCH_ADMIN_KEY"]
+      }
+    },
+    "azure_cli_tenant": {
+      "required": ["AZURE_TENANT_ID"],
+      "notes": "Existing Azure CLI authentication is bound to the explicitly configured tenant."
+    },
+    "workiq_cli_tenant": {
+      "required": ["WORKIQ_TENANT_ID"],
+      "notes": "Existing Azure CLI authentication is bound to the explicitly configured tenant."
+    },
+    "workiq_seeder": {
+      "selector": "--auth",
+      "required": ["WORKIQ_TENANT_ID"],
+      "required_by_value": {
+        "app": ["WORKIQ_CLIENT_ID", "WORKIQ_CLIENT_SECRET"],
+        "device": ["WORKIQ_CLIENT_ID"],
+        "cli": []
+      },
+      "notes": "seed_work_iq.py defaults to app auth, never falls back; seed_mission_mail.py uses app auth only. No client or tenant identity defaults."
+    },
+    "fabric_notebook": {
+      "notes": "The authenticated Fabric notebook runtime supplies service access; its context must match the explicitly configured workspace and lakehouse."
+    },
+    "workiq_audit": {
+      "required": ["WORKIQ_TENANT_ID", "WORKIQ_CLIENT_ID", "WORKIQ_CLIENT_SECRET"],
+      "notes": "Application authentication, with no fallback or preset user/team scope. Audit terms are explicit literal terms in a nonempty JSON array."
+    },
+    "workiq_device": {
+      "required": ["WORKIQ_TENANT_ID", "WORKIQ_CLIENT_ID"],
+      "notes": "Explicit delegated device authentication; no client secret or preset application identity."
+    }
+  },
+  "entrypoints": {
+    "data\\work-iq\\seed_work_iq.py": {
+      "authentication": "workiq_seeder",
+      "required": ["WORKIQ_USER_MAPPING_FILE"],
+      "conditional": [
+        {"when": "--map-users or --restore-users", "required": ["WORKIQ_RESTORE_FILE"]},
+        {"when": "mail seeding", "mapping_fields": ["driver_alias"]},
+        {"when": "also uploading to OneDrive", "required_arguments": ["--onedrive-alias"]}
+      ],
+      "notes": "The mapping must explicitly contain an account UPN for every used persona alias. Map-users also requires displayName, jobTitle, department and distinct accounts. Without --onedrive-alias, files target SharePoint only."
+    },
+    "data\\work-iq\\seed_mission_mail.py": {
+      "authentication": "workiq_seeder",
+      "auth_value": "app",
+      "required": ["WORKIQ_USER_MAPPING_FILE"],
+      "mapping_fields": ["driver_alias"]
+    },
+    "data\\work-iq\\configure_workiq_connector.py": {
+      "authentication": "workiq_cli_tenant",
+      "required": ["WORKIQ_CONNECTOR_CLIENT_ID"]
+    },
+    "data\\work-iq\\configure_workiq_redirect.py": {
+      "authentication": "workiq_cli_tenant",
+      "required": ["WORKIQ_CONNECTOR_CLIENT_ID"],
+      "optional": ["WORKIQ_RESOURCE_APP_ID"],
+      "conditional": [
+        {"when": "--apply without --show", "required_arguments": ["--redirect-uri"]}
+      ]
+    },
+    "data\\work-iq\\grant_workiq_scope.py": {
+      "authentication": "workiq_cli_tenant",
+      "required": ["WORKIQ_CONNECTOR_CLIENT_ID", "WORKIQ_RESOURCE_APP_ID"]
+    },
+    "data\\work-iq\\provision_seeder_app.py": {
+      "authentication": "workiq_cli_tenant",
+      "required": ["WORKIQ_SEEDER_APP_NAME"]
+    },
+    "data\\fabric-iq\\deploy_fabric.py": {
+      "authentication": "azure_cli_tenant",
+      "required": ["FABRIC_WORKSPACE_NAME", "FABRIC_LAKEHOUSE_NAME"],
+      "conditional": [
+        {"when": "workspace step", "require_one_of": ["FABRIC_CAPACITY_NAME", "--capacity"]},
+        {"when": "notebook step", "required": ["FABRIC_LOAD_NOTEBOOK_NAME"]},
+        {"when": "semantic-model step", "required": ["FABRIC_SEMANTIC_NOTEBOOK_NAME", "FABRIC_SEMANTIC_MODEL_NAME"]}
+      ],
+      "notes": "A full deployment requires all step settings. --status needs only base settings. The deployer injects validated notebook settings and discovered workspace/lakehouse IDs."
+    },
+    "data\\fabric-iq\\load_client_intel_fabric.py": {
+      "authentication": "fabric_notebook",
+      "required": ["FABRIC_WORKSPACE_ID", "FABRIC_LAKEHOUSE_ID", "FABRIC_LAKEHOUSE_NAME"]
+    },
+    "data\\fabric-iq\\create_semantic_model_fabric.py": {
+      "authentication": "fabric_notebook",
+      "required": ["FABRIC_WORKSPACE_ID", "FABRIC_LAKEHOUSE_ID", "FABRIC_SEMANTIC_MODEL_NAME"]
+    },
+    "data\\foundry-iq\\index_cm_policies.py": {
+      "authentication": "search_explicit",
+      "required": ["SEARCH_ENDPOINT", "SEARCH_INDEX", "SEARCH_SEMANTIC_CONFIGURATION"],
+      "notes": "The same search settings must be supplied to the agent's hybrid policy tool. --verify performs retrieval checks only."
+    },
+    "agent\\create_agent.py": {
+      "authentication": "agent_explicit",
+      "required": ["FOUNDRY_PROJECT_ENDPOINT", "FOUNDRY_AGENT_NAME", "FOUNDRY_MODEL", "CM_CLIENT_ID", "IQ_MODE"],
+      "conditional": [
+        {"when": "IQ_MODE=hybrid", "required": ["SEARCH_ENDPOINT", "SEARCH_INDEX", "SEARCH_SEMANTIC_CONFIGURATION", "BING_GROUNDING_CONNECTION_ID"]}
+      ],
+      "notes": "IQ_MODE must be local or hybrid. Both use the explicit synthetic Work/Fabric corpus; hybrid additionally uses live Search/Bing. CM_CLIENT_ID must exist in clients.csv. --local-smoke bypasses all cloud configuration."
+    },
+    "agent\\create_cm_agents.py": {
+      "authentication": "agent_explicit",
+      "required": ["FOUNDRY_PROJECT_ENDPOINT", "FOUNDRY_SOURCE_AGENT_NAME"],
+      "notes": "Target agent names and instructions are explicitly declared by the adjacent cm_agents.md specification; the source must not be a target."
+    },
+    "create_scenario_agent.py": {
+      "authentication": "agent_explicit",
+      "required": ["FOUNDRY_PROJECT_ENDPOINT", "FOUNDRY_SOURCE_AGENT_NAME", "FOUNDRY_AGENT_NAME"],
+      "notes": "Source and target agent names must differ."
+    },
+    "push_agent_instructions.py": {
+      "authentication": "agent_explicit",
+      "required": ["FOUNDRY_PROJECT_ENDPOINT", "FOUNDRY_AGENT_NAME"]
+    },
+    "set_tool_allowlist.py": {
+      "authentication": "agent_explicit",
+      "required": ["FOUNDRY_PROJECT_ENDPOINT", "FOUNDRY_AGENT_NAME"]
+    },
+    "set_tool_autoapprove.py": {
+      "authentication": "agent_explicit",
+      "required": ["FOUNDRY_PROJECT_ENDPOINT", "FOUNDRY_AGENT_NAME"]
+    },
+    "app\\infra\\audit_permissions.py": {
+      "authentication": "azure_cli_tenant",
+      "required": ["INFRA_SPA_NAME", "INFRA_BFF_NAME"]
+    },
+    "app\\infra\\configure_rbac.py": {
+      "authentication": "azure_cli_tenant",
+      "required": ["INFRA_SPA_NAME"],
+      "conditional": [
+        {"when": "default role configuration (neither --show nor --open)", "required": ["INFRA_ROLE_ASSIGNMENTS"]}
+      ],
+      "notes": "INFRA_ROLE_ASSIGNMENTS is a nonempty JSON object mapping explicit full UPNs to defined application role names."
+    },
+    "app\\infra\\grant_foundry_permission.py": {
+      "authentication": "azure_cli_tenant",
+      "required": ["INFRA_BFF_NAME"]
+    },
+    "app\\infra\\grant_mail_draft_permission.py": {
+      "authentication": "azure_cli_tenant",
+      "required": ["INFRA_BFF_CLIENT_ID"]
+    },
+    "app\\infra\\provision_app_registrations.py": {
+      "authentication": "azure_cli_tenant",
+      "required": ["INFRA_SPA_NAME", "INFRA_BFF_NAME"],
+      "conditional": [
+        {"when": "provisioning", "required_arguments": ["--spa-redirect"]},
+        {"when": "adding redirects to an existing app", "required_arguments": ["--add-redirect"]}
+      ]
+    },
+    "audit_tenant_leakage.py": {
+      "authentication": "workiq_audit",
+      "required": ["WORKIQ_USER_MAPPING_FILE", "WORKIQ_FORBIDDEN_TERMS"]
+    },
+    "audit_files.py": {
+      "authentication": "workiq_audit",
+      "required": ["WORKIQ_USER_MAPPING_FILE", "WORKIQ_TEAM_ID", "WORKIQ_FORBIDDEN_TERMS"]
+    },
+    "audit_teams.py": {
+      "authentication": "workiq_audit",
+      "required": ["WORKIQ_TEAM_ID", "WORKIQ_FORBIDDEN_TERMS"]
+    },
+    "triage_mailboxes.py": {
+      "authentication": "workiq_audit",
+      "required": ["WORKIQ_USER_MAPPING_FILE", "WORKIQ_MAIL_SOURCE_FILES"],
+      "notes": "WORKIQ_MAIL_SOURCE_FILES is a nonempty JSON array of reviewed local corpus paths, resolved from cwd. Default is report-only; --purge performs moves only after complete inventory."
+    },
+    "diag_events.py": {
+      "authentication": "agent_explicit",
+      "required": ["FOUNDRY_PROJECT_ENDPOINT", "FOUNDRY_AGENT_NAME", "DIAG_PROMPT"]
+    },
+    "diag_fabric.py": {
+      "authentication": "agent_explicit",
+      "required": ["FABRIC_WORKSPACE_ID", "FABRIC_SEMANTIC_MODEL_ID", "DIAG_FABRIC_QUERY"]
+    },
+    "diag_workiq.py": {
+      "authentication": "workiq_device",
+      "required": ["DIAG_PROMPT"]
+    },
+    "preflight.py": {
+      "required": [],
+      "conditional": [
+        {"when": "--tenant", "required": ["WORKIQ_TENANT_ID", "WORKIQ_CLIENT_ID", "WORKIQ_CLIENT_SECRET", "WORKIQ_USER_MAPPING_FILE", "WORKIQ_TEAM_ID", "WORKIQ_FORBIDDEN_TERMS"]}
+      ],
+      "notes": "Default source-only run never authenticates. Needs Python, Node.js and installed frontend dependencies. A source pass is not tenant policy or permission approval."
+    },
+    "app\\src\\bff": {
+      "required": ["AAD_TENANT_ID", "AAD_CLIENT_ID", "AAD_CLIENT_SECRET", "FOUNDRY_PROJECT_ENDPOINT", "FOUNDRY_AGENT_NAME"],
+      "optional": ["AAD_API_SCOPE", "FOUNDRY_SCOPE", "CORS_ORIGINS"],
+      "conditional": [
+        {"when": "scenario analysis", "required": ["SCENARIO_AGENT_NAME"]},
+        {"when": "mission analysis", "required": ["MISSION_AGENT_NAME"]},
+        {"when": "information-barrier review", "required": ["BARRIER_AGENT_NAME"]},
+        {"when": "telemetry panel", "required": ["LOG_ANALYTICS_WORKSPACE_ID"], "optional": ["TELEMETRY_WINDOW_DAYS"]},
+        {"when": "billed-cost panel", "required": ["COST_SCOPE"], "optional": ["COST_WINDOW_DAYS"]},
+        {"when": "capacity control", "required": ["FABRIC_CAPACITY_ID", "FABRIC_CAPACITY_OPERATORS"]}
+      ],
+      "notes": "MOCK_MODE=true is explicit offline behavior, not a fallback on errors. Omitted optional live integrations are unavailable, never fabricated. ALLOW_APP_IDENTITY_FALLBACK is compatibility-only and does not enable delegated-agent fallback. Set AAD_API_SCOPE consistently with the frontend app registration when used."
+    }
+  },
+  "mapping_template": "data\\work-iq\\user_mapping.example.json",
+  "private_mapping_rule": "Copy the template to an ignored private JSON file and replace every example.com UPN. Set WORKIQ_USER_MAPPING_FILE explicitly. Original user_mapping.json and user_mapping.restore.json are untracked but preserved locally.",
+  "publishing_ignore_contract": ["**/*.local.json", ".env*", "**/*deployment*.json", "user_mapping.json", "*.restore.json", "generated bank configuration and logo files"],
+  "runtime_dependencies": {
+    "python": ["azure-identity", "azure-ai-agents", "azure-search-documents", "requests"],
+    "workiq_admin": ["Azure CLI", "Python standard library"],
+    "azure_cli_auth": ["Azure CLI with an existing session in the explicitly configured tenant"],
+    "fabric_notebooks": ["Fabric PySpark runtime", "notebookutils", "preinstalled semantic-link-labs"],
+    "offline_tests": ["Python standard library unittest for operations; BFF tests additionally need app\\src\\bff\\requirements.txt"],
+    "source_preflight": ["Node.js", "installed app\\src\\web dependencies"]
+  },
+  "offline_test_commands_from_repository_root": [
+    "python -B -m unittest discover -s .\\app\\infra -p test_*portability.py -q",
+    "python -B -m unittest discover -s .\\agent -p test_*.py -q",
+    "python -B -m unittest discover -s .\\data\\work-iq -p test_*.py -q",
+    "python -B -m unittest discover -s .\\data -p test_bank_neutral.py -q",
+    "python -B -m unittest discover -s . -p test_root*.py -q",
+    "python -B -m unittest discover -s . -p test_source_checks.py -q",
+    "python -B -m unittest discover -s .\\app\\src\\bff\\tests -t .\\app\\src\\bff -p test_*.py -q",
+    "python -B .\\preflight.py"
+  ]
+}

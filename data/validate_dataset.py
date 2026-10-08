@@ -9,6 +9,8 @@ which matches the figure in the meeting minutes. This script proves it.
 
 Exit code 0 means every layer agrees. Non-zero means the layers have drifted and
 the demo will contradict itself on stage.
+Only the shipped example persona mapping is checked; private tenant mappings
+are validated separately by the Work IQ seeder before authentication or writes.
 """
 
 from __future__ import annotations
@@ -65,12 +67,26 @@ def all_text(*paths: Path) -> str:
 
 
 def main() -> int:
+    global _checks
+    _checks = 0
+    _failures.clear()
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--verbose", action="store_true")
     args = ap.parse_args()
 
     print(f"Capital Markets Client Intelligence - cross-layer validation")
     print(f"  as at {FACTS['as_of']} | hero {FACTS['hero_client_name']} ({FACTS['hero_ticker']})\n")
+
+    print("Bank-neutral contract")
+    check("canonical institution labels",
+          FACTS["institution"] == FACTS["institution_short"] == "The Bank")
+    check("meeting attendees use the neutral schema",
+          set(FACTS["meeting"]["bank_attendees"]) <= {p["alias"] for p in PEOPLE})
+    proposal = FACTS["opportunities"]["revolver_upsize"]
+    check("bank hold and role are preserved",
+          proposal["bank_current_hold_m"] == 165.0
+          and proposal["bank_proposed_hold_m"] == 210.0
+          and proposal["bank_role"] == "Co-Lead Arranger and Joint Bookrunner")
 
     # ---------------------------------------------------------------- files
     print("Layer presence")
@@ -81,7 +97,7 @@ def main() -> int:
         FABRIC / "wallet_share.csv", FABRIC / "trades.csv",
         FABRIC / "covenants.csv", FABRIC / "risk_ratings.csv",
         FOUNDRY / "cm_policies.json",
-        WORK / "emails.json", WORK / "teams_messages.json", WORK / "user_mapping.json",
+        WORK / "emails.json", WORK / "teams_messages.json", WORK / "user_mapping.example.json",
         WEB / "web_iq_queries.json", WEB / "README.md",
     ]
     for p in expected:
@@ -114,10 +130,23 @@ def main() -> int:
 
     wal = [r for r in load_csv("wallet_share.csv") if r["client_id"] == HERO]
     street = sum(float(r["estimated_street_wallet_cad_k"]) for r in wal)
-    bmo = sum(float(r["bmo_revenue_cad_k"]) for r in wal)
-    check("wallet share 21.4%", abs(round(bmo / street * 100, 1) - HM["wallet_share_pct"]) < 0.05)
-    check("BMO revenue in wallet table == revenue table",
-          abs(bmo - ytd) < 0.5, f"wallet {bmo} vs revenue {ytd}")
+    bank = sum(float(r["bank_revenue_cad_k"]) for r in wal)
+    check("wallet share 21.4%", abs(round(bank / street * 100, 1) - HM["wallet_share_pct"]) < 0.05)
+    check("the Bank's revenue in wallet table == revenue table",
+          abs(bank - ytd) < 0.5, f"wallet {bank} vs revenue {ytd}")
+    check("wallet schema uses only bank-neutral fields",
+          set(wal[0]) == {
+              "client_id", "client_name", "product_id", "product_name",
+              "bank_revenue_cad_k", "estimated_street_wallet_cad_k",
+              "bank_wallet_share_pct", "bank_rank", "lead_competitor",
+              "whitespace_flag", "gap_to_25pct_target_cad_k", "as_of_date",
+          })
+    check("facility schema uses only bank-neutral fields",
+          set(fac[0]) == {
+              "client_id", "client_name", "facility_id", "facility_type", "product_id",
+              "commitment_cad_m", "drawn_cad_m", "undrawn_cad_m", "utilisation_pct",
+              "maturity_date", "pricing", "bank_role", "status", "revolving_flag",
+          })
 
     lim = load_csv("limits_utilization.csv")
     sn = next(r for r in lim if r["limit_id"] == "LIM-1001-SN")
@@ -159,17 +188,33 @@ def main() -> int:
     cl = load_csv("clients.csv")
     check(f"10 clients in the portfolio (found {len(cl)})", len(cl) == len(CLIENTS))
     hero_row = next(r for r in cl if r["client_id"] == HERO)
-    check("hero KYC refresh due 2026-09-30", hero_row["kyc_refresh_due"] == HM["kyc_refresh_due"])
+    check("hero KYC refresh due 2026-11-25", hero_row["kyc_refresh_due"] == HM["kyc_refresh_due"])
     check("hero coverage: 5 team members",
           len([r for r in load_csv("coverage_team.csv") if r["client_id"] == HERO]) == len(PEOPLE))
+
+    sens = load_csv("scenario_sensitivity.csv")
+    check(f"scenario_sensitivity has one row per client (found {len(sens)})",
+          sorted(r["client_id"] for r in sens) == sorted(r["client_id"] for r in cl))
+    scn = load_csv("market_scenarios.csv")
+    oil = {r["scenario_id"]: float(r["value"]) for r in scn if r["factor"] == "oil_pct"}
+    shock = {r["factor"]: float(r["value"]) for r in scn if r["scenario_id"] == "oil-shock"}
+    check("factor betas reproduce each client's oil-shock EBITDA impact",
+          all(abs(sum(float(r[f"beta_{k}"]) * shock.get(f"{k}_pct" if k != "fx" else "usdcad_pct", 0.0)
+                      for k in ("oil", "gas", "fx", "demand", "tariff"))
+                  - float(r["oil_shock_ebitda_pct"])) < 0.01 for r in sens))
+    check(f"market_scenarios has 11 presets - 5 market, 6 world events (found {len(oil)})", len(oil) == 11)
 
     # ------------------------------------------------------------ foundry iq
     print("\nFoundry IQ")
     pol = json.loads((FOUNDRY / "cm_policies.json").read_text(encoding="utf-8"))
     docs = pol["documents"]
-    check(f"14 policy documents (found {len(docs)})", len(docs) == 14)
-    check("ids are CP-001..CP-014 with no gaps",
-          [d["id"] for d in docs] == [f"CP-{i:03d}" for i in range(1, 15)])
+    check("policy scenario uses the canonical institution",
+          pol["scenario"].startswith(FACTS["institution"] + " - "))
+    check("policy disclosure identifies a fictional institution",
+          "The Bank is a fictional institution." in pol["$schema_note"])
+    check(f"17 policy documents (found {len(docs)})", len(docs) == 17)
+    check("ids are CP-001..CP-017 with no gaps",
+          [d["id"] for d in docs] == [f"CP-{i:03d}" for i in range(1, 18)])
     check("every document has a category from the declared list",
           all(d["category"] in pol["categories"] for d in docs))
     check("every document has content over 1000 chars",
@@ -193,7 +238,7 @@ def main() -> int:
     print("\nWork IQ")
     em = json.loads((WORK / "emails.json").read_text(encoding="utf-8"))
     tm = json.loads((WORK / "teams_messages.json").read_text(encoding="utf-8"))
-    um = json.loads((WORK / "user_mapping.json").read_text(encoding="utf-8"))
+    um = json.loads((WORK / "user_mapping.example.json").read_text(encoding="utf-8"))
 
     aliases = {p["alias"] for p in PEOPLE}
     portfolio_ids = {c[0] for c in CLIENTS}
@@ -239,13 +284,11 @@ def main() -> int:
     check("all 5 personas are on the team",
           set(tm["team"]["ownerAliases"]) | set(tm["team"]["memberAliases"]) == aliases)
 
-    check("user_mapping has all 5 personas", set(um["mapping"]) == aliases)
+    check("example mapping includes all 5 personas", aliases <= set(um["mapping"]))
     check("driver is Sydney Mattos", um["driver_alias"] == "sydney.mattos")
-    scotia = {"LisaT", "MarioR", "MonicaT", "SEdemo", "KaiC", "AdilE", "AmberR",
-              "BillieV", "CoraT", "CoreyG", "DaichiM", "DakotaS", "EkaS", "HadarC"}
-    used = {v["upn"].split("@")[0] for v in um["mapping"].values()}
-    check("no overlap with the Scotia mortgage demo accounts",
-          not (used & scotia), str(used & scotia))
+    accounts = [v["upn"].strip().casefold() for v in um["mapping"].values()]
+    check("personas map to distinct, nonempty accounts",
+          all(accounts) and len(set(accounts)) == len(accounts))
     check("display names match scenario_facts",
           all(um["mapping"][p["alias"]]["displayName"] == p["displayName"] for p in PEOPLE))
     check("job titles match scenario_facts",
@@ -278,7 +321,7 @@ def main() -> int:
         ("revolver CAD 1.10bn to 1.35bn", r"CAD 1\.35bn"),
         ("target hold CAD 210m",          r"CAD 210m"),
         ("current hold CAD 165m",         r"CAD 165m"),
-        ("KYC due 30 September 2026",     r"30 September 2026"),
+        ("KYC due 25 November 2026",     r"25 November 2026"),
         ("restriction CR-2026-0184",      r"CR-2026-0184"),
         ("hedging notional CAD 240m",     r"CAD 240m"),
     ]

@@ -10,7 +10,7 @@ it *here* and re-run the generators — never edit a generated CSV by hand.
 --------------------------------------------------------------------------------
 SYNTHETIC DEMO DATA
 --------------------------------------------------------------------------------
-BMO Capital Markets is used only as a branding label. Gibson Energy Inc. and the
+The Bank is a fictional institution. Gibson Energy Inc. and the
 other TSX-listed issuers named here are real public companies, used *only* so
 that the Web IQ layer's live web grounding returns genuine public news. Every
 internal figure in this dataset -- every exposure, commitment, limit, revenue
@@ -28,11 +28,11 @@ from __future__ import annotations
 # --------------------------------------------------------------------------
 
 FACTS = {
-    "institution": "BMO Capital Markets",
-    "institution_short": "BMO",
-    "as_of": "2026-08-10",
+    "institution": "The Bank",
+    "institution_short": "The Bank",
+    "as_of": "2026-10-05",
     "fiscal_year": "FY26",
-    "fiscal_year_start": "2025-11-01",   # BMO's fiscal year runs Nov 1 - Oct 31
+    "fiscal_year_start": "2025-11-01",   # The synthetic fiscal year runs Nov 1 - Oct 31
     "currency": "CAD",
     "random_seed": 26_08_10,
 
@@ -43,12 +43,12 @@ FACTS = {
 
     # The meeting the whole demo prepares for
     "meeting": {
-        "id": "MTG-GEI-2026-08-13",
-        "date": "2026-08-13",
+        "id": "MTG-GEI-2026-10-08",
+        "date": "2026-10-08",
         "time_local": "10:00-11:30 MT",
         "location": "Gibson Energy head office, Calgary (in person)",
         "title": "Gibson Energy - CFO / Treasurer coverage meeting",
-        "bmo_attendees": ["sydney.mattos", "sasha.ouellet", "quinn.campbell", "vance.deleon"],
+        "bank_attendees": ["sydney.mattos", "sasha.ouellet", "quinn.campbell", "vance.deleon"],
         "client_attendees": [
             "Chief Financial Officer (client)",
             "VP & Treasurer (client)",
@@ -70,11 +70,11 @@ FACTS = {
             "name": "Revolver upsize + 1-year extension",
             "current_commitment_total_m": 1_100.0,
             "proposed_commitment_total_m": 1_350.0,
-            "bmo_current_hold_m": 165.0,
-            "bmo_proposed_hold_m": 210.0,
-            "bmo_role": "Co-Lead Arranger and Joint Bookrunner",
+            "bank_current_hold_m": 165.0,
+            "bank_proposed_hold_m": 210.0,
+            "bank_role": "Co-Lead Arranger and Joint Bookrunner",
             "estimated_fees_k": 1_850.0,
-            "decision_needed_by": "2026-09-30",
+            "decision_needed_by": "2026-11-25",
         },
         "hedging_overlay": {
             "id": "OPP-4472",
@@ -83,14 +83,14 @@ FACTS = {
             "tenor_months": 24,
             "estimated_revenue_k": 940.0,
             "products": ["WTI-WCS differential swap", "CAD/USD forward strip"],
-            "decision_needed_by": "2026-10-15",
+            "decision_needed_by": "2026-12-10",
         },
         "dcm_followon": {
             "id": "OPP-4473",
             "name": "2027 maturity refinancing - follow-on senior unsecured",
             "indicative_size_m": 350.0,
             "estimated_fees_k": 1_120.0,
-            "bmo_role": "Joint Bookrunner (sought; active bookrunner on the July 2026 deal)",
+            "bank_role": "Joint Bookrunner (sought; active bookrunner on the September 2026 deal)",
             "decision_needed_by": "2027-01-31",
         },
     },
@@ -120,10 +120,10 @@ FACTS = {
         "watchlist": False,
         "public_ratings": "S&P BBB- (stable) / DBRS BBB (low) (stable)",
         "relationship_since": 2011,
-        "last_meeting_date": "2026-05-21",
+        "last_meeting_date": "2026-07-16",
         "last_credit_review_date": "2026-03-18",
         "next_credit_review_due": "2027-03-31",
-        "kyc_refresh_due": "2026-09-30",
+        "kyc_refresh_due": "2026-11-25",
         "kyc_status": "Due - 51 days",
     },
 
@@ -170,9 +170,9 @@ FACTS = {
     "mnpi_tension": {
         "id": "CR-2026-0184",
         "raised_by": "Control Room (Compliance)",
-        "raised_on": "2026-08-06",
+        "raised_on": "2026-10-01",
         "summary": (
-            "Two BMO staff were wall-crossed on 2026-08-04 in connection with a "
+            "Two staff at the Bank were wall-crossed on 2026-09-29 in connection with a "
             "potential Gibson Energy corporate action. The public-side coverage team "
             "is NOT wall-crossed and must not be. Research is restricted from "
             "publishing on the name and Corporate Sales may not solicit new "
@@ -180,7 +180,7 @@ FACTS = {
         ),
         "restricted_persons": ["sasha.ouellet", "vance.deleon"],
         "public_side": ["sydney.mattos", "robin.kline", "quinn.campbell"],
-        "expires": "2026-09-15",
+        "expires": "2026-11-10",
         "effect": (
             "The revolver upsize pitch may proceed on public information only. The "
             "hedging overlay solicitation must be cleared by the Control Room before "
@@ -211,7 +211,7 @@ CLIENTS = [
 ]
 
 # --------------------------------------------------------------------------
-# The BMO deal team - mapped onto real licensed accounts in the demo tenant
+# The Bank's deal team - mapped onto licensed accounts in the demo tenant
 # --------------------------------------------------------------------------
 
 PEOPLE = [
@@ -324,7 +324,7 @@ PRODUCTS = [
 ]
 
 DISCLAIMER = (
-    "SYNTHETIC DEMO DATA. BMO Capital Markets is a branding label only. The issuers "
+    "SYNTHETIC DEMO DATA. The Bank is a fictional institution. The issuers "
     "named are real public companies, used only so live web grounding returns real "
     "public news; every internal exposure, limit, revenue, wallet-share, risk rating, "
     "covenant, trade, colleague, message, meeting and policy here is invented for a "

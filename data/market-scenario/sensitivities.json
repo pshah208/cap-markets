@@ -1,0 +1,383 @@
+{
+  "$schema_note": "SYNTHETIC DEMO DATA. Per-client factor sensitivities for the Scenarios tab. beta_oil is NOT authored: generate_scenario_tables.py solves it so that the 'oil-shock' preset reproduces each client's agreed EBITDA impact in scenario.json exactly. All other betas are authored by business model. EBITDA % change = beta_oil*oil% + beta_gas*gas% + beta_fx*usdcad% + beta_demand*demand%.",
+  "factors": [
+    {
+      "id": "oil_pct",
+      "label": "Crude oil (WTI)",
+      "unit": "%",
+      "min": -40,
+      "max": 40,
+      "step": 1
+    },
+    {
+      "id": "gas_pct",
+      "label": "Natural gas (AECO)",
+      "unit": "%",
+      "min": -40,
+      "max": 40,
+      "step": 1
+    },
+    {
+      "id": "rates_bp",
+      "label": "GoC 10Y rates",
+      "unit": "bp",
+      "min": -150,
+      "max": 150,
+      "step": 5
+    },
+    {
+      "id": "spreads_bp",
+      "label": "CAD IG credit spreads",
+      "unit": "bp",
+      "min": -50,
+      "max": 150,
+      "step": 5
+    },
+    {
+      "id": "usdcad_pct",
+      "label": "USD/CAD",
+      "unit": "%",
+      "min": -8,
+      "max": 8,
+      "step": 0.5
+    },
+    {
+      "id": "demand_pct",
+      "label": "Industrial demand (GDP proxy)",
+      "unit": "%",
+      "min": -8,
+      "max": 6,
+      "step": 0.5
+    },
+    {
+      "id": "tariff_pct",
+      "label": "US tariff on Canadian goods",
+      "unit": "%",
+      "min": 0,
+      "max": 40,
+      "step": 2.5
+    }
+  ],
+  "presets": [
+    {
+      "id": "oil-shock",
+      "name": "Overnight oil supply shock",
+      "note": "Today's scenario (SCN-2026-10-05-OIL).",
+      "factors": {
+        "oil_pct": -14.2,
+        "gas_pct": -4.0,
+        "rates_bp": -9,
+        "spreads_bp": 14,
+        "usdcad_pct": 1.4,
+        "demand_pct": 0,
+        "tariff_pct": 0.0
+      },
+      "group": "market"
+    },
+    {
+      "id": "oil-rebound",
+      "name": "Oil rebound",
+      "note": "Supply discipline returns; crude recovers.",
+      "factors": {
+        "oil_pct": 18.0,
+        "gas_pct": 6.0,
+        "rates_bp": 6,
+        "spreads_bp": -8,
+        "usdcad_pct": -1.5,
+        "demand_pct": 0.5,
+        "tariff_pct": 0.0
+      },
+      "group": "market"
+    },
+    {
+      "id": "recession",
+      "name": "Canadian recession",
+      "note": "Demand contraction, oil lower, spreads wider, BoC eases.",
+      "factors": {
+        "oil_pct": -25.0,
+        "gas_pct": -10.0,
+        "rates_bp": -75,
+        "spreads_bp": 60,
+        "usdcad_pct": 4.0,
+        "demand_pct": -4.0,
+        "tariff_pct": 0.0
+      },
+      "group": "market"
+    },
+    {
+      "id": "higher-for-longer",
+      "name": "Rates higher for longer",
+      "note": "Sticky inflation; no cuts.",
+      "factors": {
+        "oil_pct": 0.0,
+        "gas_pct": 0.0,
+        "rates_bp": 100,
+        "spreads_bp": 25,
+        "usdcad_pct": -1.0,
+        "demand_pct": -1.0,
+        "tariff_pct": 0.0
+      },
+      "group": "market"
+    },
+    {
+      "id": "spread-shock",
+      "name": "Credit spread shock",
+      "note": "Risk-off repricing across credit.",
+      "factors": {
+        "oil_pct": -5.0,
+        "gas_pct": 0.0,
+        "rates_bp": -20,
+        "spreads_bp": 80,
+        "usdcad_pct": 2.0,
+        "demand_pct": -1.5,
+        "tariff_pct": 0.0
+      },
+      "group": "market"
+    },
+    {
+      "id": "mideast-war",
+      "name": "Middle East conflict escalation",
+      "group": "world",
+      "note": "Supply-route risk lifts crude and gas; risk-off widens credit; CAD firms with oil.",
+      "web_query": "military conflict or escalation in the Middle East affecting oil supply, shipping or the Strait of Hormuz",
+      "channels": "Oil and gas up, spreads wider, inflation premium in rates, CAD stronger, softer global demand.",
+      "factors": {
+        "oil_pct": 22.0,
+        "gas_pct": 10.0,
+        "rates_bp": 15,
+        "spreads_bp": 35,
+        "usdcad_pct": -1.5,
+        "demand_pct": -1.5,
+        "tariff_pct": 0.0
+      }
+    },
+    {
+      "id": "japan-rate-spike",
+      "name": "Japan interest rate spike",
+      "group": "world",
+      "note": "JGB yields jump and the yen carry trade unwinds; global term premium and spreads reprice.",
+      "web_query": "Japanese government bond yields, Bank of Japan rate hikes, or yen carry trade unwinding",
+      "channels": "Global term premium lifts rates, risk-off widens spreads, USD/CAD up, commodities soften.",
+      "factors": {
+        "oil_pct": -6.0,
+        "gas_pct": 0.0,
+        "rates_bp": 45,
+        "spreads_bp": 50,
+        "usdcad_pct": 2.5,
+        "demand_pct": -1.0,
+        "tariff_pct": 0.0
+      }
+    },
+    {
+      "id": "extreme-weather",
+      "name": "Extreme weather disruption",
+      "group": "world",
+      "note": "Hurricanes, wildfires or a severe winter shut in production and spike gas demand.",
+      "web_query": "extreme weather such as hurricanes, wildfires, floods or cold snaps disrupting North American energy production or infrastructure",
+      "channels": "Gas sharply higher, crude modestly higher on shut-ins, industrial activity and rail/logistics disrupted.",
+      "factors": {
+        "oil_pct": 7.0,
+        "gas_pct": 28.0,
+        "rates_bp": 0,
+        "spreads_bp": 12,
+        "usdcad_pct": 0.0,
+        "demand_pct": -1.5,
+        "tariff_pct": 0.0
+      }
+    },
+    {
+      "id": "food-shortage",
+      "name": "Global food supply shock",
+      "group": "world",
+      "note": "Crop failures and export bans push food inflation; fertiliser and diesel demand rise.",
+      "web_query": "global food shortages, crop failures, grain export bans or food price inflation",
+      "channels": "Food inflation keeps rates higher, gas (fertiliser feedstock) and diesel up, consumer demand squeezed.",
+      "factors": {
+        "oil_pct": 6.0,
+        "gas_pct": 15.0,
+        "rates_bp": 30,
+        "spreads_bp": 20,
+        "usdcad_pct": 0.5,
+        "demand_pct": -2.0,
+        "tariff_pct": 0.0
+      }
+    },
+    {
+      "id": "pandemic",
+      "name": "Deadly disease outbreak",
+      "group": "world",
+      "note": "A fast-spreading outbreak triggers travel curbs and a demand collapse; central banks ease.",
+      "web_query": "deadly infectious disease outbreaks, epidemics or WHO public health emergency declarations",
+      "channels": "Demand and crude collapse, spreads gap wider, rates rally hard, USD/CAD up on risk-off.",
+      "factors": {
+        "oil_pct": -30.0,
+        "gas_pct": -10.0,
+        "rates_bp": -90,
+        "spreads_bp": 95,
+        "usdcad_pct": 5.0,
+        "demand_pct": -6.0,
+        "tariff_pct": 0.0
+      }
+    },
+    {
+      "id": "us-canada-tariffs",
+      "name": "US-Canada tariff escalation",
+      "group": "world",
+      "note": "Broad US tariffs on Canadian goods with retaliation; CAD weakens and trade-exposed names re-rate.",
+      "web_query": "United States tariffs on Canadian goods, Canada retaliatory tariffs, CUSMA/USMCA trade negotiations",
+      "channels": "Tariff hits exporters' EBITDA, CAD weaker, cross-border demand softer, spreads wider, BoC leans dovish.",
+      "factors": {
+        "oil_pct": -4.0,
+        "gas_pct": 0.0,
+        "rates_bp": -15,
+        "spreads_bp": 20,
+        "usdcad_pct": 3.0,
+        "demand_pct": -1.5,
+        "tariff_pct": 25.0
+      }
+    }
+  ],
+  "valuation": {
+    "horizon_years": 3,
+    "base_discount_rate_pct": 9.0,
+    "cet1_ratio_pct": 11.5,
+    "cost_of_equity_pct": 12.0,
+    "lgd_pct": 40.0,
+    "base_rate_bp": 550,
+    "notch_per_turn": 3,
+    "breach_extra_notches": 1,
+    "max_notches": 3,
+    "drawdown_trigger_ebitda_pct": -5.0,
+    "drawdown_share_of_undrawn": 0.15,
+    "revenue_elasticity_to_ebitda": 0.4,
+    "markets_vol_uplift_per_pct_oil": 0.5,
+    "pd_by_rating_pct": {
+      "IG-1": 0.03,
+      "IG-2": 0.05,
+      "IG-3": 0.08,
+      "IG-4": 0.12,
+      "IG-5": 0.18,
+      "IG-6": 0.27,
+      "IG-7": 0.4,
+      "IG-8": 0.6,
+      "IG-9": 1.0,
+      "IG-10": 1.8,
+      "IG-11": 3.5,
+      "IG-12": 7.0
+    },
+    "rw_by_rating_pct": {
+      "IG-1": 20,
+      "IG-2": 30,
+      "IG-3": 40,
+      "IG-4": 50,
+      "IG-5": 60,
+      "IG-6": 70,
+      "IG-7": 85,
+      "IG-8": 100,
+      "IG-9": 115,
+      "IG-10": 130,
+      "IG-11": 150,
+      "IG-12": 150
+    }
+  },
+  "clients": {
+    "CLI-1001": {
+      "beta_gas": 0.0,
+      "beta_fx": 0.3,
+      "beta_demand": 0.2,
+      "floating_debt_share": 0.45,
+      "model": "Fee-based midstream with a crude-marketing segment; USD-linked revenue.",
+      "beta_tariff": -0.05,
+      "tariff_note": "Energy flows largely tariff-exempt; marketing margins dip with lower volumes."
+    },
+    "CLI-1002": {
+      "beta_gas": 0.3,
+      "beta_fx": 0.2,
+      "beta_demand": 0.3,
+      "floating_debt_share": 0.35,
+      "model": "NGL midstream; frac spreads tie it to gas.",
+      "beta_tariff": -0.04,
+      "tariff_note": "NGL exports exposed only at the margin; fee-based core."
+    },
+    "CLI-1003": {
+      "beta_gas": 0.15,
+      "beta_fx": 0.8,
+      "beta_demand": 0.2,
+      "floating_debt_share": 0.5,
+      "model": "Light-oil producer; USD-priced barrels, CAD costs.",
+      "beta_tariff": -0.12,
+      "tariff_note": "Crude exported to US refiners; tariff widens the WCS discount."
+    },
+    "CLI-1004": {
+      "beta_gas": 0.2,
+      "beta_fx": 0.2,
+      "beta_demand": 0.8,
+      "floating_debt_share": 0.55,
+      "model": "Energy services and waste; activity-linked.",
+      "beta_tariff": -0.03,
+      "tariff_note": "Domestic energy services; second-order activity effect."
+    },
+    "CLI-1005": {
+      "beta_gas": 0.0,
+      "beta_fx": 0.2,
+      "beta_demand": 0.6,
+      "floating_debt_share": 0.4,
+      "model": "Utility poles and rail ties; diesel and fibre inputs.",
+      "beta_tariff": -0.35,
+      "tariff_note": "Utility poles and rail ties sold heavily into the US."
+    },
+    "CLI-1006": {
+      "beta_gas": 0.0,
+      "beta_fx": 0.3,
+      "beta_demand": 1.5,
+      "floating_debt_share": 0.6,
+      "model": "Metals service centres with an energy-tubulars segment.",
+      "beta_tariff": 0.06,
+      "tariff_note": "Steel tariffs lift North American metal prices and inventory gains."
+    },
+    "CLI-1007": {
+      "beta_gas": -0.1,
+      "beta_fx": 0.2,
+      "beta_demand": 0.8,
+      "floating_debt_share": 0.5,
+      "model": "Packaging and tissue; energy and fibre are inputs.",
+      "beta_tariff": -0.25,
+      "tariff_note": "Cross-border packaging and tissue plants and customers."
+    },
+    "CLI-1008": {
+      "beta_gas": 0.0,
+      "beta_fx": 0.4,
+      "beta_demand": 1.2,
+      "floating_debt_share": 0.55,
+      "model": "Agricultural equipment; farm-income cycle.",
+      "beta_tariff": -0.4,
+      "tariff_note": "Farm equipment built in Canada and sold into US agriculture."
+    },
+    "CLI-1009": {
+      "beta_gas": 0.0,
+      "beta_fx": -0.5,
+      "beta_demand": 0.3,
+      "floating_debt_share": 0.3,
+      "model": "Remote retail; imported goods, fuel and freight costs.",
+      "beta_tariff": -0.02,
+      "tariff_note": "Northern retail; mostly domestic sourcing and sales."
+    },
+    "CLI-1010": {
+      "beta_gas": 0.2,
+      "beta_fx": 0.1,
+      "beta_demand": 0.5,
+      "floating_debt_share": 0.45,
+      "model": "Propane distribution; weather-driven volumes.",
+      "beta_tariff": -0.08,
+      "tariff_note": "US propane distribution and cross-border supply."
+    }
+  },
+  "world_severity": {
+    "$note": "Web IQ reports a severity per theme; the BFF (not the agent) maps it to an intensity on the governed preset shock.",
+    "dormant": 0.25,
+    "low": 0.5,
+    "elevated": 0.75,
+    "high": 1.0,
+    "severe": 1.3
+  }
+}

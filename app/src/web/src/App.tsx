@@ -1,41 +1,36 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import type { CSSProperties } from "react";
 import {
-  fetchConfig, fetchIQs, fetchMe, fetchStory, runDiagnostics, streamChat,
+  fetchConfig, fetchIQs, fetchMe, fetchStory, fetchWebPulse, runDiagnostics, streamChat,
 } from "./api";
 import { account, authEnabled, login, logout } from "./auth";
+import { brand, brandAppConfig, brandStory } from "./brand";
+import { BankMark } from "./components/BankMark";
 import { ChatPanel } from "./components/ChatPanel";
+import { SplitHandle, SplitRail, useChatSplit } from "./components/ChatSplit";
+import { FabricCapacityControl } from "./components/FabricCapacityControl";
 import { IQPanel } from "./components/IQPanel";
 import { StoryPanel } from "./components/StoryPanel";
 import { Dashboard } from "./dashboard/Dashboard";
+import { ScenariosView } from "./scenarios/ScenariosView";
 import type {
   AppConfig, ChatMessage, Citation, IQId, IQMeta, IQState, Me, Story,
 } from "./types";
 
-type Mode = "story" | "chat" | "dashboard";
-
-/** Percentage of the viewport width given to the chat panel. */
-const CHAT_WIDTH_KEY = "cmci.chatWidth";
-const CHAT_WIDTH_DEFAULT = 50;
-const CHAT_WIDTH_MIN = 20;
-const CHAT_WIDTH_MAX = 80;
-
-const clampChatWidth = (v: number) =>
-  Math.min(CHAT_WIDTH_MAX, Math.max(CHAT_WIDTH_MIN, v));
-
-function readStoredChatWidth() {
-  try {
-    const raw = window.localStorage.getItem(CHAT_WIDTH_KEY);
-    const n = raw === null ? NaN : Number(raw);
-    return Number.isFinite(n) ? clampChatWidth(n) : CHAT_WIDTH_DEFAULT;
-  } catch {
-    return CHAT_WIDTH_DEFAULT;
-  }
-}
+type Mode = "story" | "chat" | "dashboard" | "scenarios";
 
 export default function App() {
-  const [config, setConfig] = useState<AppConfig | null>(null);
-  const [story, setStory] = useState<Story | null>(null);
+  const [rawConfig, setConfig] = useState<AppConfig | null>(null);
+  const [rawStory, setStory] = useState<Story | null>(null);
+  const config = useMemo(
+    () => (rawConfig ? brandAppConfig(rawConfig) : null),
+    [rawConfig],
+  );
+  const story = useMemo(
+    () => (rawStory ? brandStory(rawStory) : null),
+    [rawStory],
+  );
+
   const [iqMeta, setIqMeta] = useState<IQMeta[]>([]);
   const [iqs, setIqs] = useState<IQState[]>([]);
   const [messages, setMessages] = useState<ChatMessage[]>([]);
@@ -47,21 +42,9 @@ export default function App() {
   const [me, setMe] = useState<Me | null>(null);
   const [bootError, setBootError] = useState("");
   const [diag, setDiag] = useState<unknown>(null);
-  const [chatWidth, setChatWidth] = useState(readStoredChatWidth);
-  const [resizing, setResizing] = useState(false);
+  const chat = useChatSplit("cmci.chat", 50, 25, 70);
+  const layoutRef = useRef<HTMLElement>(null);
   const abortRef = useRef<AbortController | null>(null);
-
-  useEffect(() => {
-    try {
-      window.localStorage.setItem(CHAT_WIDTH_KEY, String(chatWidth));
-    } catch {
-      /* storage unavailable (private mode) — the split just won't persist */
-    }
-  }, [chatWidth]);
-
-  const nudgeChatWidth = useCallback((delta: number) => {
-    setChatWidth((w) => clampChatWidth(w + delta));
-  }, []);
 
   const signedIn = !authEnabled || Boolean(account());
 
@@ -82,6 +65,8 @@ export default function App() {
   useEffect(() => {
     if (!signedIn) return;
     fetchMe().then(setMe).catch(() => setMe(null));
+    // Warm the live Web IQ answer so the four-layer slide is ready when reached.
+    void fetchWebPulse();
   }, [signedIn]);
 
   const resetIQs = useCallback(() => {
@@ -91,6 +76,7 @@ export default function App() {
   const send = useCallback(async (question: string) => {
     if (busy) return;
     setMode("chat");
+    chat.setOpen(true);
     setMessages((prev) => [...prev, { role: "user", content: question }]);
     resetIQs();
     setBusy(true);
@@ -206,14 +192,28 @@ export default function App() {
   }
 
   if (!config || !story) {
-    return <div className="boot">Loading…</div>;
+    return (
+      <div className="boot" role="status" aria-label="Loading">
+        <div className="skel skel-bar" />
+        <div className="boot-body">
+          <div className="skel skel-line w30" />
+          <div className="skel skel-title" />
+          <div className="skel skel-line w70" />
+          <div className="skel skel-line w55" />
+          <div className="boot-cards">
+            <div className="skel skel-card" /><div className="skel skel-card" />
+            <div className="skel skel-card" /><div className="skel skel-card" />
+          </div>
+        </div>
+      </div>
+    );
   }
 
   if (authEnabled && !signedIn) {
     return (
       <div className="signin">
         <div className="signin-card">
-          <img className="signin-mark" src="/brand/cm-lockup.png" alt={config.bank} />
+          <BankMark className="signin-mark" />
           <h1>Capital Markets Client Intelligence</h1>
           <p className="signin-sub">{config.bank} · Energy &amp; Midstream coverage</p>
           <p className="signin-why">
@@ -232,15 +232,17 @@ export default function App() {
 
   return (
     <div className="app">
+      <a className="skip-link" href="#main-content">Skip to content</a>
        <header className="topbar portfolio-navigation">
         <div className="brand">
-          <img className="brand-mark" src="/brand/cm-logo-white.png" alt="" aria-hidden />
-          <span className="brand-name">{config.bank}</span>
+          <BankMark className="brand-mark" />
+          <span className="brand-name" title={brand.bankName}>{brand.bankName}</span>
           <span className="brand-divider" />
           <span className="brand-app">Capital Markets Client Intelligence</span>
         </div>
 
         <div className="topbar-right">
+          {signedIn && <FabricCapacityControl />}
            <div className="mode-toggle" role="group" aria-label="Workspace">
             <button
               className={mode === "story" ? "on" : ""}
@@ -257,8 +259,13 @@ export default function App() {
                onClick={() => setMode("dashboard")}
                aria-pressed={mode === "dashboard"}
              >Dashboard</button>
+             <button
+               className={mode === "scenarios" ? "on" : ""}
+               onClick={() => setMode("scenarios")}
+               aria-pressed={mode === "scenarios"}
+             >Scenarios</button>
           </div>
-          {config.mockMode && <span className="pill pill-warn">MOCK MODE</span>}
+          {config.mockMode&& <span className="pill pill-warn">MOCK MODE</span>}
           {me && (
             <div className="who" title={me.upn}>
               <span className="who-avatar" aria-hidden>
@@ -278,13 +285,18 @@ export default function App() {
 
       <div className="disclaimer-strip">{config.disclaimer}</div>
 
-       <Dashboard active={mode === "dashboard"} />
+       <Dashboard active={mode === "dashboard"} bankName={brand.bankName}
+                  userName={me?.name || story?.persona?.name || ""} />
+       <ScenariosView active={mode === "scenarios"} bankName={brand.bankName} />
        <main
-        className={`layout layout-${mode}${resizing ? " resizing" : ""}`}
-         style={{
-           "--chat-width": `${chatWidth}vw`,
-           ...(mode === "dashboard" ? { display: "none" } : {}),
-         } as CSSProperties}
+        id="main-content"
+        ref={layoutRef}
+        tabIndex={-1}
+        className={`layout layout-${mode}${chat.open ? "" : " chat-collapsed"}`}
+        style={{
+          "--split-w": `${chat.width}%`,
+          ...(mode === "dashboard" || mode === "scenarios" ? { display: "none" } : {}),
+        } as CSSProperties}
       >
         {mode === "story" ? (
           <StoryPanel
@@ -322,49 +334,20 @@ export default function App() {
           </section>
         )}
 
-        {/* Drag (or arrow-key) to rebalance the story/explore pane against the
-            chat pane. Double-click restores the even split. */}
-        <div
-          className="resize-divider"
-          role="separator"
-          aria-label="Resize chat panel"
-          aria-orientation="vertical"
-          aria-valuemin={CHAT_WIDTH_MIN}
-          aria-valuemax={CHAT_WIDTH_MAX}
-          aria-valuenow={Math.round(chatWidth)}
-          tabIndex={0}
-          onPointerDown={(e) => {
-            (e.target as HTMLElement).setPointerCapture(e.pointerId);
-            setResizing(true);
-          }}
-          onPointerMove={(e) => {
-            if (!(e.target as HTMLElement).hasPointerCapture(e.pointerId)) return;
-            const w = ((window.innerWidth - e.clientX) / window.innerWidth) * 100;
-            setChatWidth(clampChatWidth(w));
-          }}
-          onPointerUp={(e) => {
-            (e.target as HTMLElement).releasePointerCapture(e.pointerId);
-            setResizing(false);
-          }}
-          onPointerCancel={() => setResizing(false)}
-          onDoubleClick={() => setChatWidth(CHAT_WIDTH_DEFAULT)}
-          onKeyDown={(e) => {
-            if (e.key === "ArrowLeft") { e.preventDefault(); nudgeChatWidth(2); }
-            else if (e.key === "ArrowRight") { e.preventDefault(); nudgeChatWidth(-2); }
-            else if (e.key === "Home") { e.preventDefault(); setChatWidth(CHAT_WIDTH_MIN); }
-            else if (e.key === "End") { e.preventDefault(); setChatWidth(CHAT_WIDTH_MAX); }
-            else if (e.key === "Enter") { e.preventDefault(); setChatWidth(CHAT_WIDTH_DEFAULT); }
-          }}
-        >
-          <span className="resize-divider-bar" />
-        </div>
+        {chat.open
+          ? <SplitHandle split={chat} container={layoutRef} controls="app-chat" />
+          : <SplitRail split={chat} controls="app-chat" />}
 
         <ChatPanel
+          id="app-chat"
+          hidden={!chat.open}
+          onCollapse={() => chat.setOpen(false)}
           messages={messages}
           busy={busy}
           status={status}
           suggestions={suggestions}
           agentName={config.agentName}
+          bankName={brand.bankName}
           onSend={send}
           onStop={stop}
         />

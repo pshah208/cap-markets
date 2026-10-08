@@ -1,7 +1,7 @@
 {
   "$schema_note": "Web IQ configuration for the Capital Markets Client Intelligence Agent. This layer is LIVE ONLY - there is no offline cache and no synthetic news file. If the Grounding with Bing Search connection is not configured on the Foundry project, the tool returns an explicit 'Web IQ unavailable' response so the agent never fabricates external facts about a real issuer.",
   "$critical_guardrail": "Gibson Energy Inc. and every other issuer in this demo is a REAL public company. Web IQ returns real public information about them. Every other layer in this demo (Work IQ, Fabric IQ, Foundry IQ) is entirely synthetic. The agent must never blend a synthetic internal figure into a statement about the real issuer's actual finances, and must never attribute a synthetic internal view to a public source.",
-  "as_of": "2026-08-10",
+  "as_of": "2026-10-05",
   "mode": "live_only",
   "offline_cache": false,
   "grounding": {

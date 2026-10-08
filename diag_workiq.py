@@ -1,111 +1,194 @@
-"""Call the Work IQ A2A endpoint directly to see the real error.
+"""Diagnose Work IQ with explicit delegated device authentication and A2A.
 
-The Foundry portal wraps every failure in the same generic "Access denied ...
-verify (1)(2)(3)" message, which does not distinguish between:
-
-  * no token at all              (connection never authorized)
-  * token with the wrong audience
-  * valid token, identity not entitled
-  * valid token, tenant not enrolled in the preview
-
-This performs the delegated device-code flow against the SAME app registration
-and scope the Foundry connection uses, then calls the endpoint and prints the
-raw status and body.
-
-    python diag_workiq.py
+Requires WORKIQ_TENANT_ID and WORKIQ_CLIENT_ID (canonical GUIDs), plus
+DIAG_PROMPT. No client secret, backend bank configuration, default application,
+Azure auth profile or .env is used. Imports never read configuration or connect.
+Only status/structural summaries are printed, never tokens or raw service bodies.
 """
-
 from __future__ import annotations
 
-import json
-import os
 import sys
 import time
 import uuid
 
-import requests
+from agent.portability import ConfigurationError, require_environment, require_https_url
 
-TENANT = os.getenv("WORKIQ_TENANT_ID", "cf54b15b-1866-486f-88d6-7ba81bf35aa1")
-CLIENT = os.getenv("WORKIQ_CONNECTOR_APP", "f940a69d-32ec-4865-ab13-452cb8164771")
+
 SCOPE = "api://workiq.svc.cloud.microsoft/WorkIQAgent.Ask offline_access"
 A2A = "https://workiq.svc.cloud.microsoft/a2a/"
 
 
-def device_code() -> dict:
-    r = requests.post(
-        f"https://login.microsoftonline.com/{TENANT}/oauth2/v2.0/devicecode",
-        data={"client_id": CLIENT, "scope": SCOPE}, timeout=60)
-    if r.status_code != 200:
-        sys.exit(f"devicecode failed {r.status_code}: {r.text[:600]}")
-    return r.json()
+class DiagnosticError(RuntimeError):
+    """Device authorization or the A2A protocol failed."""
 
 
-def poll(dc: dict) -> dict:
-    deadline = time.time() + dc.get("expires_in", 900)
-    while time.time() < deadline:
-        time.sleep(dc.get("interval", 5))
-        r = requests.post(
-            f"https://login.microsoftonline.com/{TENANT}/oauth2/v2.0/token",
+def load_config() -> dict[str, str]:
+    config = require_environment("WORKIQ_TENANT_ID", "WORKIQ_CLIENT_ID", "DIAG_PROMPT")
+    for name in ("WORKIQ_TENANT_ID", "WORKIQ_CLIENT_ID"):
+        try:
+            valid = str(uuid.UUID(config[name])) == config[name].lower()
+        except ValueError:
+            valid = False
+        if not valid:
+            raise ConfigurationError(f"{name} must be a canonical GUID")
+    return config
+
+
+def read_object(response, label: str) -> dict:
+    try:
+        body = response.json()
+    except ValueError:
+        raise DiagnosticError(f"{label}: malformed JSON") from None
+    if not isinstance(body, dict):
+        raise DiagnosticError(f"{label}: expected a JSON object")
+    return body
+
+
+def device_code(http, config: dict[str, str]) -> dict:
+    with http.post(
+        f"https://login.microsoftonline.com/{config['WORKIQ_TENANT_ID']}/oauth2/v2.0/devicecode",
+        data={"client_id": config["WORKIQ_CLIENT_ID"], "scope": SCOPE},
+        timeout=(30, 60), allow_redirects=False,
+    ) as response:
+        if response.status_code != 200:
+            raise DiagnosticError(f"devicecode: HTTP {response.status_code}")
+        body = read_object(response, "devicecode")
+    if "error" in body:
+        raise DiagnosticError("devicecode: OAuth error")
+    for name in ("device_code", "user_code", "verification_uri"):
+        if not isinstance(body.get(name), str) or not body[name].strip():
+            raise DiagnosticError(f"devicecode: missing {name}")
+    try:
+        require_https_url("verification_uri", body["verification_uri"])
+    except ConfigurationError:
+        raise DiagnosticError("devicecode: invalid HTTPS verification_uri") from None
+    for name, value in (("expires_in", body.get("expires_in")), ("interval", body.get("interval", 5))):
+        if type(value) is not int or value <= 0:
+            raise DiagnosticError(f"devicecode: {name} must be a positive integer")
+    return body
+
+
+def poll(http, config: dict[str, str], device: dict) -> str:
+    deadline = time.monotonic() + device["expires_in"]
+    interval = device.get("interval", 5)
+    while True:
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise DiagnosticError("Device code expired")
+        time.sleep(min(interval, remaining))
+        remaining = deadline - time.monotonic()
+        if remaining <= 0:
+            raise DiagnosticError("Device code expired")
+        with http.post(
+            f"https://login.microsoftonline.com/{config['WORKIQ_TENANT_ID']}/oauth2/v2.0/token",
             data={"grant_type": "urn:ietf:params:oauth:grant-type:device_code",
-                  "client_id": CLIENT, "device_code": dc["device_code"]},
-            timeout=60)
-        if r.status_code == 200:
-            return r.json()
-        err = r.json().get("error", "")
-        if err in ("authorization_pending", "slow_down"):
+                  "client_id": config["WORKIQ_CLIENT_ID"], "device_code": device["device_code"]},
+            timeout=min(60, remaining), allow_redirects=False,
+        ) as response:
+            status = response.status_code
+            body = read_object(response, "token")
+        if status == 200:
+            token = body.get("access_token")
+            if ("error" in body or not isinstance(token, str) or not token.strip()
+                    or not isinstance(body.get("token_type"), str)
+                    or body["token_type"].lower() != "bearer"):
+                raise DiagnosticError("token: missing bearer access token or OAuth error")
+            return token
+        error = body.get("error")
+        if status in (400, 429) and error == "authorization_pending":
             continue
-        sys.exit(f"token failed: {r.text[:800]}")
-    sys.exit("device code expired")
+        if status in (400, 429) and error == "slow_down":
+            interval += 5
+            continue
+        if error in ("access_denied", "authorization_declined", "expired_token", "bad_verification_code"):
+            raise DiagnosticError(f"Device authorization failed: {error}")
+        raise DiagnosticError(f"token: OAuth request failed (HTTP {status})")
 
 
-def claims(tok: str) -> dict:
-    import base64
-    body = tok.split(".")[1]
-    body += "=" * (-len(body) % 4)
-    return json.loads(base64.urlsafe_b64decode(body))
+def check_a2a(body: dict, request_id: str) -> None:
+    if body.get("jsonrpc") != "2.0" or body.get("id") != request_id:
+        raise DiagnosticError("A2A: invalid JSON-RPC version or response id")
+    if "error" in body:
+        error = body["error"]
+        code = error.get("code") if isinstance(error, dict) else None
+        suffix = f" (code {code})" if type(code) is int else ""
+        raise DiagnosticError(f"A2A: JSON-RPC error{suffix}")
+    result = body.get("result")
+    if not isinstance(result, dict) or "error" in result:
+        raise DiagnosticError("A2A: missing result or result-level error")
+    if result.get("kind") == "message":
+        parts = result.get("parts")
+        if (result.get("role") != "agent"
+                or not isinstance(result.get("messageId"), str) or not result["messageId"].strip()
+                or not isinstance(parts, list) or not parts):
+            raise DiagnosticError("A2A: malformed agent message")
+        for part in parts:
+            if not isinstance(part, dict) or part.get("kind") not in ("text", "file", "data"):
+                raise DiagnosticError("A2A: malformed message part")
+            if part["kind"] == "text" and not isinstance(part.get("text"), str):
+                raise DiagnosticError("A2A: malformed text part")
+            if part["kind"] == "data" and not isinstance(part.get("data"), dict):
+                raise DiagnosticError("A2A: malformed data part")
+            if part["kind"] == "file":
+                file = part.get("file")
+                if not isinstance(file, dict):
+                    raise DiagnosticError("A2A: malformed file part")
+                content = [name for name in ("uri", "bytes") if name in file]
+                if len(content) != 1 or not isinstance(file[content[0]], str) or not file[content[0]]:
+                    raise DiagnosticError("A2A: malformed file content")
+        print(f"A2A: OK, agent message ({len(parts)} parts)")
+    elif result.get("kind") == "task":
+        status = result.get("status")
+        if (not isinstance(result.get("id"), str) or not result["id"].strip()
+                or not isinstance(status, dict) or status.get("state") != "completed"):
+            raise DiagnosticError("A2A: task failed or is not completed")
+        print("A2A: OK, completed task")
+    else:
+        raise DiagnosticError("A2A: expected an agent message or completed task")
 
 
 def main() -> int:
-    dc = device_code()
-    print("\n" + "=" * 68)
-    print(f"  Open: {dc['verification_uri']}")
-    print(f"  Code: {dc['user_code']}")
-    print("  Sign in as the user you want to test (e.g. SydneyM).")
-    print("=" * 68 + "\n")
+    try:
+        config = load_config()
+    except ConfigurationError as error:
+        print(f"Configuration error: {error}", file=sys.stderr)
+        return 2
 
-    tok = poll(dc)["access_token"]
-    c = claims(tok)
-    print("token acquired")
-    print(f"  aud : {c.get('aud')}")
-    print(f"  upn : {c.get('upn') or c.get('preferred_username')}")
-    print(f"  scp : {c.get('scp')}")
-    print(f"  appid: {c.get('appid')}")
+    import requests
 
-    # Minimal A2A message/send, mirroring what Foundry's SendMessage does.
-    payload = {
-        "jsonrpc": "2.0",
-        "id": str(uuid.uuid4()),
-        "method": "message/send",
-        "params": {
-            "message": {
+    try:
+        device = device_code(requests, config)
+        print(f"Open: {device['verification_uri']}")
+        print(f"Code: {device['user_code']}")
+        print("Sign in with the intended user in the explicitly configured Work IQ tenant.")
+        access_token = poll(requests, config, device)
+        print("Bearer token acquired (not displayed)")
+        request_id = str(uuid.uuid4())
+        payload = {
+            "jsonrpc": "2.0",
+            "id": request_id,
+            "method": "message/send",
+            "params": {"message": {
+                "kind": "message",
                 "role": "user",
-                "parts": [{"kind": "text",
-                           "text": "What is reference CR-2026-0184?"}],
+                "parts": [{"kind": "text", "text": config["DIAG_PROMPT"]}],
                 "messageId": str(uuid.uuid4()),
-            }
-        },
-    }
-    r = requests.post(A2A, headers={"Authorization": f"Bearer {tok}",
-                                    "Content-Type": "application/json"},
-                      json=payload, timeout=180)
-    print(f"\nA2A POST {A2A}")
-    print(f"  status: {r.status_code}")
-    for k in ("x-ms-diagnostics", "www-authenticate", "x-ms-request-id",
-              "request-id", "x-ms-correlation-id"):
-        if k in r.headers:
-            print(f"  {k}: {r.headers[k][:300]}")
-    print(f"  body  : {r.text[:1500]}")
-    return 0 if r.status_code < 400 else 1
+            }},
+        }
+        with requests.post(
+            A2A, headers={"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"},
+            json=payload, timeout=(30, 180), allow_redirects=False,
+        ) as response:
+            print(f"A2A HTTP {response.status_code}")
+            if response.status_code != 200:
+                raise DiagnosticError(f"A2A: HTTP {response.status_code}")
+            check_a2a(read_object(response, "A2A"), request_id)
+        return 0
+    except DiagnosticError as error:
+        print(f"Work IQ diagnostic failed: {error}", file=sys.stderr)
+    except requests.RequestException as error:
+        print(f"Work IQ transport failed ({type(error).__name__})", file=sys.stderr)
+    return 1
 
 
 if __name__ == "__main__":

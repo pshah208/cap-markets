@@ -1,0 +1,120 @@
+{
+  "$schema_note": "SYNTHETIC DEMO DATA. A one-morning market scenario for the coverage workflow (triage, outreach, call assist, wrap-up). Every level, change, sensitivity, channel preference and committee view here is invented. The issuers are real TSX names used only as labels; contacts are ROLES, never invented people at real companies. Macro direction and per-client EBITDA sensitivities were reviewed by a second model (oil supply shock, risk-off): gas moves less than oil; the WCS-WTI differential widens to -17.2; a wider differential moves Gibson's differential hedge toward Gibson, so the Bank's pre-settlement exposure FALLS.",
+  "id": "SCN-2026-10-05-OIL",
+  "as_of": "2026-10-05",
+  "time_local": "08:15 ET",
+  "title": "Overnight oil supply shock",
+  "headline": "OPEC+ surprise supply increase: WTI -14.2% overnight, WCS-WTI differential wider by US$4.1, energy credit spreads +62 bp.",
+  "alert": "Crude fell 14.2% overnight on an unexpected OPEC+ supply increase. Energy credit is repricing and the WCS discount has widened.",
+  "pulse": [
+    {"panel": "Equities", "rows": [
+      {"name": "S&P/TSX Composite", "level": "25,980", "change": "-2.6%", "dir": "down"},
+      {"name": "S&P/TSX Capped Energy", "level": "286.4", "change": "-7.9%", "dir": "down"},
+      {"name": "S&P 500", "level": "6,180", "change": "-1.1%", "dir": "down"},
+      {"name": "Cdn integrated oil peers", "level": "100.0", "change": "-8.5%", "dir": "down"}
+    ]},
+    {"panel": "Rates", "rows": [
+      {"name": "GoC 2Y", "level": "3.02%", "change": "-6 bp", "dir": "down"},
+      {"name": "GoC 10Y", "level": "3.18%", "change": "-9 bp", "dir": "down"},
+      {"name": "UST 10Y", "level": "3.74%", "change": "-7 bp", "dir": "down"},
+      {"name": "Canada 2s10s", "level": "+16 bp", "change": "-3 bp", "dir": "down"}
+    ]},
+    {"panel": "Credit", "rows": [
+      {"name": "CAD IG OAS", "level": "132 bp", "change": "+14 bp", "dir": "up", "bad": true},
+      {"name": "CAD HY OAS", "level": "452 bp", "change": "+38 bp", "dir": "up", "bad": true},
+      {"name": "US Energy HY OAS", "level": "548 bp", "change": "+62 bp", "dir": "up", "bad": true},
+      {"name": "CDX IG", "level": "71 bp", "change": "+6 bp", "dir": "up", "bad": true}
+    ]},
+    {"panel": "Commodities & FX", "rows": [
+      {"name": "WTI (US$/bbl)", "level": "61.40", "change": "-14.2%", "dir": "down"},
+      {"name": "WCS-WTI diff (US$/bbl)", "level": "-17.20", "change": "-4.10", "dir": "down"},
+      {"name": "AECO (C$/mmbtu)", "level": "1.98", "change": "-4.0%", "dir": "down"},
+      {"name": "USD/CAD", "level": "1.392", "change": "+1.4%", "dir": "up"}
+    ]}
+  ],
+  "clients": {
+    "CLI-1001": {"ebitda_shock_pct": -3.0, "pse_change_m": -4.1,
+      "driver": "Fee-based infrastructure cushions the hit; crude marketing margin and the Chauvin volumes are exposed to the wider WCS differential.",
+      "pending_transaction": "Revolver upsize CAD 1.10bn -> 1.35bn (OPP-4471) in approval",
+      "contact_role": "VP & Treasurer", "channel": "video", "channel_detail": "Teams video",
+      "slot": "10:30 ET", "response": {"status": "accepted", "detail": "Accepted the Teams video call at 10:30 ET."}},
+    "CLI-1002": {"ebitda_shock_pct": -3.5, "pse_change_m": 0.0,
+      "driver": "NGL margins and producer activity soften; the fee-for-service base is resilient.",
+      "contact_role": "VP & Treasurer", "channel": "chat", "channel_detail": "Teams chat",
+      "slot": "13:00 ET", "response": {"status": "awaiting", "detail": "Message delivered; awaiting reply."}},
+    "CLI-1003": {"ebitda_shock_pct": -14.5, "pse_change_m": 0.0,
+      "driver": "Light-oil producer: realised prices fall with WTI; the hedge book covers only part of the next 12 months.",
+      "contact_role": "Chief Financial Officer", "channel": "phone", "channel_detail": "Phone",
+      "slot": "11:00 ET", "response": {"status": "accepted", "detail": "Confirmed a call at 11:00 ET."}},
+    "CLI-1004": {"ebitda_shock_pct": -5.0, "pse_change_m": 0.0,
+      "driver": "Activity-linked energy-services volumes soften; waste and industrial services are steadier.",
+      "contact_role": "Chief Financial Officer", "channel": "phone", "channel_detail": "Phone",
+      "slot": "15:00 ET", "response": {"status": "awaiting", "detail": "Voicemail left; awaiting call back."}},
+    "CLI-1005": {"ebitda_shock_pct": 0.5, "pse_change_m": 0.0,
+      "driver": "Lower diesel and input costs and USD revenue translation help modestly.",
+      "contact_role": "Chief Financial Officer", "channel": "email", "channel_detail": "Email",
+      "slot": "Today", "response": {"status": "awaiting", "detail": "Email delivered; awaiting reply."}},
+    "CLI-1006": {"ebitda_shock_pct": -4.0, "pse_change_m": 0.0,
+      "driver": "Energy tubular product demand and industrial sentiment weaken; CAD weakness partly offsets on USD-priced sales.",
+      "contact_role": "VP Finance", "channel": "email", "channel_detail": "Email",
+      "slot": "Today", "response": {"status": "tomorrow", "detail": "Replied: available tomorrow at 09:00 ET."}},
+    "CLI-1007": {"ebitda_shock_pct": 0.5, "pse_change_m": 0.0,
+      "driver": "Lower energy, freight and input costs offset demand worries.",
+      "contact_role": "Chief Financial Officer", "channel": "video", "channel_detail": "Teams video",
+      "slot": "14:00 ET", "response": {"status": "accepted", "detail": "Accepted the Teams video call at 14:00 ET."}},
+    "CLI-1008": {"ebitda_shock_pct": 0.0, "pse_change_m": 0.0,
+      "driver": "Broadly neutral near term: mixed FX and input-cost effects.",
+      "contact_role": "Chief Financial Officer", "channel": "email", "channel_detail": "Email",
+      "slot": "Today", "response": {"status": "awaiting", "detail": "Email delivered; awaiting reply."}},
+    "CLI-1009": {"ebitda_shock_pct": 0.0, "pse_change_m": 0.0,
+      "driver": "Fuel and freight relief is offset by a weaker CAD on imported merchandise.",
+      "contact_role": "VP & Treasurer", "channel": "email", "channel_detail": "Email",
+      "slot": "Today", "response": {"status": "awaiting", "detail": "Email delivered; awaiting reply."}},
+    "CLI-1010": {"ebitda_shock_pct": -1.0, "pse_change_m": 0.0,
+      "driver": "Propane distribution margins are modestly lower; volumes remain weather-driven.",
+      "contact_role": "Chief Financial Officer", "channel": "phone", "channel_detail": "Phone",
+      "slot": "16:00 ET", "response": {"status": "awaiting", "detail": "Awaiting call back."}}
+  },
+  "house_view": {
+    "id": "HV-2026-10-05",
+    "committee": "Credit & Markets Committee (synthetic)",
+    "date": "2026-10-05",
+    "positions": [
+      {"topic": "Oil", "view": "Treat the move as supply-driven, not a demand shock. Base case is a partial retracement over two quarters; do not anchor client conversations on spot."},
+      {"topic": "Energy credit", "view": "Expect energy high-yield spreads to stay wide near term; investment-grade midstream remains resilient. No change to midstream appetite."},
+      {"topic": "Lending posture", "view": "No new term exposure to producers in the Tight or Breach band without a CP-005 pro-forma at a 15% EBITDA stress. Energy sector envelope is Amber: route new requests through Portfolio Management (CP-002)."},
+      {"topic": "Hedging", "view": "Offer hedge-programme reviews to producers, subject to CP-010 appropriateness and pre-settlement capacity. No solicitation on restricted names."},
+      {"topic": "Covenants", "view": "Raise covenant conversations early and attach them to any facility discussion now, not after the next compliance certificate."}
+    ],
+    "approved_framing": [
+      "Today's move looks supply-driven; our committee's base case is a partial retracement over the next two quarters.",
+      "We are not changing our support for well-structured midstream and infrastructure credits.",
+      "Any change to facility size or terms is subject to our internal approval; we will come back with something firm.",
+      "If it would help, we can review your hedge programme with you - any recommendation follows our appropriateness process."
+    ],
+    "needs_disclaimer": [
+      "Any view on commodity prices or spreads (forward-looking; not a forecast or advice).",
+      "Any illustration of covenant sensitivity (based on your reported figures; illustrative only)."
+    ],
+    "needs_approval": [
+      "Any indicative facility size, hold or pricing (CP-003).",
+      "Any specific hedge structure or notional (CP-010, and CP-008 where a restriction applies)."
+    ],
+    "never_say": [
+      "Our internal risk rating, single-name limit or its utilisation (CP-014).",
+      "Our sector capacity position or that it constrains us (CP-002).",
+      "Wallet share or competitor rankings (CP-014).",
+      "Anything touching a restricted subject, or that a wall-crossing exists (CP-008)."
+    ]
+  },
+  "severity": {
+    "note": "Deterministic 0-100. Weights reviewed by a second model; the derivative factor is replaced by shock magnitude (only one client carries derivatives) and events include live transactions. Threshold 41 flags five of ten, as the reviewer suggested.",
+    "covenant": {"breach": 45, "lt5": 35, "lt10": 25, "lt20": 15, "else": 5},
+    "limit": {"gt90": 20, "gt80": 15, "gt70": 10, "else": 0},
+    "rating": {"watchlist_or_negative": 15, "stable": 5, "improving": 0},
+    "events_cap": 10,
+    "events": {"meeting_7d": 3, "kyc_60d": 3, "maturity_12m": 4, "pending_transaction": 4},
+    "shock": {"ge10": 10, "ge3": 6, "ge1": 3, "else": 0},
+    "threshold": 41
+  }
+}

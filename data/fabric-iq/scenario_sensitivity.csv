@@ -1,0 +1,11 @@
+client_id,client_name,beta_oil,beta_gas,beta_fx,beta_demand,beta_tariff,floating_debt_share,business_model,oil_shock_ebitda_pct,as_of_date
+CLI-1001,Gibson Energy Inc.,0.240845,0.0,0.3,0.2,-0.05,0.45,Fee-based midstream with a crude-marketing segment; USD-linked revenue.,-3.0,2026-10-05
+CLI-1002,Keyera Corp.,0.18169,0.3,0.2,0.3,-0.04,0.35,NGL midstream; frac spreads tie it to gas.,-3.5,2026-10-05
+CLI-1003,Whitecap Resources Inc.,1.057746,0.15,0.8,0.2,-0.12,0.5,"Light-oil producer; USD-priced barrels, CAD costs.",-14.5,2026-10-05
+CLI-1004,Secure Waste Infrastructure,0.315493,0.2,0.2,0.8,-0.03,0.55,Energy services and waste; activity-linked.,-5.0,2026-10-05
+CLI-1005,Stella-Jones Inc.,-0.015493,0.0,0.2,0.6,-0.35,0.4,Utility poles and rail ties; diesel and fibre inputs.,0.5,2026-10-05
+CLI-1006,Russel Metals Inc.,0.311268,0.0,0.3,1.5,0.06,0.6,Metals service centres with an energy-tubulars segment.,-4.0,2026-10-05
+CLI-1007,Cascades Inc.,0.012676,-0.1,0.2,0.8,-0.25,0.5,Packaging and tissue; energy and fibre are inputs.,0.5,2026-10-05
+CLI-1008,Ag Growth International Inc.,0.039437,0.0,0.4,1.2,-0.4,0.55,Agricultural equipment; farm-income cycle.,0.0,2026-10-05
+CLI-1009,North West Company Inc.,-0.049296,0.0,-0.5,0.3,-0.02,0.3,"Remote retail; imported goods, fuel and freight costs.",0.0,2026-10-05
+CLI-1010,Superior Plus Corp.,0.023944,0.2,0.1,0.5,-0.08,0.45,Propane distribution; weather-driven volumes.,-1.0,2026-10-05

@@ -1,53 +1,53 @@
 client_id,client_name,product_id,product_name,business_line,exposure_type,current_exposure_cad_m,peak_12m_exposure_cad_m,tenor_note,as_of_date
-CLI-1001,Gibson Energy Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded - drawn revolver,96.0,118.0,Committed to 2029-06-30,2026-08-10
-CLI-1001,Gibson Energy Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded - term loan,140.0,140.0,Committed to 2030-03-31,2026-08-10
-CLI-1001,Gibson Energy Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent - letters of credit,32.4,38.1,Rolling 364-day,2026-08-10
-CLI-1001,Gibson Energy Inc.,PRD-09,Commodity Derivatives,Global Markets,Derivative - commodity MTM + PSE,41.2,47.8,"WTI-WCS differential, 18m",2026-08-10
-CLI-1001,Gibson Energy Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - FX forward MTM + PSE,18.6,22.9,"CAD/USD strip, 12m",2026-08-10
-CLI-1001,Gibson Energy Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - interest rate swap MTM,9.4,14.2,"SOFR fixed-pay, 5y",2026-08-10
-CLI-1001,Gibson Energy Inc.,PRD-10,Cash Management & Treasury Services,Transaction Banking,Intraday settlement / daylight,4.1,6.8,Uncommitted,2026-08-10
-CLI-1002,Keyera Corp.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,122.7,132.4,,2026-08-10
-CLI-1002,Keyera Corp.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,123.0,134.2,,2026-08-10
-CLI-1002,Keyera Corp.,PRD-03,Letters of Credit,Corporate Banking,Contingent,27.0,31.5,,2026-08-10
-CLI-1002,Keyera Corp.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,22.7,25.0,,2026-08-10
-CLI-1002,Keyera Corp.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,12.2,14.2,,2026-08-10
-CLI-1003,Whitecap Resources Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,59.7,62.7,,2026-08-10
-CLI-1003,Whitecap Resources Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,51.7,66.8,,2026-08-10
-CLI-1003,Whitecap Resources Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,24.4,31.6,,2026-08-10
-CLI-1003,Whitecap Resources Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,10.9,12.5,,2026-08-10
-CLI-1003,Whitecap Resources Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,7.6,8.6,,2026-08-10
-CLI-1004,Secure Waste Infrastructure,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,46.5,51.1,,2026-08-10
-CLI-1004,Secure Waste Infrastructure,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,40.0,42.6,,2026-08-10
-CLI-1004,Secure Waste Infrastructure,PRD-03,Letters of Credit,Corporate Banking,Contingent,14.2,15.7,,2026-08-10
-CLI-1004,Secure Waste Infrastructure,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,7.8,8.2,,2026-08-10
-CLI-1004,Secure Waste Infrastructure,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,7.0,7.8,,2026-08-10
-CLI-1005,Stella-Jones Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,71.5,89.9,,2026-08-10
-CLI-1005,Stella-Jones Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,42.5,46.2,,2026-08-10
-CLI-1005,Stella-Jones Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,18.1,20.3,,2026-08-10
-CLI-1005,Stella-Jones Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,11.2,12.4,,2026-08-10
-CLI-1005,Stella-Jones Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,7.4,9.0,,2026-08-10
-CLI-1006,Russel Metals Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,93.1,118.2,,2026-08-10
-CLI-1006,Russel Metals Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,62.8,68.1,,2026-08-10
-CLI-1006,Russel Metals Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,15.3,19.5,,2026-08-10
-CLI-1006,Russel Metals Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,13.9,14.8,,2026-08-10
-CLI-1006,Russel Metals Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,6.3,8.0,,2026-08-10
-CLI-1007,Cascades Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,53.1,57.0,,2026-08-10
-CLI-1007,Cascades Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,42.8,48.6,,2026-08-10
-CLI-1007,Cascades Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,8.9,10.7,,2026-08-10
-CLI-1007,Cascades Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,6.5,7.9,,2026-08-10
-CLI-1007,Cascades Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,5.9,7.0,,2026-08-10
-CLI-1008,Ag Growth International Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,24.4,26.1,,2026-08-10
-CLI-1008,Ag Growth International Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,23.2,29.0,,2026-08-10
-CLI-1008,Ag Growth International Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,10.1,12.4,,2026-08-10
-CLI-1008,Ag Growth International Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,4.7,5.0,,2026-08-10
-CLI-1008,Ag Growth International Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,4.8,5.6,,2026-08-10
-CLI-1009,North West Company Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,35.2,43.0,,2026-08-10
-CLI-1009,North West Company Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,24.9,29.2,,2026-08-10
-CLI-1009,North West Company Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,11.8,12.7,,2026-08-10
-CLI-1009,North West Company Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,6.2,7.0,,2026-08-10
-CLI-1009,North West Company Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,3.7,4.4,,2026-08-10
-CLI-1010,Superior Plus Corp.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,72.3,74.9,,2026-08-10
-CLI-1010,Superior Plus Corp.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,85.7,101.6,,2026-08-10
-CLI-1010,Superior Plus Corp.,PRD-03,Letters of Credit,Corporate Banking,Contingent,19.3,21.7,,2026-08-10
-CLI-1010,Superior Plus Corp.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,13.1,16.0,,2026-08-10
-CLI-1010,Superior Plus Corp.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,13.0,13.9,,2026-08-10
+CLI-1001,Gibson Energy Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded - drawn revolver,96.0,118.0,Committed to 2029-06-30,2026-10-05
+CLI-1001,Gibson Energy Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded - term loan,140.0,140.0,Committed to 2030-03-31,2026-10-05
+CLI-1001,Gibson Energy Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent - letters of credit,32.4,38.1,Rolling 364-day,2026-10-05
+CLI-1001,Gibson Energy Inc.,PRD-09,Commodity Derivatives,Global Markets,Derivative - commodity MTM + PSE,41.2,47.8,"WTI-WCS differential, 18m",2026-10-05
+CLI-1001,Gibson Energy Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - FX forward MTM + PSE,18.6,22.9,"CAD/USD strip, 12m",2026-10-05
+CLI-1001,Gibson Energy Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - interest rate swap MTM,9.4,14.2,"SOFR fixed-pay, 5y",2026-10-05
+CLI-1001,Gibson Energy Inc.,PRD-10,Cash Management & Treasury Services,Transaction Banking,Intraday settlement / daylight,4.1,6.8,Uncommitted,2026-10-05
+CLI-1002,Keyera Corp.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,122.7,132.4,,2026-10-05
+CLI-1002,Keyera Corp.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,123.0,134.2,,2026-10-05
+CLI-1002,Keyera Corp.,PRD-03,Letters of Credit,Corporate Banking,Contingent,27.0,31.5,,2026-10-05
+CLI-1002,Keyera Corp.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,22.7,25.0,,2026-10-05
+CLI-1002,Keyera Corp.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,12.2,14.2,,2026-10-05
+CLI-1003,Whitecap Resources Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,59.7,62.7,,2026-10-05
+CLI-1003,Whitecap Resources Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,51.7,66.8,,2026-10-05
+CLI-1003,Whitecap Resources Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,24.4,31.6,,2026-10-05
+CLI-1003,Whitecap Resources Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,10.9,12.5,,2026-10-05
+CLI-1003,Whitecap Resources Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,7.6,8.6,,2026-10-05
+CLI-1004,Secure Waste Infrastructure,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,46.5,51.1,,2026-10-05
+CLI-1004,Secure Waste Infrastructure,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,40.0,42.6,,2026-10-05
+CLI-1004,Secure Waste Infrastructure,PRD-03,Letters of Credit,Corporate Banking,Contingent,14.2,15.7,,2026-10-05
+CLI-1004,Secure Waste Infrastructure,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,7.8,8.2,,2026-10-05
+CLI-1004,Secure Waste Infrastructure,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,7.0,7.8,,2026-10-05
+CLI-1005,Stella-Jones Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,71.5,89.9,,2026-10-05
+CLI-1005,Stella-Jones Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,42.5,46.2,,2026-10-05
+CLI-1005,Stella-Jones Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,18.1,20.3,,2026-10-05
+CLI-1005,Stella-Jones Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,11.2,12.4,,2026-10-05
+CLI-1005,Stella-Jones Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,7.4,9.0,,2026-10-05
+CLI-1006,Russel Metals Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,93.1,118.2,,2026-10-05
+CLI-1006,Russel Metals Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,62.8,68.1,,2026-10-05
+CLI-1006,Russel Metals Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,15.3,19.5,,2026-10-05
+CLI-1006,Russel Metals Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,13.9,14.8,,2026-10-05
+CLI-1006,Russel Metals Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,6.3,8.0,,2026-10-05
+CLI-1007,Cascades Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,53.1,57.0,,2026-10-05
+CLI-1007,Cascades Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,42.8,48.6,,2026-10-05
+CLI-1007,Cascades Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,8.9,10.7,,2026-10-05
+CLI-1007,Cascades Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,6.5,7.9,,2026-10-05
+CLI-1007,Cascades Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,5.9,7.0,,2026-10-05
+CLI-1008,Ag Growth International Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,24.4,26.1,,2026-10-05
+CLI-1008,Ag Growth International Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,23.2,29.0,,2026-10-05
+CLI-1008,Ag Growth International Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,10.1,12.4,,2026-10-05
+CLI-1008,Ag Growth International Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,4.7,5.0,,2026-10-05
+CLI-1008,Ag Growth International Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,4.8,5.6,,2026-10-05
+CLI-1009,North West Company Inc.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,35.2,43.0,,2026-10-05
+CLI-1009,North West Company Inc.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,24.9,29.2,,2026-10-05
+CLI-1009,North West Company Inc.,PRD-03,Letters of Credit,Corporate Banking,Contingent,11.8,12.7,,2026-10-05
+CLI-1009,North West Company Inc.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,6.2,7.0,,2026-10-05
+CLI-1009,North West Company Inc.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,3.7,4.4,,2026-10-05
+CLI-1010,Superior Plus Corp.,PRD-01,Corporate Loan - Revolving Credit Facility,Corporate Banking,Funded,72.3,74.9,,2026-10-05
+CLI-1010,Superior Plus Corp.,PRD-02,Corporate Loan - Term Loan,Corporate Banking,Funded,85.7,101.6,,2026-10-05
+CLI-1010,Superior Plus Corp.,PRD-03,Letters of Credit,Corporate Banking,Contingent,19.3,21.7,,2026-10-05
+CLI-1010,Superior Plus Corp.,PRD-07,FX - Forwards and Options,Global Markets,Derivative - MTM + PSE,13.1,16.0,,2026-10-05
+CLI-1010,Superior Plus Corp.,PRD-08,Interest Rate Derivatives,Global Markets,Derivative - MTM + PSE,13.0,13.9,,2026-10-05

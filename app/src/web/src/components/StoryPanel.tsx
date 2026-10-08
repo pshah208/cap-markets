@@ -1,12 +1,17 @@
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { FlowScene } from "./FlowScene";
 import { PlainPanel } from "./PlainPanel";
 import type { Chapter, Persona, Story } from "../types";
 import { IQPanel } from "./IQPanel";
 import { IQDiagram } from "./IQDiagram";
+import { Markdown } from "./Markdown";
 import { TelemetrySlide } from "./TelemetrySlide";
 import { DIAGRAMS } from "../lib/iqDiagram";
-import type { IQState } from "../types";
+import { fetchWebPulse, apiPost } from "../api";
+import type { IQState, LayerTable, ProFormaResult, WebPulse } from "../types";
+import { SkillModal, useSkillCatalogue } from "./SkillBar";
+import { ProFormaSkill } from "./skills/ProFormaSkill";
+import { PapersSkill } from "./skills/PapersSkill";
 
 interface Props {
   story: Story;
@@ -191,6 +196,195 @@ function DiagramSlide({ ch }: { ch: Chapter }) {
   );
 }
 
+/** The Web IQ row is fetched live rather than authored, so it never goes stale. */
+function LiveWebCell({ fallback }: { fallback: string }) {
+  const [pulse, setPulse] = useState<WebPulse | null>(null);
+  const [refreshing, setRefreshing] = useState(false);
+
+  useEffect(() => {
+    let alive = true;
+    fetchWebPulse().then((p) => { if (alive) setPulse(p); });
+    return () => { alive = false; };
+  }, []);
+
+  const refresh = () => {
+    setRefreshing(true);
+    fetchWebPulse(true).then((p) => { setPulse(p); setRefreshing(false); });
+  };
+
+  if (!pulse || refreshing) {
+    return (
+      <div className="web-live" aria-busy="true">
+        <span className="web-live-tag pending">Fetching live from the web…</span>
+        <div className="skel skel-line w90" />
+        <div className="skel skel-line w75" />
+        <div className="skel skel-line w60" />
+      </div>
+    );
+  }
+  if (pulse.status !== "live" || !pulse.text) {
+    return (
+      <div className="web-live">
+        <span className="web-live-tag off">Live web unavailable</span>
+        <p className="web-live-fallback">{fallback}</p>
+      </div>
+    );
+  }
+  const when = pulse.fetchedAt
+    ? new Date(pulse.fetchedAt).toLocaleString(undefined, {
+      dateStyle: "medium", timeStyle: "short",
+    })
+    : "";
+  return (
+    <div className="web-live">
+      <span className="web-live-tag">
+        ● Live · Bing grounding · {when}{pulse.stale ? " · last good answer" : ""}
+      </span>
+      <div className="web-live-body"><Markdown text={pulse.text} /></div>
+      {pulse.citations?.length ? (
+        <div className="web-live-sources">
+          {pulse.citations.slice(0, 4).map((c, i) => (
+            <a key={c.url ?? i} href={c.url} target="_blank" rel="noreferrer">
+              {c.title || new URL(c.url ?? "", window.location.href).hostname}
+            </a>
+          ))}
+        </div>
+      ) : null}
+      <button className="web-live-refresh" onClick={refresh} type="button">Refresh</button>
+    </div>
+  );
+}
+
+function LayerTableView({ table, iqs }: { table: LayerTable; iqs: IQState[] }) {
+  const byId = new Map(iqs.map((i) => [i.id, i]));
+  const used = iqs.filter((i) => i.status !== "idle").length;
+  return (
+    <section className="layer-table-wrap">
+      <div className="panel-head">
+        <h2 className="panel-title">Microsoft intelligence layers</h2>
+        <span className="panel-count">{used} of {iqs.length} engaged</span>
+      </div>
+      <p className="panel-sub">
+        The badges light up from the agent's actual tool calls — nothing here is scripted.
+      </p>
+      <table className="layer-table">
+        <thead>
+          <tr>{table.headers.map((h) => <th key={h} scope="col">{h}</th>)}</tr>
+        </thead>
+        <tbody>
+          {table.rows.map((r) => {
+            const iq = byId.get(r.iq);
+            const status = iq?.status ?? "idle";
+            return (
+              <tr key={r.iq} className={`layer-row iq-${r.iq}`}>
+                <th scope="row">
+                  <span className="layer-name">{iq?.name ?? r.iq}</span>
+                  <span className={`iq-badge badge-${status}`}>
+                    {status === "active" ? "ACTIVE" : status === "done" ? "USED" : "IDLE"}
+                  </span>
+                </th>
+                <td>{r.holds}</td>
+                <td className="layer-tells">
+                  {r.iq === "web" ? <LiveWebCell fallback={r.tells} /> : r.tells}
+                </td>
+                <td className="layer-cannot">{r.cannot}</td>
+              </tr>
+            );
+          })}
+        </tbody>
+      </table>
+    </section>
+  );
+}
+
+/**
+ * The path to yes.
+ *
+ * The "no" on its own is where most risk tooling stops. This slide turns it into
+ * a sequence: the ask as made, the version that can go into the room, and every
+ * gate between them with the person who owns it. The agent prompt asks for the
+ * same thing live, so the slide is the expectation and the answer is the proof.
+ */
+function PathSlide({ ch, busy, onRunPrompt }: {
+  ch: Chapter; busy: boolean; onRunPrompt: (p: string) => void;
+}) {
+  const catalogue = useSkillCatalogue();
+  const [open, setOpen] = useState<"proforma" | "papers" | null>(null);
+  return (
+    <div className="slide slide-path">
+      <div className="slide-eyebrow">{ch.kicker}</div>
+      <h2 className="slide-title">{ch.title}</h2>
+      <p className="slide-lede">{ch.body}</p>
+
+      <div className="reveal-grid">
+        <div className="reveal-col reveal-wrong">
+          <div className="reveal-head">{ch.wrong?.head}</div>
+          <ul>{ch.wrong?.lines.map((l) => <li key={l}>{l}</li>)}</ul>
+        </div>
+        <div className="reveal-vs" aria-hidden>→</div>
+        <div className="reveal-col reveal-right">
+          <div className="reveal-head">{ch.right?.head}</div>
+          <ul>{ch.right?.lines.map((l) => <li key={l}>{l}</li>)}</ul>
+        </div>
+      </div>
+
+      {ch.pathSteps?.length ? (
+        <table className="path-table">
+          <thead>
+            <tr><th scope="col">#</th><th scope="col">Gate</th><th scope="col">What clears it</th><th scope="col">Who decides</th></tr>
+          </thead>
+          <tbody>
+            {ch.pathSteps.map((s, i) => (
+              <tr key={s.constraint} className={`path-row tone-${s.tone ?? "warn"}`}>
+                <td className="path-num">{i + 1}</td>
+                <th scope="row">{s.constraint}</th>
+                <td>{s.clears}</td>
+                <td className="path-owner">{s.owner}</td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      ) : null}
+
+      {ch.note && <div className="slide-note">{ch.note}</div>}
+
+      <div className="path-actions">
+        {ch.prompt && (
+          <button
+            className="run-prompt"
+            disabled={busy}
+            onClick={() => onRunPrompt(ch.prompt as string)}
+          >
+            {busy ? "Running…" : "Ask the agent →"}
+          </button>
+        )}
+        {catalogue && (
+          <>
+            <button className="path-skill" onClick={() => setOpen("proforma")}>Stress-test it</button>
+            <button className="path-skill" onClick={() => setOpen("papers")}>Draft the approval papers</button>
+          </>
+        )}
+      </div>
+
+      {catalogue && open === "proforma" && (
+        <SkillModal title="CP-005 pro-forma covenant test" onClose={() => setOpen(null)}>
+          <ProFormaSkill
+            catalogue={catalogue}
+            result={null}
+            onRun={(incrementalM, ebitdaShockPct) =>
+              apiPost<ProFormaResult>("/api/skills/proforma", { incrementalM, ebitdaShockPct })}
+          />
+        </SkillModal>
+      )}
+      {catalogue && open === "papers" && (
+        <SkillModal title="Approval papers — drafts" onClose={() => setOpen(null)} wide>
+          <PapersSkill catalogue={catalogue} />
+        </SkillModal>
+      )}
+    </div>
+  );
+}
+
 function IQSlide({ ch, iqs, busy, onRunPrompt }: {
   ch: Chapter; iqs: IQState[]; busy: boolean; onRunPrompt: (p: string) => void;
 }) {
@@ -211,9 +405,11 @@ function IQSlide({ ch, iqs, busy, onRunPrompt }: {
       <h2 className="slide-title">{ch.title}</h2>
       <p className="slide-lede">{ch.body}</p>
 
-      {single ? <IQDiagram iq={single} /> : <IQPanel iqs={focus} />}
+      {ch.layerTable ? (
+        <LayerTableView table={ch.layerTable} iqs={iqs} />
+      ) : single ? <IQDiagram iq={single} /> : <IQPanel iqs={focus} />}
 
-      {!single && ch.expect?.length ? (
+      {!single && !ch.layerTable && ch.expect?.length ? (
         <div className="expect">
           <div className="expect-head">What a good answer contains</div>
           <ul>
@@ -300,6 +496,9 @@ export function StoryPanel({
         {ch.layout === "reveal" && <RevealSlide ch={ch} />}
         {ch.layout === "diagram" && <DiagramSlide ch={ch} />}
         {ch.layout === "telemetry" && <TelemetrySlide ch={ch} />}
+        {ch.layout === "path" && (
+          <PathSlide ch={ch} busy={busy} onRunPrompt={onRunPrompt} />
+        )}
         {ch.layout === "iq" && (
           <IQSlide ch={ch} iqs={iqs} busy={busy} onRunPrompt={onRunPrompt} />
         )}

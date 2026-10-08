@@ -1,4 +1,4 @@
-"""Configure RBAC for the BMO Capital Markets Client Intelligence web app.
+"""Configure RBAC for the Bank's Capital Markets Client Intelligence web app.
 
 WHAT THIS DOES
 --------------
@@ -19,7 +19,7 @@ WHAT THIS DOES
    explicitly assigned users can sign in at all. Without this, any member of the
    tenant can open the app.
 
-3. Assigns the demo personas to sensible roles.
+3. Assigns explicitly configured user principal names to app roles.
 
 Note this is *application* RBAC - who may use the app. It sits on top of, and
 does not replace, the data-plane authorisation that already happens downstream:
@@ -29,21 +29,32 @@ because every call is made On-Behalf-Of that user.
     python configure_rbac.py            # apply
     python configure_rbac.py --show     # report only
     python configure_rbac.py --open     # turn OFF assignment-required (open to tenant)
+
+Required environment in every mode: AZURE_TENANT_ID (tenant GUID),
+INFRA_SPA_NAME (unique app display name). Apply also requires
+INFRA_ROLE_ASSIGNMENTS: a nonempty JSON object mapping full UPNs to Coverage,
+CorporateBanking, GlobalMarkets, CreditRisk or Research. --show and --open do not
+read INFRA_ROLE_ASSIGNMENTS. No inferred domain, users or optional defaults.
 """
 
 from __future__ import annotations
 
 import argparse
-import subprocess
 import sys
 import time
 import uuid
-from typing import Any
+from urllib.parse import quote
 
-import requests
-
-GRAPH = "https://graph.microsoft.com/v1.0"
-SPA_NAME = "cm-client-intelligence-spa"
+if __package__:
+    from .portability_config import (
+        ConfigurationError, GraphClient, app_name, environment, find_app, find_sp,
+        role_assignments, tenant_id,
+    )
+else:
+    from portability_config import (
+        ConfigurationError, GraphClient, app_name, environment, find_app, find_sp,
+        role_assignments, tenant_id,
+    )
 
 ROLES = [
     {
@@ -73,81 +84,57 @@ ROLES = [
     },
 ]
 
-# Persona UPN prefix -> role. These five accounts belong to THIS demo.
-#
-# Every other account in the tenant is load-bearing for another demo - do not
-# add them here. In particular the Scotia mortgage-renewal demo owns LisaT,
-# MarioR, MonicaT, SEdemo, KaiC, AdilE, AmberR, BillieV, CoraT, CoreyG, DaichiM,
-# DakotaS, EkaS and HadarC. The role value must match a key in story.json's
-# personaByRole, or the SPA silently falls back to the default Coverage framing.
-ASSIGNMENTS = {
-    "SydneyM": "Coverage",          # Sydney Mattos  - MD, Corporate Coverage - Energy (driver)
-    "SashaO": "CorporateBanking",   # Sasha Ouellet  - Director, Corporate Banking & DCM
-    "QuinnC": "GlobalMarkets",      # Quinn Campbell - Director, Commodities & FX Sales
-    "VanceD": "CreditRisk",         # Vance DeLeon   - Director, Credit Risk - Energy
-    "RobinK": "Research",           # Robin Kline    - ED, Equity Research
-}
 
-DOMAIN = "M365CPI65678641.OnMicrosoft.com"
+def main(argv=None, environ=None) -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    mode = ap.add_mutually_exclusive_group()
+    mode.add_argument("--show", action="store_true")
+    mode.add_argument("--open", action="store_true",
+                      help="allow any tenant user to sign in (turns off assignment-required)")
+    args = ap.parse_args(argv)
+    env = environment(environ)
+    try:
+        tenant = tenant_id(env)
+        spa_name = app_name(env, "INFRA_SPA_NAME")
+        assignments = (
+            role_assignments(env, {role["value"] for role in ROLES})
+            if not args.show and not args.open else {}
+        )
+    except ConfigurationError as exc:
+        ap.error(str(exc))
 
-
-def token() -> str:
-    out = subprocess.run(
-        ["az", "account", "get-access-token", "--resource",
-         "https://graph.microsoft.com", "--query", "accessToken", "-o", "tsv"],
-        capture_output=True, text=True, shell=True,
-    )
-    if out.returncode != 0:
-        sys.exit(f"az token failed - run `az login`: {out.stderr}")
-    return out.stdout.strip()
-
-
-class G:
-    def __init__(self) -> None:
-        self.h = {"Authorization": f"Bearer {token()}",
-                  "Content-Type": "application/json"}
-
-    def call(self, method: str, path: str, body: Any = None,
-             ok: tuple[int, ...] = (200, 201, 204)) -> Any:
-        r = requests.request(method, f"{GRAPH}{path}", headers=self.h,
-                             json=body, timeout=90)
-        if r.status_code not in ok:
-            raise RuntimeError(f"{method} {path} -> {r.status_code}: {r.text[:600]}")
-        if r.content and "json" in r.headers.get("Content-Type", ""):
-            return r.json()
-        return None
-
-
-def main() -> None:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--show", action="store_true")
-    ap.add_argument("--open", action="store_true",
-                    help="allow any tenant user to sign in (turns off assignment-required)")
-    args = ap.parse_args()
-
-    g = G()
-
-    app = (g.call("GET", f"/applications?$filter=displayName eq '{SPA_NAME}'")
-           .get("value") or [None])[0]
+    g = GraphClient(tenant)
+    app = find_app(g, spa_name)
     if not app:
-        sys.exit(f"{SPA_NAME} not found. Run provision_app_registrations.py first.")
-    sp = (g.call("GET", f"/servicePrincipals?$filter=appId eq '{app['appId']}'")
-          .get("value") or [None])[0]
+        sys.exit(f"{spa_name} not found. Run provision_app_registrations.py first.")
+    sp = find_sp(g, app["appId"])
     if not sp:
         sys.exit("Service principal not found for the SPA.")
 
     if args.show:
-        print(f"{SPA_NAME}  appId={app['appId']}")
+        print(f"{spa_name}  appId={app['appId']}")
         print(f"  assignment required : {sp.get('appRoleAssignmentRequired')}")
         print("  roles defined       :",
               ", ".join(r["value"] for r in app.get("appRoles", [])) or "none")
-        assigned = g.call("GET", f"/servicePrincipals/{sp['id']}/appRoleAssignedTo")
-        print(f"  users assigned      : {len(assigned.get('value', []))}")
+        assigned = g.collection(f"/servicePrincipals/{sp['id']}/appRoleAssignedTo")
+        print(f"  users assigned      : {len(assigned)}")
         role_by_id = {r["id"]: r["value"] for r in app.get("appRoles", [])}
-        for a in assigned.get("value", []):
+        for a in assigned:
             print(f"     {a.get('principalDisplayName'):<22} "
                   f"{role_by_id.get(a.get('appRoleId'), '(default)')}")
         return
+
+    if args.open:
+        g.call("PATCH", f"/servicePrincipals/{sp['id']}",
+               {"appRoleAssignmentRequired": False}, ok=(204,))
+        print("= sign-in OPEN to all tenant users")
+        return
+
+    # Resolve all configured users before changing any roles or sign-in policy.
+    users = {
+        upn: g.call("GET", f"/users/{quote(upn, safe='')}?$select=id,displayName")
+        for upn in assignments
+    }
 
     # ---- 1. app roles ----
     existing = {r["value"]: r for r in app.get("appRoles", [])}
@@ -176,47 +163,32 @@ def main() -> None:
     role_id = {r["value"]: r["id"] for r in app["appRoles"]}
 
     # ---- 2. require assignment ----
-    if args.open:
-        g.call("PATCH", f"/servicePrincipals/{sp['id']}",
-               {"appRoleAssignmentRequired": False}, ok=(204,))
-        print("= sign-in OPEN to all tenant users")
-        return
-
     g.call("PATCH", f"/servicePrincipals/{sp['id']}",
            {"appRoleAssignmentRequired": True}, ok=(204,))
     print("+ user assignment REQUIRED - only assigned users can sign in")
 
-    # ---- 3. assign the personas ----
+    # ---- 3. assign the configured users ----
     current = {
         (a.get("principalId"), a.get("appRoleId"))
-        for a in g.call("GET", f"/servicePrincipals/{sp['id']}/appRoleAssignedTo")
-                  .get("value", [])
+        for a in g.collection(f"/servicePrincipals/{sp['id']}/appRoleAssignedTo")
     }
 
-    for prefix, role in ASSIGNMENTS.items():
-        upn = f"{prefix}@{DOMAIN}"
-        try:
-            user = g.call("GET", f"/users/{upn}?$select=id,displayName")
-        except RuntimeError:
-            print(f"  !! not found: {upn}")
-            continue
+    for upn, role in assignments.items():
+        user = users[upn]
         rid = role_id[role]
         if (user["id"], rid) in current:
             print(f"  = {user['displayName']:<20} {role}")
             continue
-        try:
-            g.call("POST", f"/users/{user['id']}/appRoleAssignments", {
-                "principalId": user["id"],
-                "resourceId": sp["id"],
-                "appRoleId": rid,
-            })
-            print(f"  + {user['displayName']:<20} {role}")
-        except RuntimeError as exc:
-            print(f"  !! {user['displayName']}: {str(exc)[:120]}")
+        g.call("POST", f"/users/{user['id']}/appRoleAssignments", {
+            "principalId": user["id"],
+            "resourceId": sp["id"],
+            "appRoleId": rid,
+        })
+        print(f"  + {user['displayName']:<20} {role}")
 
-    print("\nUsers not assigned above will be blocked at sign-in.")
+    print("\nOnly users with an app role assignment can sign in; existing assignments are retained.")
     print("Assign more in the portal: Entra ID > Enterprise applications > "
-          f"{SPA_NAME} > Users and groups.")
+          f"{spa_name} > Users and groups.")
     print("To open it up again:  python configure_rbac.py --open")
 
 

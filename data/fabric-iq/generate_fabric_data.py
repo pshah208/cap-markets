@@ -6,7 +6,10 @@ Produces ten CSVs under this directory. Every hero-client figure is pinned to
 policy documents reconcile exactly with what the agent reads out of Fabric.
 
     python generate_fabric_data.py
-    python generate_fabric_data.py --check     # verify against scenario_facts
+    python generate_fabric_data.py --check     # reconcile and verify CSVs without writing
+
+``build_tables()`` returns fresh, deterministic tables in memory. Both CLI modes
+reconcile against scenario_facts before writing or checking existing CSV bytes.
 
 SYNTHETIC DEMO DATA - see scenario_facts.py for the full disclaimer.
 """
@@ -15,6 +18,7 @@ from __future__ import annotations
 
 import argparse
 import csv
+import io
 import random
 import sys
 from datetime import date, timedelta
@@ -37,13 +41,30 @@ HM = FACTS["hero_metrics"]
 rng = random.Random(FACTS["random_seed"])
 
 
+def _csv_bytes(header: list[str], rows: list[list]) -> bytes:
+    with io.StringIO(newline="") as fh:
+        writer = csv.writer(fh)
+        writer.writerow(header)
+        writer.writerows(rows)
+        return fh.getvalue().encode("utf-8")
+
+
 def _write(name: str, header: list[str], rows: list[list]) -> None:
-    path = HERE / name
-    with path.open("w", newline="", encoding="utf-8") as fh:
-        w = csv.writer(fh)
-        w.writerow(header)
-        w.writerows(rows)
+    (HERE / name).write_bytes(_csv_bytes(header, rows))
     print(f"  {name:<32} {len(rows):>4} rows")
+
+
+def _check(name: str, header: list[str], rows: list[list]) -> bool:
+    try:
+        actual = (HERE / name).read_bytes()
+    except OSError as exc:
+        print(f"  FAIL {name}: {exc}")
+        return False
+    if actual != _csv_bytes(header, rows):
+        print(f"  FAIL {name}: CSV differs from generated data")
+        return False
+    print(f"  OK  {name:<32} {len(rows):>4} rows")
+    return True
 
 
 def _r(lo: float, hi: float, dp: int = 1) -> float:
@@ -140,9 +161,9 @@ def gen_coverage_team() -> list[list]:
                 interactions = {"sydney.mattos": 14, "sasha.ouellet": 31,
                                 "robin.kline": 6, "quinn.campbell": 11,
                                 "vance.deleon": 9}[p["alias"]]
-                last = {"sydney.mattos": "2026-08-07", "sasha.ouellet": "2026-08-08",
-                        "robin.kline": "2026-07-28", "quinn.campbell": "2026-08-05",
-                        "vance.deleon": "2026-08-06"}[p["alias"]]
+                last = {"sydney.mattos": "2026-10-02", "sasha.ouellet": "2026-10-03",
+                        "robin.kline": "2026-09-22", "quinn.campbell": "2026-09-30",
+                        "vance.deleon": "2026-10-01"}[p["alias"]]
                 wall = p["wall_status"]
             else:
                 interactions = rng.randint(0, 12)
@@ -160,7 +181,7 @@ def gen_coverage_team() -> list[list]:
 # ---------------------------------------------------------------------------
 
 HERO_FACILITIES = [
-    # facility_id, type, product, commitment, drawn, maturity, pricing, bmo_role, status
+    # facility_id, type, product, commitment, drawn, maturity, pricing, bank_role, status
     ("FAC-10011", "Revolving Credit Facility", "PRD-01", 165.0, 96.0,  "2029-06-30", "SOFR + 162.5 bps", "Co-Lead Arranger / Joint Bookrunner", "Active"),
     ("FAC-10012", "Term Loan B (Chauvin bridge take-out)", "PRD-02", 140.0, 140.0, "2030-03-31", "SOFR + 200.0 bps", "Joint Lead Arranger", "Active"),
     ("FAC-10013", "Letter of Credit Facility", "PRD-03", 60.0, 32.4, "2027-12-31", "Fee 145.0 bps", "Issuing Bank", "Active"),
@@ -254,7 +275,7 @@ def _longest_tenor_years() -> float:
 
     Derived rather than hardcoded. This row previously carried a literal 5.6,
     which reconciled to nothing: the longest facility (FAC-10012, 2030-03-31) is
-    3.6 years out from the 2026-08-10 as-at date. An audience member who asked
+    3.6 years out from the 2026-10-05 as-at date. An audience member who asked
     the agent for the tenor position and then for the facility maturities would
     have got two numbers that could not both be true - and "every figure
     reconciles" is the claim this whole dataset rests on.
@@ -360,7 +381,7 @@ def gen_revenue() -> list[list]:
 # ---------------------------------------------------------------------------
 
 HERO_WALLET = [
-    # product, bmo_k, street_wallet_k, rank, lead_competitor
+    # product, bank_k, street_wallet_k, rank, lead_competitor
     ("PRD-01", 1_240.0,  4_900.0, 2, "Competitor A"),
     ("PRD-02", 1_015.0,  3_600.0, 2, "Competitor B"),
     ("PRD-03",   395.0,  1_450.0, 3, "Competitor A"),
@@ -373,18 +394,18 @@ HERO_WALLET = [
     ("PRD-10",   315.0,  1_450.0, 3, "Competitor E"),
     ("PRD-11",     0.0,    400.0, 5, "Competitor E"),
 ]
-# street wallet total = 39,350.0 k ; BMO = 8,420.0 k -> 21.4%
+# street wallet total = 39,350.0 k ; the Bank = 8,420.0 k -> 21.4%
 
 
 def gen_wallet_share() -> list[list]:
     prod_name = {p[0]: p[1] for p in PRODUCTS}
     rows = []
-    for prod, bmo, street, rank, comp in HERO_WALLET:
-        share = round(bmo / street * 100, 1) if street else 0.0
+    for prod, bank, street, rank, comp in HERO_WALLET:
+        share = round(bank / street * 100, 1) if street else 0.0
         rows.append([
-            HERO, FACTS["hero_client_name"], prod, prod_name[prod], bmo, street,
-            share, rank, comp, "Y" if bmo == 0 else "N",
-            round(street * 0.25 - bmo, 1),  # whitespace to a 25% target share
+            HERO, FACTS["hero_client_name"], prod, prod_name[prod], bank, street,
+            share, rank, comp, "Y" if bank == 0 else "N",
+            round(street * 0.25 - bank, 1),  # whitespace to a 25% target share
             FACTS["as_of"],
         ])
     for cid, name, *_ in CLIENTS:
@@ -392,13 +413,13 @@ def gen_wallet_share() -> list[list]:
             continue
         total, _ = PORTFOLIO_SCALE[cid]
         for prod in ("PRD-01", "PRD-04", "PRD-07", "PRD-09"):
-            bmo = round(total * _r(0.002, 0.010, 4) * 1000, 1)
-            street = round(bmo * _r(3.2, 9.5, 2), 1)
+            bank = round(total * _r(0.002, 0.010, 4) * 1000, 1)
+            street = round(bank * _r(3.2, 9.5, 2), 1)
             rows.append([
-                cid, name, prod, prod_name[prod], bmo, street,
-                round(bmo / street * 100, 1), rng.randint(1, 6),
+                cid, name, prod, prod_name[prod], bank, street,
+                round(bank / street * 100, 1), rng.randint(1, 6),
                 f"Competitor {rng.choice('ABCDE')}", "N",
-                round(street * 0.25 - bmo, 1), FACTS["as_of"],
+                round(street * 0.25 - bank, 1), FACTS["as_of"],
             ])
     return rows
 
@@ -409,10 +430,10 @@ def gen_wallet_share() -> list[list]:
 
 HERO_TRADES = [
     # trade_id, date, product, description, notional_m, revenue_k, desk, status
-    ("TRD-88401", "2026-07-07", "PRD-04", "Senior unsecured notes - joint bookrunner", 400.0, 1_940.0, "DCM Syndicate", "Settled"),
-    ("TRD-88377", "2026-06-24", "PRD-09", "WTI-WCS differential swap - 12m strip",      75.0,   312.0, "Commodities", "Live"),
-    ("TRD-88355", "2026-06-11", "PRD-07", "CAD/USD forward - 6m",                       60.0,   148.0, "FX Corporate Sales", "Live"),
-    ("TRD-88301", "2026-05-19", "PRD-08", "SOFR fixed-pay swap - 5y",                  100.0,   205.0, "Rates", "Live"),
+    ("TRD-88401", "2026-09-01", "PRD-04", "Senior unsecured notes - joint bookrunner", 400.0, 1_940.0, "DCM Syndicate", "Settled"),
+    ("TRD-88377", "2026-08-19", "PRD-09", "WTI-WCS differential swap - 12m strip",      75.0,   312.0, "Commodities", "Live"),
+    ("TRD-88355", "2026-08-06", "PRD-07", "CAD/USD forward - 6m",                       60.0,   148.0, "FX Corporate Sales", "Live"),
+    ("TRD-88301", "2026-07-14", "PRD-08", "SOFR fixed-pay swap - 5y",                  100.0,   205.0, "Rates", "Live"),
     ("TRD-88244", "2026-04-28", "PRD-09", "WCS crude collar - 18m",                     55.0,   268.0, "Commodities", "Live"),
     ("TRD-88190", "2026-03-31", "PRD-02", "Chauvin bridge take-out term loan",         140.0,   740.0, "Loan Syndications", "Settled"),
     ("TRD-88121", "2026-02-17", "PRD-07", "CAD/USD forward - 12m",                      85.0,   205.0, "FX Corporate Sales", "Live"),
@@ -559,7 +580,7 @@ GENERATORS = [
     ("credit_facilities.csv",
      ["client_id", "client_name", "facility_id", "facility_type", "product_id",
       "commitment_cad_m", "drawn_cad_m", "undrawn_cad_m", "utilisation_pct",
-      "maturity_date", "pricing", "bmo_role", "status", "revolving_flag"],
+      "maturity_date", "pricing", "bank_role", "status", "revolving_flag"],
      gen_credit_facilities),
 
     ("exposures.csv",
@@ -581,8 +602,8 @@ GENERATORS = [
      gen_revenue),
 
     ("wallet_share.csv",
-     ["client_id", "client_name", "product_id", "product_name", "bmo_revenue_cad_k",
-      "estimated_street_wallet_cad_k", "bmo_wallet_share_pct", "bmo_rank",
+     ["client_id", "client_name", "product_id", "product_name", "bank_revenue_cad_k",
+      "estimated_street_wallet_cad_k", "bank_wallet_share_pct", "bank_rank",
       "lead_competitor", "whitespace_flag", "gap_to_25pct_target_cad_k", "as_of_date"],
      gen_wallet_share),
 
@@ -605,22 +626,17 @@ GENERATORS = [
 ]
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--check", action="store_true",
-                    help="regenerate, then assert the hero figures match scenario_facts")
-    args = ap.parse_args()
-
-    print(f"Capital Markets Client Intelligence - Fabric IQ data")
-    print(f"  as at {FACTS['as_of']} | hero {FACTS['hero_client_name']} ({FACTS['hero_ticker']})")
-    print(f"  {DISCLAIMER}\n")
-
+def build_tables() -> dict[str, tuple[list[str], list[list]]]:
+    """Build all ten tables in memory, resetting the seed before each full build."""
+    rng.seed(FACTS["random_seed"])
     tables = {}
     for name, header, fn in GENERATORS:
-        rows = fn()
-        tables[name] = (header, rows)
-        _write(name, header, rows)
+        tables[name] = (header.copy(), fn())
+    return tables
 
+
+def reconcile_tables(tables: dict[str, tuple[list[str], list[list]]]) -> bool:
+    """Report whether the generated hero figures agree with scenario_facts."""
     print("\nReconciling hero figures against scenario_facts...")
     ok = True
 
@@ -650,9 +666,9 @@ def main() -> int:
     hdr, rows = tables["wallet_share.csv"]
     hero_wal = [r for r in rows if r[0] == HERO]
     street = sum(r[5] for r in hero_wal)
-    bmo = sum(r[4] for r in hero_wal)
+    bank = sum(r[4] for r in hero_wal)
     chk("estimated street wallet (CAD k)", street, HM["estimated_street_wallet_k"])
-    chk("wallet share (%)", round(bmo / street * 100, 1), HM["wallet_share_pct"])
+    chk("wallet share (%)", round(bank / street * 100, 1), HM["wallet_share_pct"])
 
     hdr, rows = tables["limits_utilization.csv"]
     sn = next(r for r in rows if r[2] == "LIM-1001-SN")
@@ -663,7 +679,33 @@ def main() -> int:
     chk("leverage covenant headroom (turns)", lev[8], CT["headroom_turns"], tol=0.005)
 
     print("\n" + ("All hero figures reconcile." if ok else "RECONCILIATION FAILED."))
-    return 0 if ok or not args.check else 1
+    return ok
+
+
+def main() -> int:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.add_argument("--check", action="store_true",
+                    help="reconcile and verify existing CSV bytes without writing")
+    args = ap.parse_args()
+
+    print(f"Capital Markets Client Intelligence - Fabric IQ data")
+    print(f"  as at {FACTS['as_of']} | hero {FACTS['hero_client_name']} ({FACTS['hero_ticker']})")
+    print(f"  {DISCLAIMER}\n")
+
+    tables = build_tables()
+    if not reconcile_tables(tables):
+        return 1
+
+    if args.check:
+        print("\nChecking existing CSVs...")
+        ok = True
+        for name, (header, rows) in tables.items():
+            ok &= _check(name, header, rows)
+        return 0 if ok else 1
+
+    for name, (header, rows) in tables.items():
+        _write(name, header, rows)
+    return 0
 
 
 if __name__ == "__main__":

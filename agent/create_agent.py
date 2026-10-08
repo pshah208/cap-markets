@@ -1,4 +1,4 @@
-"""Create (or update) the **BMO Capital Markets Client Intelligence** agent in Azure AI
+"""Create (or update) the Bank's Capital Markets Client Intelligence agent in Azure AI
 Foundry and run it interactively.
 
 The agent gets four function tools, one per IQ layer:
@@ -8,10 +8,10 @@ The agent gets four function tools, one per IQ layer:
     lookup_capital_markets_policy        -> Azure AI Search          (Foundry IQ)
     research_client_external_intelligence-> Grounding with Bing      (Web IQ)
 
-Each tool degrades gracefully: if its backend is not configured it reads the local
-synthetic files under ../data instead, so the agent is demonstrable before every
-backend is wired. Web IQ is the exception - it is LIVE ONLY and returns an explicit
-"unavailable" rather than inventing external facts about a real company.
+Backend selection is explicit. IQ_MODE=local uses synthetic Work/Fabric/Foundry IQ
+data and disables Web IQ. IQ_MODE=hybrid uses synthetic Work/Fabric IQ, live Azure
+AI Search and live Bing grounding. Neither mode substitutes local data on a live
+service failure. --local-smoke is an explicitly offline, configuration-free test.
 
 --------------------------------------------------------------------------------
 WHY FUNCTION TOOLS RATHER THAN A KNOWLEDGE ATTACHMENT
@@ -31,25 +31,17 @@ INSTALL
     pip install -r ../requirements.txt
 
 --------------------------------------------------------------------------------
-CONFIGURE (all optional except the first two)
+CONFIGURE (required for every cloud action)
 --------------------------------------------------------------------------------
-    $env:FOUNDRY_PROJECT_ENDPOINT = "https://cmintel-foundry.services.ai.azure.com/api/projects/proj-client-intelligence"
-    $env:FOUNDRY_MODEL            = "gpt-5.4"
+    FOUNDRY_PROJECT_ENDPOINT, FOUNDRY_MODEL, FOUNDRY_AGENT_NAME
+    CM_CLIENT_ID (a client_id in data/fabric-iq/clients.csv)
+    IQ_MODE: local or hybrid
+    AZURE_AUTH_MODE and its identity fields (see agent/portability.py)
 
-    # Foundry IQ
-    $env:SEARCH_ENDPOINT          = "https://<svc>.search.windows.net"
-    $env:SEARCH_INDEX             = "cm-client-policies"
-
-    # Web IQ (live only)
-    $env:BING_GROUNDING_CONNECTION = "bing-grounding-cmintel"
-
-    # Fabric IQ (optional - falls back to the local CSVs)
-    $env:FABRIC_SQL_ENDPOINT      = "<ws>.datawarehouse.fabric.microsoft.com"
-    $env:FABRIC_DATABASE          = "lh_client_intel"
-
-    # Work IQ (delegated Graph auth - the signed-in user's M365 search)
-    $env:WORKIQ_TENANT_ID         = "<tenant-guid>"
-    $env:WORKIQ_CLIENT_ID         = "<app-client-id>"
+    hybrid additionally requires SEARCH_ENDPOINT, SEARCH_INDEX,
+    SEARCH_SEMANTIC_CONFIGURATION and BING_GROUNDING_CONNECTION_ID.
+    The connection ID must identify an existing project connection, not a name
+    to discover or a connection to create. Search uses the selected Azure identity.
 
 --------------------------------------------------------------------------------
 RUN
@@ -67,10 +59,9 @@ from __future__ import annotations
 
 import argparse
 import csv
+import importlib.util
 import json
-import os
 import re
-import sys
 from pathlib import Path
 from typing import Any
 
@@ -80,15 +71,64 @@ FABRIC = DATA / "fabric-iq"
 FOUNDRY = DATA / "foundry-iq"
 WORK = DATA / "work-iq"
 
-sys.path.insert(0, str(DATA))
-from scenario_facts import FACTS  # noqa: E402
-
-AGENT_NAME = "BMO Capital Markets Client Intelligence"
+if __package__:
+    from .portability import (
+        ConfigurationError, build_credential, load_auth_config, load_foundry_config,
+        require_environment, require_file, require_https_url,
+    )
+else:
+    from portability import (
+        ConfigurationError, build_credential, load_auth_config, load_foundry_config,
+        require_environment, require_file, require_https_url,
+    )
 
 
 # ===========================================================================
 # helpers
 # ===========================================================================
+
+def _facts() -> dict:
+    path = require_file(DATA / "scenario_facts.py", "synthetic scenario facts")
+    spec = importlib.util.spec_from_file_location("_cm_synthetic_facts", path)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module.FACTS
+
+
+def _backend_config() -> dict[str, str]:
+    config = require_environment("IQ_MODE")
+    if config["IQ_MODE"] not in ("local", "hybrid"):
+        raise ConfigurationError("IQ_MODE must be local or hybrid; there is no automatic fallback")
+    if config["IQ_MODE"] == "hybrid":
+        config.update(require_environment(
+            "SEARCH_ENDPOINT", "SEARCH_INDEX", "SEARCH_SEMANTIC_CONFIGURATION",
+            "BING_GROUNDING_CONNECTION_ID"))
+        config["SEARCH_ENDPOINT"] = require_https_url("SEARCH_ENDPOINT", config["SEARCH_ENDPOINT"])
+        config.update(load_auth_config())
+    return config
+
+
+def _cloud_config() -> dict[str, str]:
+    config = load_foundry_config("FOUNDRY_MODEL", "CM_CLIENT_ID")
+    config.update(_backend_config())
+    return config
+
+
+def _validate_data(config: dict[str, str]) -> None:
+    for name in ("clients.csv", "credit_facilities.csv", "exposures.csv", "limits_utilization.csv",
+                 "covenants.csv", "revenue_by_product.csv", "wallet_share.csv", "trades.csv",
+                 "coverage_team.csv"):
+        require_file(FABRIC / name, "Fabric IQ table")
+    for name in ("emails.json", "teams_messages.json"):
+        require_file(WORK / name, "Work IQ corpus")
+    if config["IQ_MODE"] == "local":
+        require_file(FOUNDRY / "cm_policies.json", "Foundry IQ corpus")
+    else:
+        require_file(DATA / "web-iq" / "web_iq_queries.json", "Web IQ query configuration")
+    _facts()
+    if not any(row["client_id"] == config["CM_CLIENT_ID"] for row in _load_csv("clients.csv")):
+        raise ConfigurationError("CM_CLIENT_ID must identify a client in data/fabric-iq/clients.csv")
+
 
 def _load_csv(name: str) -> list[dict]:
     with (FABRIC / name).open(encoding="utf-8") as fh:
@@ -103,29 +143,85 @@ def _f(row: dict, key: str) -> float:
 
 
 def _instructions() -> str:
-    md = (HERE / "agent_instructions.md").read_text(encoding="utf-8")
-    m = re.search(r"<!-- INSTRUCTIONS-START -->(.*?)<!-- INSTRUCTIONS-END -->", md, re.S)
-    if not m:
-        raise RuntimeError("instruction markers not found in agent_instructions.md")
-    return m.group(1).strip()
+    path = require_file(HERE / "agent_instructions.md", "agent instructions")
+    md = path.read_text(encoding="utf-8")
+    start, end = "<!-- INSTRUCTIONS-START -->", "<!-- INSTRUCTIONS-END -->"
+    if md.count(start) != 1 or md.count(end) != 1 or md.index(start) >= md.index(end):
+        raise ConfigurationError(f"{path} must contain one ordered pair of instruction markers")
+    body = md.split(start, 1)[1].split(end, 1)[0].strip()
+    if not body:
+        raise ConfigurationError(f"{path} contains empty agent instructions")
+    return body
 
 
 # ===========================================================================
 # Work IQ
 # ===========================================================================
 
-def search_client_relationship_history(query: str, category: str | None = None) -> str:
-    """Work IQ. Emails, meeting records and client documents in Microsoft 365.
+_WORK_CATEGORIES = (
+    "client_interaction", "compliance_and_control", "credit_and_limits",
+    "executive_guidance", "market_and_hedging",
+)
 
-    Falls back to the local corpus when Graph is not configured. The local path is
-    a keyword scan, which is cruder than Graph Search but returns the same content.
-    """
+# Keep old tool calls compatible; advertise only the corpus's canonical categories.
+_WORK_CATEGORY_ALIASES = {
+    "coverage_and_planning": "client_interaction",
+    "investment_banking": "client_interaction",
+    "markets_and_hedging": "market_and_hedging",
+    "lending_and_country_risk": "credit_and_limits",
+    "governance_and_escalation": "compliance_and_control",
+}
+
+# The shipped Teams export lacks categories. Classify known IDs, not message keywords
+# or whole channels: TH-M03 is a control decision despite its Markets channel.
+_WORK_TEAMS_CATEGORIES = {
+    "TH-G01": "executive_guidance",
+    "TH-G02": "compliance_and_control",
+    "TH-G03": "executive_guidance",
+    "TH-C01": "client_interaction",
+    "TH-C02": "client_interaction",
+    "TH-C03": "client_interaction",
+    "TH-C04": "compliance_and_control",
+    "TH-R01": "credit_and_limits",
+    "TH-R02": "credit_and_limits",
+    "TH-R03": "compliance_and_control",
+    "TH-R04": "credit_and_limits",
+    "TH-M01": "market_and_hedging",
+    "TH-M02": "market_and_hedging",
+    "TH-M03": "compliance_and_control",
+}
+
+# Exact suffixes after YYYY-MM-DD-. Cross-topic briefs have explicit memberships;
+# unlisted documents remain unclassified rather than matching every category.
+_WORK_DOCUMENT_CATEGORIES = {
+    "gibson-energy-coverage-call-report.md": ("client_interaction",),
+    "energy-sector-portfolio-review-minutes.md": ("credit_and_limits",),
+    "capital-markets-quarterly-business-review.md": ("executive_guidance",),
+    "control-room-briefing-cr-2026-0184.md": ("compliance_and_control",),
+    "deal-team-prep-transcript.md": (
+        "client_interaction", "compliance_and_control", "credit_and_limits",
+        "executive_guidance", "market_and_hedging"),
+    "gibson-energy-pre-meeting-brief.md": (
+        "client_interaction", "compliance_and_control", "credit_and_limits"),
+    "gibson-energy-pitch-book-v3-extract.md": (
+        "client_interaction", "compliance_and_control", "credit_and_limits"),
+}
+
+
+def search_client_relationship_history(query: str, category: str | None = None) -> str:
+    """Work IQ. Explicitly selected synthetic relationship history."""
+    _backend_config()
+    return _search_local_relationships(query, category)
+
+
+def _search_local_relationships(query: str, category: str | None = None) -> str:
+    category = _WORK_CATEGORY_ALIASES.get(category, category)
     terms = [t for t in re.findall(r"\w+", (query or "").lower()) if len(t) > 3]
     hits: list[dict] = []
 
     emails = json.loads((WORK / "emails.json").read_text(encoding="utf-8"))
     for e in emails["emails"]:
-        if category and e["category"] != category:
+        if category and _WORK_CATEGORY_ALIASES.get(e["category"], e["category"]) != category:
             continue
         blob = f"{e['subject']} {e['body']}".lower()
         score = sum(blob.count(t) for t in terms)
@@ -142,6 +238,9 @@ def search_client_relationship_history(query: str, category: str | None = None) 
     teams = json.loads((WORK / "teams_messages.json").read_text(encoding="utf-8"))
     for ch in teams["channels"]:
         for c in ch["conversations"]:
+            source_category = c.get("category", _WORK_TEAMS_CATEGORIES.get(c["id"]))
+            if category and _WORK_CATEGORY_ALIASES.get(source_category, source_category) != category:
+                continue
             blob = f"{c.get('subject', '')} {c['message']}".lower()
             score = sum(blob.count(t) for t in terms)
             if score:
@@ -153,6 +252,8 @@ def search_client_relationship_history(query: str, category: str | None = None) 
                 })
 
     for p in sorted((WORK / "meetings").glob("*.md")) + sorted((WORK / "files").glob("*.md")):
+        if category and category not in _WORK_DOCUMENT_CATEGORIES.get(p.name[11:], ()):
+            continue
         text = p.read_text(encoding="utf-8")
         score = sum(text.lower().count(t) for t in terms)
         if score:
@@ -166,8 +267,8 @@ def search_client_relationship_history(query: str, category: str | None = None) 
     hits.sort(key=lambda h: -h["score"])
     return json.dumps({
         "layer": "Work IQ",
-        "backend": "local synthetic corpus (Microsoft Graph not configured)",
-        "as_of": FACTS["as_of"],
+        "backend": "explicit local synthetic corpus (not Microsoft Graph)",
+        "as_of": _facts()["as_of"],
         "matches": len(hits),
         "results": hits[:8],
     }, indent=2)
@@ -180,6 +281,13 @@ def search_client_relationship_history(query: str, category: str | None = None) 
 def query_client_exposure_analytics(question: str,
                                     client: str | None = None,
                                     topic: str | None = None) -> str:
+    """Fabric IQ. Explicit synthetic analytics, including all capacity constraints."""
+    _backend_config()
+    return _query_local_analytics(question, client, topic)
+
+
+def _query_local_analytics(question: str, client: str | None = None,
+                           topic: str | None = None) -> str:
     """Fabric IQ. Governed exposure, limit, covenant, revenue and trade data.
 
     IMPORTANT DESIGN DECISION. Any question touching capacity ALWAYS returns the
@@ -191,25 +299,28 @@ def query_client_exposure_analytics(question: str,
     q = (question or "").lower()
     clients = _load_csv("clients.csv")
 
-    cid = None
+    candidates = []
     if client:
-        for c in clients:
-            if client.lower() in c["client_name"].lower() or client.upper() == c["client_id"]:
-                cid = c["client_id"]
-                break
-    if not cid:
-        for c in clients:
-            first = c["client_name"].split()[0].lower()
-            if first in q:
-                cid = c["client_id"]
-                break
-    cid = cid or FACTS["hero_client_id"]
+        candidates = [c for c in clients if client.lower() in c["client_name"].lower()
+                      or client.upper() == c["client_id"].upper()]
+        if len(candidates) != 1:
+            raise ConfigurationError("client must match exactly one known client name or client_id")
+    else:
+        candidates = [c for c in clients if c["client_name"].split()[0].lower() in q]
+        if len(candidates) > 1:
+            raise ConfigurationError("Question matches multiple clients; pass an explicit client")
+    if candidates:
+        cid = candidates[0]["client_id"]
+    else:
+        cid = require_environment("CM_CLIENT_ID")["CM_CLIENT_ID"]
+        if not any(c["client_id"] == cid for c in clients):
+            raise ConfigurationError("CM_CLIENT_ID must identify a client in data/fabric-iq/clients.csv")
     crow = next(c for c in clients if c["client_id"] == cid)
 
     out: dict[str, Any] = {
         "layer": "Fabric IQ",
-        "backend": "local synthetic tables (Fabric semantic model not configured)",
-        "as_of": FACTS["as_of"],
+        "backend": "explicit local synthetic tables (not the Fabric semantic model)",
+        "as_of": _facts()["as_of"],
         "client": {
             "client_id": cid, "client_name": crow["client_name"],
             "ticker": crow["ticker"], "sector": crow["sector"],
@@ -401,29 +512,23 @@ def query_client_exposure_analytics(question: str,
 
 def lookup_capital_markets_policy(query: str, category: str | None = None) -> str:
     """Foundry IQ. The CP-001..CP-014 policy corpus."""
-    endpoint = os.getenv("SEARCH_ENDPOINT")
-    index = os.getenv("SEARCH_INDEX", "cm-client-policies")
+    config = _backend_config()
+    if config["IQ_MODE"] == "local":
+        return _lookup_local_policy(query, category)
 
-    if endpoint:
-        try:
-            from azure.identity import DefaultAzureCredential
-            from azure.search.documents import SearchClient
+    from azure.search.documents import SearchClient
 
-            key = os.getenv("SEARCH_ADMIN_KEY")
-            if key:
-                from azure.core.credentials import AzureKeyCredential
-                cred: Any = AzureKeyCredential(key)
-            else:
-                cred = DefaultAzureCredential()
-            client = SearchClient(endpoint, index, cred)
+    credential = build_credential(config)
+    try:
+        with SearchClient(config["SEARCH_ENDPOINT"], config["SEARCH_INDEX"], credential) as client:
             results = list(client.search(
                 search_text=query, query_type="semantic",
-                semantic_configuration_name="default",
-                filter=f"category eq '{category}'" if category else None,
+                semantic_configuration_name=config["SEARCH_SEMANTIC_CONFIGURATION"],
+                filter="category eq '" + category.replace("'", "''") + "'" if category else None,
                 select=["id", "title", "category", "owner", "regulatory_anchor", "content"],
                 top=4))
             return json.dumps({
-                "layer": "Foundry IQ", "backend": f"Azure AI Search ({index})",
+                "layer": "Foundry IQ", "backend": f"Azure AI Search ({config['SEARCH_INDEX']})",
                 "matches": len(results),
                 "results": [{
                     "id": r["id"], "title": r["title"], "category": r["category"],
@@ -431,9 +536,11 @@ def lookup_capital_markets_policy(query: str, category: str | None = None) -> st
                     "content": r["content"][:2500],
                 } for r in results],
             }, indent=2)
-        except Exception as exc:  # noqa: BLE001
-            pass  # fall through to the local corpus
+    finally:
+        credential.close()
 
+
+def _lookup_local_policy(query: str, category: str | None = None) -> str:
     corpus = json.loads((FOUNDRY / "cm_policies.json").read_text(encoding="utf-8"))
     terms = [t for t in re.findall(r"\w+", (query or "").lower()) if len(t) > 3]
     scored = []
@@ -449,7 +556,7 @@ def lookup_capital_markets_policy(query: str, category: str | None = None) -> st
     scored.sort(key=lambda x: -x[0])
     return json.dumps({
         "layer": "Foundry IQ",
-        "backend": "local synthetic corpus (Azure AI Search not configured)",
+        "backend": "explicit local synthetic corpus (not Azure AI Search)",
         "matches": len(scored),
         "results": [{
             "id": d["id"], "title": d["title"], "category": d["category"],
@@ -466,29 +573,29 @@ def lookup_capital_markets_policy(query: str, category: str | None = None) -> st
 def research_client_external_intelligence(topic: str, lookback_days: int = 30) -> str:
     """Web IQ. Live public web only - there is deliberately no offline cache.
 
-    If the grounding connection is absent this returns an explicit 'unavailable'
-    rather than answering from model memory. Three of the four layers in this demo
-    are synthetic; this one concerns real listed companies, and inventing external
-    facts about them is the worst failure the agent could produce.
+    Local mode explicitly disables live web access. Hybrid mode requires a
+    configured native grounding tool; this function reports its answer guardrails.
     """
-    conn = os.getenv("BING_GROUNDING_CONNECTION")
+    config = _backend_config()
+    if config["IQ_MODE"] == "local":
+        return _web_unavailable()
     cfg = json.loads((DATA / "web-iq" / "web_iq_queries.json").read_text(encoding="utf-8"))
-    if not conn:
-        return json.dumps({
-            "layer": "Web IQ", "status": "unavailable",
-            "reason": "BING_GROUNDING_CONNECTION is not set. Web IQ is live only and has "
-                      "no offline cache by design.",
-            "instruction_to_agent": "State plainly that live external intelligence is "
-                                    "unavailable. Do NOT substitute internal data or model "
-                                    "memory for external facts about a real company.",
-            "suggested_queries": [t for topic_ in cfg["topics"] for t in topic_["query_templates"]][:6],
-        }, indent=2)
     # When the agent runs inside Foundry the BingGroundingTool handles retrieval; this
     # function only reports configuration and the guardrails that apply to the answer.
     return json.dumps({
         "layer": "Web IQ", "status": "live",
-        "connection": conn, "topic": topic, "lookback_days": lookback_days,
+        "connection": config["BING_GROUNDING_CONNECTION_ID"],
+        "topic": topic, "lookback_days": lookback_days,
         "answer_rules": cfg["answer_rules"],
+    }, indent=2)
+
+
+def _web_unavailable() -> str:
+    return json.dumps({
+        "layer": "Web IQ", "status": "unavailable",
+        "reason": "Explicit local mode disables live web access; there is no offline web cache.",
+        "instruction_to_agent": "State plainly that live external intelligence is unavailable. "
+                                "Do NOT substitute internal data or model memory for external facts.",
     }, indent=2)
 
 
@@ -504,18 +611,24 @@ TOOL_FUNCTIONS = {
 # demo questions
 # ===========================================================================
 
-DEMO_QUESTIONS = [
-    "Prepare me for Thursday's Gibson Energy CFO and Treasurer meeting.",
-    "Can we do the revolving credit facility upsize? What would it take?",
-    "The client wants a hedging overlay. Walk me through everything that bears on it.",
-    "Could we put the incremental hold on the uncommitted bilateral line instead?",
-    "What has happened with Gibson Energy externally in the last 30 days?",
-]
+def _demo_questions(client_id: str) -> list[str]:
+    client = next(c for c in _load_csv("clients.csv") if c["client_id"] == client_id)
+    name = client["client_name"]
+    return [
+        f"Prepare me for the {name} CFO and Treasurer meeting.",
+        f"Can we do the revolving credit facility upsize for {name}? What would it take?",
+        f"{name} wants a hedging overlay. Walk me through everything that bears on it.",
+        f"Could we put {name}'s incremental hold on the uncommitted bilateral line instead?",
+        f"What has happened with {name} externally in the last 30 days?",
+    ]
 
-TRAP_QUESTION = (
-    "We have a CAD 500m single-name limit on Gibson Energy and we are only using "
-    "341.7. Can we take our revolver hold from 165 to 210 on Thursday?"
-)
+
+def _trap_question(client_id: str) -> str:
+    analytics = json.loads(_query_local_analytics("capacity", client=client_id, topic="limits"))
+    limit = next(row for row in analytics["limits"] if row["limit_type"] == "Single-name credit limit")
+    return (f"We have a CAD {limit['limit_cad_m']:g}m single-name limit on "
+            f"{analytics['client']['client_name']} and we are only using "
+            f"{limit['utilised_cad_m']:g}. Can we increase our revolver hold?")
 
 
 def local_smoke() -> int:
@@ -525,8 +638,8 @@ def local_smoke() -> int:
     print("=" * 78)
 
     print("\n--- Fabric IQ: the capacity question ---")
-    res = json.loads(query_client_exposure_analytics(
-        "can we increase our hold on Gibson Energy?", client="Gibson"))
+    res = json.loads(_query_local_analytics(
+        "can we increase our hold?", client=_facts()["hero_client_id"]))
     sn = next(l for l in res["limits"] if l["limit_type"] == "Single-name credit limit")
     sec = res["sector_limit"]
     cov = min(res["covenants"], key=lambda c: c["utilisation_pct"] * -1)
@@ -556,19 +669,19 @@ def local_smoke() -> int:
     for q, want in [("sector concentration amber energy ceiling", "CP-002"),
                     ("pro-forma covenant test before the pitch", "CP-005"),
                     ("wall crossing restricted list public side", "CP-008")]:
-        res_p = json.loads(lookup_capital_markets_policy(q))
+        res_p = json.loads(_lookup_local_policy(q))
         ids = [r["id"] for r in res_p["results"]]
         print(f"  {'OK  ' if want in ids[:2] else 'WEAK'} {q[:44]:<44} -> {ids[:3]}")
 
     print("\n--- Work IQ ---")
     for q in ["control room restriction", "covenant pro-forma", "hedging overlay"]:
-        res_w = json.loads(search_client_relationship_history(q))
+        res_w = json.loads(_search_local_relationships(q))
         top = res_w["results"][0] if res_w["results"] else None
         print(f"  {res_w['matches']:>2} hits  {q:<34} top: "
               f"{(top['source'] + ' ' + top['id']) if top else 'none'}")
 
     print("\n--- Web IQ ---")
-    res = json.loads(research_client_external_intelligence("recent results"))
+    res = json.loads(_web_unavailable())
     print(f"  status: {res['status']}"
           + (f"  ({res['reason'][:60]}...)" if res["status"] == "unavailable" else ""))
 
@@ -590,9 +703,7 @@ def _tool_defs() -> list[dict]:
                            "committed to. Use for relationship history and internal debate.",
             "parameters": {"type": "object", "properties": {
                 "query": {"type": "string", "description": "What to search for."},
-                "category": {"type": "string", "enum": [
-                    "coverage_and_planning", "investment_banking", "markets_and_hedging",
-                    "lending_and_country_risk", "governance_and_escalation"]},
+                "category": {"type": "string", "enum": list(_WORK_CATEGORIES)},
             }, "required": ["query"]}}},
         {"type": "function", "function": {
             "name": "query_client_exposure_analytics",
@@ -640,47 +751,43 @@ def _tool_defs() -> list[dict]:
 
 
 def _client():
-    from azure.ai.agents import AgentsClient
-    from azure.identity import DefaultAzureCredential
+    config = _cloud_config()
+    _validate_data(config)
+    _instructions()
 
-    endpoint = os.getenv("FOUNDRY_PROJECT_ENDPOINT")
-    if not endpoint:
-        sys.exit("FOUNDRY_PROJECT_ENDPOINT is not set.")
-    return AgentsClient(endpoint=endpoint, credential=DefaultAzureCredential())
+    from azure.ai.agents import AgentsClient
+
+    return AgentsClient(endpoint=config["FOUNDRY_PROJECT_ENDPOINT"],
+                        credential=build_credential(config))
 
 
 def create_or_update(client) -> str:
-    model = os.getenv("FOUNDRY_MODEL", "gpt-5.4")
+    config = _cloud_config()
+    _validate_data(config)
+    instructions = _instructions()
+    model, name = config["FOUNDRY_MODEL"], config["FOUNDRY_AGENT_NAME"]
     tools = _tool_defs()
 
-    # Web IQ is a first-class Foundry tool when the connection exists, so add the
-    # Bing grounding tool alongside the function tools.
-    conn = os.getenv("BING_GROUNDING_CONNECTION")
-    if conn:
-        try:
-            conns = list(client.list_connections()) if hasattr(client, "list_connections") else []
-            cid = next((c.id for c in conns if getattr(c, "name", "") == conn), None)
-            if cid:
-                tools.append({"type": "bing_grounding",
-                              "bing_grounding": {"search_configurations": [
-                                  {"connection_id": cid, "count": 8}]}})
-                print(f"  + Bing grounding tool ({conn})")
-        except Exception as exc:  # noqa: BLE001
-            print(f"  (Bing grounding tool not attached: {str(exc)[:120]})")
+    if config["IQ_MODE"] == "hybrid":
+        tools.append({"type": "bing_grounding", "bing_grounding": {"search_configurations": [
+            {"connection_id": config["BING_GROUNDING_CONNECTION_ID"], "count": 8}]}})
 
-    existing = next((a for a in client.list_agents() if a.name == AGENT_NAME), None)
+    existing = next((a for a in client.list_agents() if a.name == name), None)
     if existing:
-        agent = client.update_agent(agent_id=existing.id, model=model, name=AGENT_NAME,
-                                    instructions=_instructions(), tools=tools)
-        print(f"= updated agent {AGENT_NAME} ({agent.id})")
+        agent = client.update_agent(agent_id=existing.id, model=model, name=name,
+                                    instructions=instructions, tools=tools)
+        print(f"= updated agent {name} ({agent.id})")
     else:
-        agent = client.create_agent(model=model, name=AGENT_NAME,
-                                    instructions=_instructions(), tools=tools)
-        print(f"+ created agent {AGENT_NAME} ({agent.id})")
+        agent = client.create_agent(model=model, name=name,
+                                    instructions=instructions, tools=tools)
+        print(f"+ created agent {name} ({agent.id})")
     return agent.id
 
 
 def ask(client, agent_id: str, question: str) -> None:
+    config = _cloud_config()
+    _validate_data(config)
+    _instructions()
     from azure.ai.agents.models import (
         ListSortOrder, RequiredFunctionToolCall, SubmitToolOutputsAction, ToolOutput,
     )
@@ -718,7 +825,7 @@ def ask(client, agent_id: str, question: str) -> None:
             print("\n" + m.text_messages[-1].text.value)
 
 
-def main() -> int:
+def main(argv=None) -> int:
     ap = argparse.ArgumentParser(description=__doc__,
                                  formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--local-smoke", action="store_true",
@@ -729,20 +836,29 @@ def main() -> int:
     ap.add_argument("--trap", action="store_true",
                     help="ask the one question that separates a good agent from a plausible one")
     ap.add_argument("--chat", action="store_true", help="interactive")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
-    if args.local_smoke or not any([args.create, args.ask, args.demo, args.trap, args.chat]):
+    cloud_action = any([args.create, args.ask, args.demo, args.trap, args.chat])
+    if args.local_smoke and cloud_action:
+        ap.error("--local-smoke cannot be combined with a cloud action")
+    if args.local_smoke:
         return local_smoke()
+    if not cloud_action:
+        ap.error("Choose --local-smoke or a cloud action: --create, --ask, --demo, --trap, --chat")
 
-    client = _client()
+    try:
+        config = _cloud_config()
+        client = _client()
+    except (ConfigurationError, OSError, UnicodeError) as exc:
+        ap.error(str(exc))
     with client:
         agent_id = create_or_update(client)
         if args.ask:
             ask(client, agent_id, args.ask)
         if args.trap:
-            ask(client, agent_id, TRAP_QUESTION)
+            ask(client, agent_id, _trap_question(config["CM_CLIENT_ID"]))
         if args.demo:
-            for q in DEMO_QUESTIONS:
+            for q in _demo_questions(config["CM_CLIENT_ID"]):
                 ask(client, agent_id, q)
         if args.chat:
             print("\nInteractive. Blank line to exit.")

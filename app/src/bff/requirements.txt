@@ -4,6 +4,9 @@ pydantic==2.10.4
 httpx==0.28.1
 PyJWT[crypto]==2.10.1
 
+# Word rendering for the approval-paper drafts.
+python-docx==1.2.0
+
 # Entra credentials for diagnostics and the optional app-identity path.
 azure-identity==1.19.0
 

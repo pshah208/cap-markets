@@ -1,10 +1,10 @@
 {
-  "$note": "Guided story for the BMO Capital Markets Client Intelligence demo. SYNTHETIC DEMO DATA - BMO Capital Markets is a branding label only. Gibson Energy Inc. (TSX:GEI) and the other TSX-listed issuers named here are real public companies, named only so live web grounding returns real public news; every internal figure here is invented and reconciles to data/scenario_facts.py. The persona card is replaced at run time with whoever is signed in, from Microsoft Graph.",
+  "$note": "Guided story for the Capital Markets Client Intelligence demo. SYNTHETIC DEMO DATA - The Bank is a fictional institution. Gibson Energy Inc. (TSX:GEI) and the other TSX-listed issuers named here are real public companies, named only so live web grounding returns real public news; every internal figure here is invented and reconciles to data/scenario_facts.py. The persona card is replaced at run time with whoever is signed in, from Microsoft Graph.",
   "persona": {
     "$note": "Fallback only. Name and title are replaced from Microsoft Graph for the signed-in user; goal and objectives come from personaByRole where the token carries a role.",
-    "name": "Sydney Mattos",
-    "title": "Managing Director, Corporate Coverage — Energy",
-    "org": "BMO Capital Markets",
+    "name": "Coverage Banker",
+    "title": "Corporate Coverage — Energy",
+    "org": "The Bank",
     "goal": "Walk into Thursday's Gibson Energy meeting knowing exactly what we can and cannot say.",
     "objectives": [
       "Know what my own team has already committed to, and to whom.",
@@ -67,7 +67,7 @@
       "points": [
         "4.18x of a 4.50x maximum",
         "Prior quarter 3.94x — deteriorating",
-        "KYC refresh due 2026-09-30"
+        "KYC refresh due 2026-11-25"
       ]
     },
     "Research": {
@@ -80,7 +80,7 @@
       ],
       "points": [
         "Restricted from publishing on GEI",
-        "Target price frozen until 2026-09-15",
+        "Target price frozen until 2026-11-10",
         "Public side — and must stay there"
       ]
     }
@@ -106,7 +106,7 @@
             "icon": "🏦",
             "title": "Corporate Banking",
             "sub": "“Raise the credit limit”",
-            "body": "Gibson has what amounts to a company credit card. The teams wants the limit raised from CAD 1,100m to 1,350m across all its banks — with BMO's own share of that promise going from 165m to 210m."
+            "body": "Gibson has what amounts to a company credit card. The team wants the limit raised from CAD 1,100m to 1,350m across all its banks — with the Bank's own share of that promise going from 165m to 210m."
           },
           {
             "icon": "📈",
@@ -118,7 +118,7 @@
             "icon": "💼",
             "title": "Investment Banking",
             "sub": "“Let us run their bond sale”",
-            "body": "Gibson has debt due in 2027 and will replace it by selling new IOUs to investors. BMO wants to organise that sale — earning a fee, not lending its own money."
+            "body": "Gibson has debt due in 2027 and will replace it by selling new IOUs to investors. The Bank wants to organise that sale — earning a fee, not lending its own money."
           }
         ],
         "punch": "Each team did its homework. None of them checked the same thing — and two of the four people in the car were told a secret nine days ago that they are not allowed to discuss."
@@ -129,7 +129,7 @@
       "title": "The board, before anyone reasons over it",
       "kicker": "What the systems say",
       "layout": "metrics",
-      "body": "This is the governed position as at 10 August 2026 — straight from the Fabric semantic model, before any agent touches it. Read it the way a banker would on the drive to the client's head office, and form a view about whether there is room to take the hold from 165 to 210.",
+      "body": "This is the governed position as at 5 October 2026 — straight from the Fabric semantic model, before any agent touches it. Read it the way a banker would on the drive to the client's head office, and form a view about whether there is room to take the hold from 165 to 210.",
       "metrics": [
         {
           "label": "Total committed",
@@ -178,7 +178,7 @@
             "icon": "🤝",
             "title": "CAD 465m",
             "sub": "Promised",
-            "body": "What BMO has told Gibson it may borrow, across five facilities. A limit, not a loan."
+            "body": "What the Bank has told Gibson it may borrow, across five facilities. A limit, not a loan."
           },
           {
             "icon": "💸",
@@ -190,7 +190,7 @@
             "icon": "⚠️",
             "title": "CAD 341.7m",
             "sub": "Counted as at risk",
-            "body": "Larger than what was drawn, because risk also covers what BMO could lose on the insurance trades. This is the figure measured against the 500m limit."
+            "body": "Larger than what was drawn, because risk also covers what the Bank could lose on the insurance trades. This is the figure measured against the 500m limit."
           }
         ],
         "punch": "Committed does not mean lent. Every tile above is green — and the conclusion you are about to draw from them is wrong."
@@ -230,7 +230,7 @@
         "lead": "There are two limits in play here. Everybody checked the first one. The second is the one that bites.",
         "gauges": [
           {
-            "label": "BMO's own house rule",
+            "label": "The Bank's own house rule",
             "sub": "“We will lend Gibson at most CAD 500m”",
             "value": "341.7m of 500m",
             "pct": 68.3,
@@ -246,7 +246,7 @@
             "caption": "Almost full, and moving the wrong way — it was 3.94x last quarter. Nobody opened this one."
           }
         ],
-        "punch": "The first limit is BMO's own business. The second is a promise Gibson made to every bank it borrows from — break it and they can all act at once. Lending the extra money would push it to 4.59x."
+        "punch": "The first limit is the Bank's own business. The second is a promise Gibson made to every bank it borrows from — break it and they can all act at once. Lending the extra money would push it to 4.59x."
       }
     },
     {
@@ -357,15 +357,15 @@
       "kicker": "Work IQ",
       "layout": "iq",
       "iq": "work",
-      "body": "Before any number, the argument. Five colleagues have spent two weeks disagreeing productively in email and Teams — about who gets the balance sheet, whether a pro-forma test is really needed before a pitch, and what the Control Room actually restricted on 6 August. That context exists nowhere in a database.",
+      "body": "Before any number, the argument. Five colleagues have spent two weeks disagreeing productively in email and Teams — about who gets the balance sheet, whether a pro-forma test is really needed before a pitch, and what the Control Room actually restricted on 1 October. That context exists nowhere in a database.",
       "prompt": "What is reference CR-2026-0184, and what did the Control Room restrict?",
       "expect": [
-        "The Control Room briefing of 6 August 2026",
-        "Named individuals were wall-crossed on 4 August — but NOT who they are",
+        "The Control Room briefing of 1 October 2026",
+        "Named individuals were wall-crossed on 29 September — but NOT who they are",
         "Research may not publish or update the target price",
         "Corporate Sales may not solicit a structure connected to the restricted matter",
         "Doubt is resolved by the Control Room, not by the business",
-        "Expected expiry 2026-09-15 — an expectation, not an authorisation"
+        "Expected expiry 2026-11-10 — an expectation, not an authorisation"
       ],
       "note": "That reference exists nowhere except this tenant's mail and SharePoint. If it comes back, Work IQ is genuinely connected. If it comes back with names attached, the agent has over-reached — CP-008 says the public side must not be told who is crossed."
     },
@@ -427,23 +427,117 @@
       "iq": "all",
       "body": "Now put it together. This is the question a Managing Director actually asks on the drive over — and the one where a plausible answer and a correct answer look nothing alike.",
       "prompt": "We have a CAD 500m single-name limit on Gibson Energy and we are only using 341.7. Can we take our revolver hold from 165 to 210 on Thursday?",
-      "expect": [
-        "No — not as currently positioned",
-        "Single-name 68.3% green, and explicitly NOT the constraint",
-        "Leverage covenant 4.18x of 4.50x — 0.32 turns, deteriorating from 3.94x",
-        "CP-005 pro-forma test required BEFORE the pitch is delivered",
-        "Energy sector envelope 85.8% amber — CRO-owned under CP-002",
-        "CR-2026-0184 restricts the competing hedging overlay solicitation — CP-008",
-        "Escalated to Credit Committee and the Control Room, with NO preference expressed between the business lines"
+      "layerTable": {
+        "headers": [
+          "Layer",
+          "What it holds",
+          "What it tells you about Gibson",
+          "What it cannot tell you"
+        ],
+        "rows": [
+          {
+            "iq": "fabric",
+            "holds": "Governed tables — facilities, exposures, limits, covenants, revenue, wallet share",
+            "tells": "341.7m exposure against a 500m limit — 158.3m of headroom for a 45m ask. Risk rating improving, revenue +17.9%. Leverage covenant 4.18x of 4.50x.",
+            "cannot": "Whether that headroom is usable. Every indicator is green."
+          },
+          {
+            "iq": "foundry",
+            "holds": "The policy corpus — CP-001 to CP-014",
+            "tells": "CP-005 requires a pro-forma covenant test before any pitch: 4.18x becomes 4.59x at the full 1,350m — a breach. CP-002 sector concentration; CP-008 / CP-009 information barriers and MNPI.",
+            "cannot": "What is happening this week, or who is involved."
+          },
+          {
+            "iq": "work",
+            "holds": "The deal team's email, Teams, meetings and documents",
+            "tells": "Control Room restriction CR-2026-0184 — two team members wall-crossed, hedging overlay not cleared. “Do not indicate a hold yet”, “CAD 240m does not fit”, KYC refresh due 25 November.",
+            "cannot": "Whether any of it reconciles to the governed numbers."
+          },
+          {
+            "iq": "web",
+            "holds": "Live public news, filings and agency ratings — fetched from the web, not authored",
+            "tells": "Gibson's latest reported results, its current public ratings as the agencies publish them, and the last 30 days of news — the only information the public-side team may use in the room.",
+            "cannot": "Anything internal."
+          }
+        ]
+      },
+      "note": "Each layer alone gives a confident, wrong answer. Fabric says yes; Fabric + Foundry says not at 1,350m; add Work IQ and it is also: be careful what you say, and to whom. A failing answer is \"yes, there is 158.3m of headroom.\" Every number in that sentence is correct."
+    },
+    {
+      "id": "11-path-to-yes",
+      "title": "The deal that does work",
+      "kicker": "Path to yes",
+      "layout": "path",
+      "body": "A risk tool that only says no gets routed around. The same four layers that stopped the 1.35bn upsize also show the version that clears every constraint — and the order the gates have to open in. The agent lays out the options; the people who own each gate decide.",
+      "wrong": {
+        "head": "As asked",
+        "lines": [
+          "Revolver 1,100 → 1,350m (+250m), the Bank hold 165 → 210",
+          "Pro-forma leverage 4.59x vs 4.50x max — breach under CP-005",
+          "Hedging overlay CAD 240m vs 20.8m pre-settlement headroom",
+          "Overlay solicitation barred while CR-2026-0184 is live",
+          "KYC refresh due 25 November — two documents outstanding",
+          "→ \"No.\""
+        ]
+      },
+      "right": {
+        "head": "What can go into the room on Thursday",
+        "lines": [
+          "Size to the covenant: +150m (facility 1,250m) → 4.43x, 0.07 turns — clears, Tight band",
+          "Stress it: that size survives only a 1.7% EBITDA miss; at −10% Gibson breaches with NO upsize",
+          "So the robust path: keep 1,350m with a covenant reset negotiated alongside — e.g. 4.75x → 0.16 turns",
+          "Lead the covenant conversation now, while headroom exists — not in six months",
+          "Talk about the facility and tenor; give no number and no hold size",
+          "→ \"Yes — at this size, on this sequence, with the papers drafted.\""
+        ]
+      },
+      "pathSteps": [
+        {
+          "constraint": "Leverage covenant (CP-005)",
+          "clears": "Increase under CAD 195.8m fully drawn — or a covenant amendment agreed with the lender group at the same time as the upsize",
+          "owner": "Credit Risk (pro-forma) · lender group",
+          "tone": "bad"
+        },
+        {
+          "constraint": "Hold size (CP-003)",
+          "clears": "Convened Credit Committee for a 151–250m hold — five business days, no expedited path",
+          "owner": "Credit Committee",
+          "tone": "warn"
+        },
+        {
+          "constraint": "Energy sector envelope 85.8% amber (CP-002)",
+          "clears": "Arrange above the final hold with a documented sell-down plan — a plan, not an intention",
+          "owner": "Portfolio Management · CRO",
+          "tone": "warn"
+        },
+        {
+          "constraint": "KYC refresh (CP-006)",
+          "clears": "Close the two outstanding documents before 25 November — approval can run in parallel, documentation cannot",
+          "owner": "Coverage · KYC Operations",
+          "tone": "warn"
+        },
+        {
+          "constraint": "Hedging overlay (CP-004 / CP-008)",
+          "clears": "Re-shape to fit the pre-settlement line; present nothing sized until the Control Room clears it",
+          "owner": "Control Room · Credit Risk (GM)",
+          "tone": "bad"
+        },
+        {
+          "constraint": "Sustainability-linked margin (CP-011)",
+          "clears": "Material, verifiable KPIs; second-party opinion required on a private SLL above CAD 250m",
+          "owner": "Sustainable Finance",
+          "tone": "ok"
+        }
       ],
-      "note": "A failing answer is \"yes, there is 158.3m of headroom.\" Every number in that sentence is correct."
+      "note": "Every revenue line survives — the revolver (est. CAD 1.85m fees as proposed), the overlay (est. CAD 0.94m) and the 2027 refinancing (est. CAD 1.12m) are sequenced, not lost. Stress-test the sizes, then draft the Credit Committee, Portfolio Management and Control Room papers from the same governed figures — each a draft with a human sign-off block. The agent still does not choose between Corporate Banking and Global Markets: CP-002 gives that call to the Chief Risk Officer.",
+      "prompt": "The 1.35bn upsize breaches the leverage covenant. What version of the Gibson deal can we take into Thursday's meeting, and what has to happen, in what order, to get to yes?"
     },
     {
       "id": "11-what-it-proves",
       "title": "What just happened",
       "kicker": "Why this is different",
       "layout": "reveal",
-      "body": "The agent did not retrieve a document. It reconciled four systems that disagree, found two constraints nobody asked it about, respected an information barrier it was never told to respect, and then declined to make a decision that was not its to make.",
+      "body": "The agent did not retrieve a document. It reconciled four systems that disagree, found two constraints nobody asked it about, respected an information barrier it was never told to respect, showed the version of the deal that clears every gate, and then declined to make a decision that was not its to make.",
       "wrong": {
         "head": "A search tool would have",
         "lines": [
@@ -486,6 +580,7 @@
   ],
   "suggestions": [
     "We have a CAD 500m single-name limit on Gibson Energy and we are only using 341.7. Can we take our revolver hold from 165 to 210 on Thursday?",
+    "The 1.35bn upsize breaches. What version of the Gibson deal can we take into Thursday, and in what order?",
     "Give me the top three things I need to know before Thursday's Gibson Energy meeting.",
     "What is Gibson Energy's Total Net Debt to Adjusted EBITDA covenant position, and how much headroom is left?",
     "Could we put the incremental hold on the uncommitted bilateral line instead?",

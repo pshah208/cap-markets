@@ -1,135 +1,108 @@
-"""Inventory every message in this demo's mailboxes and classify it.
+"""Inventory mapped mailboxes; optionally move unmatched subjects to Deleted Items.
 
-Anything not seeded by THIS demo is foreign. These accounts were reused from an
-earlier demo, so their mailboxes still contain that demo's mail - which Work IQ
-will happily retrieve mid-presentation.
+Requires WORKIQ_TENANT_ID/CLIENT_ID/CLIENT_SECRET, WORKIQ_USER_MAPPING_FILE
+and WORKIQ_MAIL_SOURCE_FILES (a nonempty JSON array of explicit local JSON
+paths, relative to the working directory). Include EVERY seed corpus in that
+list, including mission mail if used. Each corpus must have a nonempty emails
+array with nonblank subjects. There is no built-in author or subject allowlist.
 
-    python triage_mailboxes.py            # report only
-    python triage_mailboxes.py --purge    # move foreign mail to Deleted Items
+Subject matching is a triage heuristic, not provenance verification. Review the
+report before explicitly choosing --purge. Deleted Items and its descendants
+are excluded. Inventory must complete for every user before any move occurs.
+No POST is retried automatically; a failure may leave a partially moved batch.
 """
-
 from __future__ import annotations
 
 import argparse
-import json
 import os
 import re
-import sys
-import time
 from pathlib import Path
+from urllib.parse import quote
 
-import requests
-
-G = "https://graph.microsoft.com/v1.0"
-DOMAIN = "M365CPI65678641.OnMicrosoft.com"
-HERE = Path(__file__).parent
-USERS = ["SydneyM", "SashaO", "QuinnC", "VanceD", "RobinK"]
-
-
-def rq(method: str, url: str, **kw):
-    """Graph occasionally drops a connection outright. Retry, or a purge stops
-    half-finished and the next run sees an inconsistent mailbox."""
-    last = None
-    for attempt in range(4):
-        try:
-            return requests.request(method, url, timeout=90, **kw)
-        except requests.exceptions.RequestException as e:  # noqa: PERF203
-            last = e
-            time.sleep(2 * (attempt + 1))
-    raise last  # type: ignore[misc]
+from diagnostic_support import (
+    AuditError, ConfigurationError, GraphClient, folder_ids, identifier,
+    load_audit_config, read_object, report_error, string_list, user_url,
+)
 
 
-def norm(s: str) -> str:
-    """Compare subjects ignoring case, Re:/Fw: prefixes and whitespace."""
-    s = re.sub(r"^(re|fw|fwd)\s*:\s*", "", (s or "").strip(), flags=re.I)
-    return re.sub(r"\s+", " ", s).strip().lower()
+def norm(subject: str) -> str:
+    subject = re.sub(r"^(?:(?:re|fw|fwd)\s*:\s*)+", "", subject.strip(), flags=re.I)
+    return re.sub(r"\s+", " ", subject).strip().casefold()
 
 
-def token() -> str:
-    tid = os.environ["WORKIQ_TENANT_ID"]
-    r = requests.post(
-        f"https://login.microsoftonline.com/{tid}/oauth2/v2.0/token",
-        data={
-            "client_id": os.environ["WORKIQ_CLIENT_ID"],
-            "client_secret": os.environ["WORKIQ_CLIENT_SECRET"],
-            "scope": "https://graph.microsoft.com/.default",
-            "grant_type": "client_credentials",
-        }, timeout=60)
-    r.raise_for_status()
-    return r.json()["access_token"]
+def load_subjects() -> set[str]:
+    sources = string_list("WORKIQ_MAIL_SOURCE_FILES", os.environ["WORKIQ_MAIL_SOURCE_FILES"])
+    subjects = set()
+    for source in sources:
+        data = read_object(Path(source), "WORKIQ_MAIL_SOURCE_FILES")
+        emails = data.get("emails")
+        if not isinstance(emails, list) or not emails:
+            raise ConfigurationError(f"WORKIQ_MAIL_SOURCE_FILES: {source} needs a nonempty emails array")
+        for email in emails:
+            if (not isinstance(email, dict) or not isinstance(email.get("subject"), str)
+                    or not norm(email["subject"])):
+                raise ConfigurationError(f"WORKIQ_MAIL_SOURCE_FILES: {source} has a missing/blank subject")
+            subjects.add(norm(email["subject"]))
+    return subjects
 
 
-def main() -> int:
-    ap = argparse.ArgumentParser()
-    ap.add_argument("--purge", action="store_true",
-                    help="move foreign messages to Deleted Items")
-    args = ap.parse_args()
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument("--purge", action="store_true", help="move unmatched subjects to Deleted Items after full inventory")
+    args = parser.parse_args(argv)
+    try:
+        config = load_audit_config(forbidden=False, extra=("WORKIQ_MAIL_SOURCE_FILES",))
+        seeded = load_subjects()
+        graph = GraphClient.authenticate(config)
+        foreign = []
+        print(f"{len(seeded)} distinct configured subjects; subject matching is only a triage heuristic")
+        for alias, upn in config.users:
+            base = user_url(upn)
+            deleted = graph.get(f"{base}/mailFolders/deleteditems?$select=id", f"{alias} Deleted Items")
+            destination = identifier(deleted, "id", f"{alias} Deleted Items")
+            excluded = set(folder_ids(graph, base, destination))
+            seen = set()
+            total = unmatched = 0
+            for message in graph.collection(
+                f"{base}/messages?$top=200&$select=id,subject,parentFolderId,receivedDateTime",
+                f"{alias} mailbox messages",
+            ):
+                mid = identifier(message, "id", f"{alias} message")
+                parent = identifier(message, "parentFolderId", f"{alias} message")
+                if mid in seen:
+                    raise AuditError(f"{alias}: repeated message id; inventory is unstable")
+                seen.add(mid)
+                if parent in excluded:
+                    continue
+                subject = message.get("subject")
+                if not isinstance(subject, str):
+                    raise AuditError(f"{alias}: message has a missing/invalid subject")
+                total += 1
+                if norm(subject) not in seeded:
+                    foreign.append((alias, base, mid, subject, destination))
+                    unmatched += 1
+            print(f"{alias}: {total} outside Deleted Items, {unmatched} unmatched subject(s)")
 
-    emails = json.loads((HERE / "data" / "work-iq" / "emails.json")
-                        .read_text(encoding="utf-8"))
-    seeded = {norm(e["subject"]) for e in emails["emails"]}
-    print(f"this demo seeded {len(seeded)} distinct subjects\n")
-
-    h = {"Authorization": "Bearer " + token()}
-    foreign: list[tuple[str, str, str, str]] = []
-    errors: list[str] = []
-
-    for u in USERS:
-        upn = f"{u}@{DOMAIN}"
-        r = rq("GET",
-               f"{G}/users/{upn}/messages"
-               f"?$top=300&$select=id,subject,receivedDateTime,from",
-               headers=h)
-        if r.status_code != 200:
-            errors.append(f"{u}: HTTP {r.status_code} {r.text[:160]}")
-            continue
-        msgs = r.json().get("value", [])
-        mine = [m for m in msgs if norm(m.get("subject", "")) in seeded]
-        alien = [m for m in msgs if norm(m.get("subject", "")) not in seeded]
-        print(f"{u:9} {len(msgs):>3} total  "
-              f"{len(mine):>3} this demo  {len(alien):>3} FOREIGN")
-        for m in alien:
-            foreign.append((u, m["id"], m.get("subject", ""),
-                            (m.get("receivedDateTime") or "")[:10]))
-
-    if errors:
-        print("\nrequest failures (inventory incomplete):")
-        for e in errors:
-            print(f"  ! {e}")
-
-    if not foreign:
-        print("\nNo foreign mail. Mailboxes contain only this demo's content.")
-        return 0
-
-    print(f"\n{len(foreign)} foreign message(s):\n")
-    by_user: dict[str, list] = {}
-    for u, _id, subj, date in foreign:
-        by_user.setdefault(u, []).append((date, subj))
-    for u, rows in by_user.items():
-        print(f"  {u}")
-        for date, subj in sorted(rows):
-            print(f"    {date}  {subj[:96]}")
-        print()
-
-    if not args.purge:
-        print("Report only. Re-run with --purge to move these to Deleted Items.")
-        return 1
-
-    print("Purging...")
-    moved = failed = 0
-    for u, mid, subj, _date in foreign:
-        r = rq("POST",
-               f"{G}/users/{u}@{DOMAIN}/messages/{mid}/move",
-               headers={**h, "Content-Type": "application/json"},
-               json={"destinationId": "deleteditems"})
-        if r.status_code in (200, 201):
+        if not foreign:
+            print("No unmatched subjects outside Deleted Items in the inventoried mailboxes.")
+            return 0
+        for alias, _, _, subject, _ in foreign:
+            print(f"  {alias}: {subject[:120]}")
+        if not args.purge:
+            print("Report only. Review all configured corpora before choosing --purge.")
+            return 1
+        moved = 0
+        for alias, base, mid, _, destination in foreign:
+            graph.move(f"{base}/messages/{quote(mid, safe='')}/move", destination, f"{alias} move")
             moved += 1
-        else:
-            failed += 1
-            print(f"  ! {u}: {r.status_code} {subj[:60]}")
-    print(f"\nmoved {moved}, failed {failed}")
-    return 0 if failed == 0 else 1
+            print(f"Confirmed moves: {moved}/{len(foreign)}")
+        print(f"Moved {moved} message(s) to Deleted Items.")
+        return 0
+    except (ConfigurationError, AuditError) as error:
+        if args.purge:
+            print("Purge did not complete. Previously confirmed moves may remain; re-run report-only before retrying.")
+        return report_error(error)
 
 
 if __name__ == "__main__":
-    sys.exit(main())
+    raise SystemExit(main())

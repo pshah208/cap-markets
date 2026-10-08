@@ -1,11 +1,12 @@
 # --- build ---------------------------------------------------------------- #
-FROM node:20-alpine AS build
+FROM node:22-alpine AS build
 WORKDIR /app
 
-COPY package*.json ./
-RUN npm ci
-
 COPY . .
+# Fail before dependency installation if the deployment-local setup is absent.
+# The Docker context is this web directory, including public/brand/bank.json.
+RUN node scripts/bank-config.mjs --check
+RUN npm ci
 
 # Entra values are baked in at build time - Vite inlines VITE_* into the bundle.
 ARG VITE_AAD_TENANT_ID=""

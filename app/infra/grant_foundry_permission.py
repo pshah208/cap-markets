@@ -13,73 +13,63 @@ time, after the user had already signed in.
 
     python grant_foundry_permission.py
     python grant_foundry_permission.py --show
+
+Required environment: AZURE_TENANT_ID (tenant GUID), INFRA_BFF_NAME (unique app
+display name). No optional environment settings or implicit identity defaults.
 """
 
 from __future__ import annotations
 
 import argparse
-import subprocess
 import sys
 import time
 
-import requests
-
-GRAPH = "https://graph.microsoft.com/v1.0"
-BFF_NAME = "cm-client-intelligence-bff"
+if __package__:
+    from .portability_config import (
+        ConfigurationError, GraphClient, app_name, environment, eq_filter,
+        find_app, find_sp, tenant_grant, tenant_id,
+    )
+else:
+    from portability_config import (
+        ConfigurationError, GraphClient, app_name, environment, eq_filter,
+        find_app, find_sp, tenant_grant, tenant_id,
+    )
 
 # The audience the Foundry Responses API demands is https://ai.azure.com. That URI
 # is owned by "Azure Machine Learning Services" (18a66f5f-...), NOT by the
 # similarly-named "Azure Machine Learning" (0736f41a-...), which exposes no scopes
-# at all. Resolving it the reliable way:  az ad sp show --id https://ai.azure.com
+# at all. This is the first-party resource app ID for that audience.
 CANDIDATES = [
     ("Azure Machine Learning Services", "18a66f5f-dbdf-4c17-9dd7-1634712a9cbe"),
 ]
 WANT_SCOPE = "user_impersonation"
 
 
-def token() -> str:
-    o = subprocess.run(["az", "account", "get-access-token", "--resource",
-                        "https://graph.microsoft.com", "--query", "accessToken",
-                        "-o", "tsv"], capture_output=True, text=True, shell=True)
-    if o.returncode != 0:
-        sys.exit("run az login")
-    return o.stdout.strip()
-
-
-H = {"Authorization": f"Bearer {token()}", "Content-Type": "application/json"}
-
-
-def call(method: str, path: str, body=None, ok=(200, 201, 204)):
-    r = requests.request(method, f"{GRAPH}{path}", headers=H, json=body, timeout=90)
-    if r.status_code not in ok:
-        raise RuntimeError(f"{method} {path} -> {r.status_code}: {r.text[:500]}")
-    if r.content and "json" in r.headers.get("Content-Type", ""):
-        return r.json()
-    return None
-
-
-def find_sp(app_id: str):
-    v = call("GET", f"/servicePrincipals?$filter=appId eq '{app_id}'"
-                    "&$select=id,appId,displayName,oauth2PermissionScopes")["value"]
-    return v[0] if v else None
-
-
-def main() -> None:
-    ap = argparse.ArgumentParser()
+def main(argv=None, environ=None) -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument("--show", action="store_true")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
+    env = environment(environ)
+    try:
+        tenant = tenant_id(env)
+        bff_name = app_name(env, "INFRA_BFF_NAME")
+    except ConfigurationError as exc:
+        ap.error(str(exc))
 
-    app = (call("GET", f"/applications?$filter=displayName eq '{BFF_NAME}'")
-           .get("value") or [None])[0]
+    g = GraphClient(tenant)
+    call = g.call
+    app = find_app(g, bff_name)
     if not app:
-        sys.exit(f"{BFF_NAME} not found.")
+        sys.exit(f"{bff_name} not found.")
     app = call("GET", f"/applications/{app['id']}")
-    bff_sp = find_sp(app["appId"])
+    bff_sp = find_sp(g, app["appId"])
+    if not bff_sp:
+        sys.exit("Service principal not found for the configured BFF.")
 
     # Locate (or provision) the resource service principal.
     resource = None
     for label, app_id in CANDIDATES:
-        sp = find_sp(app_id)
+        sp = find_sp(g, app_id)
         if sp:
             print(f"= resource SP present: {sp['displayName']} ({app_id})")
             resource = sp
@@ -91,7 +81,7 @@ def main() -> None:
             sp = call("POST", "/servicePrincipals", {"appId": app_id})
             print(f"+ provisioned resource SP: {label} ({app_id})")
             time.sleep(10)
-            resource = find_sp(app_id)
+            resource = find_sp(g, app_id)
             break
         except RuntimeError as exc:
             print(f"  could not provision {label}: {str(exc)[:160]}")
@@ -99,7 +89,8 @@ def main() -> None:
     if not resource:
         sys.exit("No suitable resource service principal found or created.")
 
-    scopes = {s["value"]: s["id"] for s in resource.get("oauth2PermissionScopes", [])}
+    scopes = {s["value"]: s["id"] for s in resource.get("oauth2PermissionScopes", [])
+              if s.get("isEnabled", False)}
     if WANT_SCOPE not in scopes:
         print(f"  !! '{WANT_SCOPE}' not exposed by {resource['displayName']}. "
               f"Available: {', '.join(sorted(scopes)) or '(none)'}")
@@ -108,19 +99,21 @@ def main() -> None:
 
     if args.show:
         blocks = app.get("requiredResourceAccess", [])
-        has = any(b["resourceAppId"] == resource["appId"] for b in blocks)
+        has = any(b["resourceAppId"] == resource["appId"] and
+                  any(a["id"] == scope_id and a["type"] == "Scope" for a in b["resourceAccess"])
+                  for b in blocks)
         print(f"  BFF requests it in manifest : {has}")
-        grants = call("GET", f"/oauth2PermissionGrants?$filter=clientId eq '{bff_sp['id']}'")["value"]
-        g = next((x for x in grants if x["resourceId"] == resource["id"]), None)
-        print(f"  BFF consented               : {bool(g)}"
-              + (f" ({g['scope'].strip()})" if g else ""))
+        grants = g.collection(f"/oauth2PermissionGrants?{eq_filter('clientId', bff_sp['id'])}")
+        grant = tenant_grant(grants, resource["id"])
+        print(f"  BFF consented               : {bool(grant) and WANT_SCOPE in grant['scope'].split()}"
+              + (f" ({grant['scope'].strip()})" if grant else ""))
         return
 
     # 1. add to the manifest
     blocks = app.get("requiredResourceAccess", [])
     block = next((b for b in blocks if b["resourceAppId"] == resource["appId"]), None)
     if block:
-        if not any(a["id"] == scope_id for a in block["resourceAccess"]):
+        if not any(a["id"] == scope_id and a["type"] == "Scope" for a in block["resourceAccess"]):
             block["resourceAccess"].append({"id": scope_id, "type": "Scope"})
     else:
         blocks.append({"resourceAppId": resource["appId"],
@@ -130,8 +123,8 @@ def main() -> None:
     print(f"+ manifest: delegated {WANT_SCOPE} on {resource['displayName']}")
 
     # 2. admin-consent it
-    grants = call("GET", f"/oauth2PermissionGrants?$filter=clientId eq '{bff_sp['id']}'")["value"]
-    grant = next((x for x in grants if x["resourceId"] == resource["id"]), None)
+    grants = g.collection(f"/oauth2PermissionGrants?{eq_filter('clientId', bff_sp['id'])}")
+    grant = tenant_grant(grants, resource["id"])
     if grant:
         merged = " ".join(sorted(set(grant["scope"].split()) | {WANT_SCOPE}))
         call("PATCH", f"/oauth2PermissionGrants/{grant['id']}",

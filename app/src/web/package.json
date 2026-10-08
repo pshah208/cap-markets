@@ -4,9 +4,14 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "check:bank": "node scripts/bank-config.mjs --check",
+    "predev": "npm run check:bank",
     "dev": "vite",
-    "build": "tsc -b && vite build",
-    "preview": "vite preview"
+    "prebuild": "npm run check:bank",
+    "build": "tsc --noEmit && vite build",
+    "prepreview": "npm run check:bank",
+    "preview": "vite preview",
+    "test": "node --test dashboard.test.mjs brand-ui.test.mjs bank-config.test.mjs bank-build.test.mjs"
   },
   "dependencies": {
     "@azure/msal-browser": "^3.28.1",

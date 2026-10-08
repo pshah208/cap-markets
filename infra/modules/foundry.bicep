@@ -7,12 +7,15 @@
 // time by agent/create_agent.py - they cannot be expressed in Bicep.
 
 @description('Foundry (AIServices) account name.')
+@minLength(2)
 param accountName string
 
 @description('Project name under the account.')
+@minLength(2)
 param projectName string
 
 @description('Azure region.')
+@minLength(1)
 param location string
 
 @description('Resource tags.')

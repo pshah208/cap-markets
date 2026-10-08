@@ -1,4 +1,4 @@
-# BMO Capital Markets Client Intelligence - Python dependencies
+# Capital Markets Client Intelligence - Python dependencies
 #
 #   pip install -r requirements.txt
 

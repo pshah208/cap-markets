@@ -1,110 +1,176 @@
-"""Query the Fabric semantic model directly, bypassing Foundry.
+"""Read semantic-model metadata/history and execute two Power BI REST queries.
 
-When Fabric IQ fails, the Foundry error ("Power BI couldn't process that request
-right now") does not say whether the problem is the model, the capacity, or the
-MCP layer in between. This talks to the Power BI XMLA/REST endpoint directly, so
-a success here proves the model and capacity are fine and isolates the fault to
-the Fabric IQ tool.
-
-    python diag_fabric.py
+Requires FABRIC_WORKSPACE_ID and FABRIC_SEMANTIC_MODEL_ID (canonical GUIDs),
+DIAG_FABRIC_QUERY (a nonblank, explicitly selected DAX query), and the
+AZURE_AUTH_MODE profile from agent.portability. Always runs a generic ROW smoke
+query followed by DIAG_FABRIC_QUERY; DAX syntax is validated by the service.
+No .env is loaded. No configuration, authentication or I/O occurs on import.
+Success checks only these calls, not the health of every model/capacity workload.
 """
-
 from __future__ import annotations
 
-import json
-import subprocess
 import sys
 import time
+import uuid
 
-import requests
+from agent.portability import ConfigurationError, build_credential, load_auth_config, require_environment
+from diagnostic_auth import validate_auth_identifiers
 
-WS = "d9d24578-dc14-485f-a29a-5011f9b46b3e"
-DS = "8062de98-306f-4b70-8230-872b74d45059"
+
 API = "https://api.powerbi.com/v1.0/myorg"
-
-QUERIES = [
-    ("smoke", "EVALUATE ROW(\"ok\", 1)"),
-    # The covenant row is what the demo turns on, so proving it is queryable
-    # proves the layer that matters, not just that the model answers at all.
-    ("covenant",
-     "EVALUATE SELECTCOLUMNS(FILTER(covenants, "
-     "covenants[client_id] = \"CLI-1001\" && "
-     "covenants[covenant] = \"Total Net Debt to Adjusted EBITDA\"), "
-     "\"covenant\", covenants[covenant], "
-     "\"threshold\", covenants[threshold], "
-     "\"actual\", covenants[actual], "
-     "\"prior\", covenants[prior_quarter_actual], "
-     "\"headroom\", covenants[headroom], "
-     "\"status\", covenants[status])"),
-    ("limits",
-     "EVALUATE SELECTCOLUMNS(FILTER(limits_utilization, "
-     "limits_utilization[client_id] = \"CLI-1001\"), "
-     "\"limit\", limits_utilization[limit_type], "
-     "\"cap\", limits_utilization[limit_cad_m], "
-     "\"used\", limits_utilization[utilised_cad_m], "
-     "\"pct\", limits_utilization[utilisation_pct], "
-     "\"status\", limits_utilization[status])"),
-]
+SCOPE = "https://analysis.windows.net/powerbi/api/.default"
+SMOKE_QUERY = 'EVALUATE ROW("ok", 1)'
 
 
-def token() -> str:
-    out = subprocess.run(
-        ["az", "account", "get-access-token", "--resource",
-         "https://analysis.windows.net/powerbi/api",
-         "--query", "accessToken", "-o", "tsv"],
-        capture_output=True, text=True, shell=True)
-    if out.returncode != 0:
-        sys.exit(f"token failed: {out.stderr[:300]}")
-    return out.stdout.strip()
+class DiagnosticError(RuntimeError):
+    """A REST call or query result failed validation."""
+
+
+def load_config() -> dict[str, str]:
+    config = require_environment("FABRIC_WORKSPACE_ID", "FABRIC_SEMANTIC_MODEL_ID", "DIAG_FABRIC_QUERY")
+    for name in ("FABRIC_WORKSPACE_ID", "FABRIC_SEMANTIC_MODEL_ID"):
+        try:
+            valid = str(uuid.UUID(config[name])) == config[name].lower()
+        except ValueError:
+            valid = False
+        if not valid:
+            raise ConfigurationError(f"{name} must be a canonical GUID")
+    config.update(load_auth_config())
+    validate_auth_identifiers(config)
+    return config
+
+
+def token(config: dict[str, str]) -> str:
+    credential = build_credential(config)
+    try:
+        value = credential.get_token(SCOPE).token
+        if not value:
+            raise DiagnosticError("The selected Azure credential returned an empty Power BI token")
+        return value
+    finally:
+        credential.close()
+
+
+def read_object(response, label: str) -> dict:
+    if response.status_code != 200:
+        raise DiagnosticError(f"{label}: HTTP {response.status_code}")
+    try:
+        body = response.json()
+    except ValueError:
+        raise DiagnosticError(f"{label}: malformed JSON") from None
+    if not isinstance(body, dict) or "error" in body:
+        raise DiagnosticError(f"{label}: service error or malformed object")
+    return body
+
+
+def query_rows(body: dict) -> list[dict]:
+    results = body.get("results")
+    if not isinstance(results, list) or len(results) != 1:
+        raise DiagnosticError("executeQueries: expected exactly one result")
+    rows = []
+    for result in results:
+        if not isinstance(result, dict) or "error" in result:
+            raise DiagnosticError("executeQueries: result-level error or malformed result")
+        tables = result.get("tables")
+        if not isinstance(tables, list) or not tables:
+            raise DiagnosticError("executeQueries: missing tables")
+        for table in tables:
+            if not isinstance(table, dict) or "error" in table:
+                raise DiagnosticError("executeQueries: table-level error or malformed table")
+            table_rows = table.get("rows")
+            if not isinstance(table_rows, list) or any(not isinstance(row, dict) for row in table_rows):
+                raise DiagnosticError("executeQueries: malformed rows")
+            rows.extend(table_rows)
+    return rows
+
+
+def execute_query(http, url: str, headers: dict, label: str, dax: str) -> None:
+    body = {"queries": [{"query": dax}], "serializerSettings": {"includeNulls": True}}
+    for attempt in range(3):
+        with http.post(
+            f"{url}/executeQueries", headers=headers, json=body,
+            timeout=(30, 180), allow_redirects=False,
+        ) as response:
+            status = response.status_code
+            if status not in (429, 503):
+                rows = query_rows(read_object(response, "executeQueries"))
+                if label == "smoke" and rows != [{"[ok]": 1}]:
+                    raise DiagnosticError("smoke: expected exactly one [ok]=1 row")
+                print(f"[{label}] OK: {len(rows)} row(s)")
+                return
+        if attempt == 2:
+            raise DiagnosticError(f"{label}: HTTP {status}; retries exhausted")
+        wait = 5 * (attempt + 1)
+        print(f"[{label}] HTTP {status}; retry in {wait}s")
+        time.sleep(wait)
+
+
+def run_checks(http, config: dict[str, str], access_token: str) -> int:
+    url = f"{API}/groups/{config['FABRIC_WORKSPACE_ID']}/datasets/{config['FABRIC_SEMANTIC_MODEL_ID']}"
+    headers = {"Authorization": f"Bearer {access_token}", "Content-Type": "application/json"}
+    failures = 0
+    for label, suffix in (("metadata", ""), ("refresh history", "/refreshes?$top=3")):
+        try:
+            with http.get(
+                url + suffix, headers=headers, timeout=(30, 90), allow_redirects=False,
+            ) as response:
+                body = read_object(response, label)
+            if label == "metadata":
+                if (not isinstance(body.get("id"), str)
+                        or body["id"].lower() != config["FABRIC_SEMANTIC_MODEL_ID"].lower()
+                        or not isinstance(body.get("name"), str) or not body["name"].strip()):
+                    raise DiagnosticError("metadata: missing name or mismatched dataset id")
+                print("Dataset metadata: OK")
+            else:
+                history = body.get("value")
+                if (not isinstance(history, list)
+                        or any(not isinstance(entry, dict) or "error" in entry
+                               or not isinstance(entry.get("status"), str) for entry in history)):
+                    raise DiagnosticError("refresh history: malformed entries")
+                print(f"Refresh history: OK ({len(history)} entries)")
+                # Historical refresh failures are reported, not confused with a failed REST call.
+                for entry in history:
+                    status = entry["status"]
+                    print("  refresh status: " + (
+                        status if status in ("Completed", "Failed", "Cancelled", "Disabled", "Unknown")
+                        else "other"
+                    ))
+        except DiagnosticError as error:
+            print(f"FAIL: {error}", file=sys.stderr)
+            failures += 1
+
+    for label, dax in (("smoke", SMOKE_QUERY), ("configured", config["DIAG_FABRIC_QUERY"])):
+        try:
+            execute_query(http, url, headers, label, dax)
+        except DiagnosticError as error:
+            print(f"[{label}] FAIL: {error}", file=sys.stderr)
+            failures += 1
+    return 1 if failures else 0
 
 
 def main() -> int:
-    h = {"Authorization": "Bearer " + token(),
-         "Content-Type": "application/json"}
+    try:
+        config = load_config()
+    except ConfigurationError as error:
+        print(f"Configuration error: {error}", file=sys.stderr)
+        return 2
 
-    r = requests.get(f"{API}/groups/{WS}/datasets/{DS}", headers=h, timeout=90)
-    if r.status_code == 200:
-        d = r.json()
-        print(f"dataset  : {d.get('name')}")
-        print(f"  storage: {d.get('targetStorageMode')}")
-        print(f"  refresh: {d.get('isRefreshable')}")
-    else:
-        print(f"dataset lookup -> {r.status_code}: {r.text[:300]}")
+    import requests
+    from azure.core.exceptions import AzureError
 
-    r = requests.get(f"{API}/groups/{WS}/datasets/{DS}/refreshes?$top=3",
-                     headers=h, timeout=90)
-    if r.status_code == 200:
-        for x in r.json().get("value", []):
-            print(f"  refresh {x.get('status')} {x.get('endTime','')} "
-                  f"{(x.get('serviceExceptionJson') or '')[:200]}")
-
-    failures = 0
-    for label, dax in QUERIES:
-        body = {"queries": [{"query": dax}],
-                "serializerSettings": {"includeNulls": True}}
-        for attempt in range(3):
-            r = requests.post(
-                f"{API}/groups/{WS}/datasets/{DS}/executeQueries",
-                headers=h, json=body, timeout=180)
-            if r.status_code == 200:
-                rows = r.json()["results"][0]["tables"][0]["rows"]
-                print(f"\n[{label}] OK  {len(rows)} row(s)")
-                print("  " + json.dumps(rows[:5])[:400])
-                break
-            if r.status_code in (429, 503):
-                wait = 5 * (attempt + 1)
-                print(f"\n[{label}] {r.status_code} throttled, retry in {wait}s")
-                time.sleep(wait)
-                continue
-            print(f"\n[{label}] FAIL {r.status_code}")
-            print("  " + r.text[:500])
-            failures += 1
-            break
-        else:
-            print(f"\n[{label}] still throttled after retries")
-            failures += 1
-
-    return 1 if failures else 0
+    try:
+        access_token = token(config)
+    except DiagnosticError as error:
+        print(f"Fabric authentication failed: {error}", file=sys.stderr)
+        return 1
+    except AzureError as error:
+        print(f"Fabric authentication failed ({type(error).__name__})", file=sys.stderr)
+        return 1
+    try:
+        return run_checks(requests, config, access_token)
+    except requests.RequestException as error:
+        print(f"Fabric transport failed ({type(error).__name__})", file=sys.stderr)
+        return 1
 
 
 if __name__ == "__main__":

@@ -38,7 +38,7 @@ from .skill_data import SKILL_DATA
 # CP-005 pro-forma
 # --------------------------------------------------------------------------- #
 
-def proforma(incremental_m: float) -> dict[str, Any]:
+def proforma(incremental_m: float, ebitda_shock_pct: float = 0.0) -> dict[str, Any]:
     """Pro-forma leverage for an incremental commitment, assumed fully drawn.
 
     `incremental_m` is the increase in COMMITTED capacity at the client level
@@ -46,13 +46,19 @@ def proforma(incremental_m: float) -> dict[str, Any]:
     borrower's total net debt, which is why routing the exposure to a different
     facility changes nothing - a point CP-001 and CP-005 both make and the agent
     is instructed to repeat.
+
+    `ebitda_shock_pct` stresses the denominator (e.g. -10 for a 10% fall in
+    Adjusted EBITDA) - the "soft quarter in Marketing" Credit Risk worries about.
     """
     fin = SKILL_DATA["financials"]
     cov = SKILL_DATA["covenant"]
 
-    ebitda = float(fin["adjusted_ebitda_ltm_m"])
+    base_ebitda = float(fin["adjusted_ebitda_ltm_m"])
     net_debt = float(fin["total_net_debt_m"])
     threshold = float(cov["threshold"])
+
+    shock = max(-90.0, min(50.0, float(ebitda_shock_pct)))
+    ebitda = base_ebitda * (1 + shock / 100)
 
     inc = max(0.0, float(incremental_m))
     pro_forma = (net_debt + inc) / ebitda
@@ -60,6 +66,9 @@ def proforma(incremental_m: float) -> dict[str, Any]:
 
     # Largest incremental commitment that still clears, fully drawn.
     max_clearing = threshold * ebitda - net_debt
+
+    # How far unstressed EBITDA can fall, at this size, before the covenant breaks.
+    ebitda_cushion_pct = (1 - (net_debt + inc) / threshold / base_ebitda) * 100
 
     # CP-005 headroom bands, in turns.
     if headroom <= 0:
@@ -73,33 +82,72 @@ def proforma(incremental_m: float) -> dict[str, Any]:
 
     return {
         "incremental_m": round(inc, 1),
-        "ebitda_m": ebitda,
+        "ebitda_shock_pct": round(shock, 1),
+        "base_ebitda_m": base_ebitda,
+        "ebitda_m": round(ebitda, 1),
         "net_debt_m": net_debt,
         "pro_forma_net_debt_m": round(net_debt + inc, 1),
-        "current_leverage": round(net_debt / ebitda, 2),
+        "current_leverage": round(net_debt / base_ebitda, 2),
         "pro_forma_leverage": round(pro_forma, 2),
         "threshold": threshold,
         "headroom_turns": round(headroom, 2),
         "band": band,
         "tone": tone,
         "clears": headroom > 0,
-        "max_clearing_m": round(max_clearing, 1),
-        "shrink_required_m": round(max(0.0, inc - max_clearing), 1),
+        "max_clearing_m": round(max(0.0, max_clearing), 1),
+        "shrink_required_m": round(max(0.0, inc - max(0.0, max_clearing)), 1),
+        "ebitda_cushion_pct": round(ebitda_cushion_pct, 1),
     }
+
+
+STRESS_SHOCKS = [0.0, -5.0, -10.0, -15.0, -20.0]
+
+
+def stress_grid() -> dict[str, Any]:
+    """Pro-forma leverage across facility sizes x EBITDA shocks.
+
+    The sizes are the ones the story puts on the table: no change, the resized
+    path-to-yes option, the largest that clears today, and the ask as made.
+    """
+    base = proforma(0)
+    sizes = [0.0, 150.0, float(int(base["max_clearing_m"])), 250.0]
+    rows = []
+    for inc in sizes:
+        cells = []
+        for s in STRESS_SHOCKS:
+            r = proforma(inc, s)
+            cells.append({"shock": s, "leverage": r["pro_forma_leverage"],
+                          "headroom": r["headroom_turns"], "band": r["band"],
+                          "tone": r["tone"]})
+        rows.append({"incremental_m": inc,
+                     "facility_m": SKILL_DATA["opportunities"]["revolver_upsize"]
+                     ["current_commitment_total_m"] + inc,
+                     "ebitda_cushion_pct": proforma(inc)["ebitda_cushion_pct"],
+                     "cells": cells})
+    return {"shocks": STRESS_SHOCKS, "rows": rows, "threshold": base["threshold"]}
 
 
 def proforma_verdict(result: dict[str, Any]) -> str:
     """One sentence a banker can paste into a credit note."""
+    stress = (f" with Adjusted EBITDA stressed {result['ebitda_shock_pct']:+.0f}%"
+              if result.get("ebitda_shock_pct") else "")
     if result["clears"]:
         return (
-            f"Pro-forma {result['pro_forma_leverage']}x against a "
+            f"Pro-forma {result['pro_forma_leverage']}x{stress} against a "
             f"{result['threshold']}x maximum - clears with "
             f"{result['headroom_turns']} turns ({result['band']}). "
-            f"Fully-drawn basis per CP-005."
+            f"Adjusted EBITDA could fall {result['ebitda_cushion_pct']}% from the "
+            f"LTM figure before this size breaches. Fully-drawn basis per CP-005."
+        )
+    if result["max_clearing_m"] <= 0:
+        return (
+            f"Pro-forma {result['pro_forma_leverage']}x{stress} against a "
+            f"{result['threshold']}x maximum - DOES NOT CLEAR. At this EBITDA "
+            f"level the covenant breaches even with no increase, so no upsize is "
+            f"deliverable without covenant relief. Owned by the sector Credit Risk "
+            f"director under CP-005."
         )
     return (
-        f"Pro-forma {result['pro_forma_leverage']}x against a "
-        f"{result['threshold']}x maximum - DOES NOT CLEAR. The largest "
         f"incremental commitment that clears fully drawn is CAD "
         f"{result['max_clearing_m']}m, so the request must reduce by CAD "
         f"{result['shrink_required_m']}m. Pro-forma test required before the "
@@ -244,4 +292,5 @@ def catalogue() -> dict[str, Any]:
         "opportunities": SKILL_DATA["opportunities"],
         "roomcard": roomcard(),
         "radar": radar(),
+        "stress": stress_grid(),
     }

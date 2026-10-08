@@ -1,10 +1,14 @@
 """Run every pre-deployment audit, source and live tenant, in one command.
 
-Source checks need nothing. The tenant checks need the seeder app's credentials:
+Source checks need Python, Node.js and installed web dependencies, but no tenant
+configuration. The tenant checks need explicit credentials and audit scope:
 
     $env:WORKIQ_TENANT_ID     = "<tenant-guid>"
     $env:WORKIQ_CLIENT_ID     = "<workiq-cmintel-seeder appId>"
     $env:WORKIQ_CLIENT_SECRET = "<a freshly minted secret>"
+    $env:WORKIQ_USER_MAPPING_FILE = "<private mapping JSON path>"
+    $env:WORKIQ_TEAM_ID = "<team-guid>"
+    $env:WORKIQ_FORBIDDEN_TERMS = '["foreign demo phrase"]'
 
     python preflight.py            # source only
     python preflight.py --tenant   # source + live tenant
@@ -40,7 +44,7 @@ TENANT = [
 
 def run(label: str, cmd: list[str]) -> bool:
     print(f"\n{'=' * 70}\n  {label}\n{'=' * 70}")
-    env = {**os.environ, "PYTHONUTF8": "1"}
+    env = {**os.environ, "PYTHONUTF8": "1", "PYTHONDONTWRITEBYTECODE": "1"}
     p = subprocess.run(cmd, env=env, capture_output=True, text=True,
                        encoding="utf-8", errors="replace")
     out = (p.stdout or "") + (p.stderr or "")
@@ -53,6 +57,8 @@ def run(label: str, cmd: list[str]) -> bool:
 
 
 def main() -> int:
+    if hasattr(sys.stdout, "reconfigure"):
+        sys.stdout.reconfigure(encoding="utf-8")
     ap = argparse.ArgumentParser()
     ap.add_argument("--tenant", action="store_true",
                     help="also audit the live tenant (needs WORKIQ_* env vars)")
@@ -60,10 +66,11 @@ def main() -> int:
 
     checks = list(SOURCE)
     if args.tenant:
-        missing = [v for v in ("WORKIQ_TENANT_ID", "WORKIQ_CLIENT_ID",
-                               "WORKIQ_CLIENT_SECRET") if not os.getenv(v)]
-        if missing:
-            print(f"--tenant needs: {', '.join(missing)}")
+        from diagnostic_support import ConfigurationError, load_audit_config
+        try:
+            load_audit_config(users=True, team=True)
+        except ConfigurationError as exc:
+            print(f"--tenant configuration invalid: {exc}")
             return 2
         checks += TENANT
 
@@ -76,7 +83,9 @@ def main() -> int:
     if failed:
         print(f"\n{len(failed)} check(s) FAILED - do not deploy.")
         return 1
-    print("\nAll checks passed. Safe to deploy.")
+    print("\nAll selected checks passed. "
+          + ("Live audit scope was verified." if args.tenant else
+             "Source only; tenant policy, permissions and connectivity are not verified."))
     return 0
 
 

@@ -11,13 +11,15 @@ TWO PROBLEMS, ONE FIX
 
 2. **Safety.** The unfiltered surface includes `DeleteMessage`,
    `deleteFileOrFolder`, `deleteList`, `SendMessageToChannel` and
-   `setSensitivityLabelOnFile`. This demo runs in a tenant that also hosts the
-   Scotia mortgage demo, on accounts that demo depends on. A read-only agent has
-   no business holding a delete tool, and an allowlist is a far stronger control
-   than an instruction asking it not to.
+    `setSensitivityLabelOnFile`. A read-only agent has no business holding a
+    delete tool, and an allowlist is a far stronger control than an instruction
+    asking it not to.
 
 The allowlist below is therefore **read-only by construction**. Adding a write
 tool here is a deliberate act, not an accident of connecting a server.
+
+Requires FOUNDRY_PROJECT_ENDPOINT, FOUNDRY_AGENT_NAME and AZURE_AUTH_MODE, plus
+the selected mode's Azure identity environment fields.
 
     python set_tool_allowlist.py            # dry run - show the saving
     python set_tool_allowlist.py --apply
@@ -27,14 +29,14 @@ tool here is a deliberate act, not an accident of connecting a server.
 from __future__ import annotations
 
 import argparse
-import subprocess
-import sys
 
-import requests
+from agent.portability import (
+    ConfigurationError,
+    agent_url,
+    foundry_token,
+    load_foundry_config,
+)
 
-ENDPOINT = ("https://cmintel-foundry.services.ai.azure.com"
-            "/api/projects/proj-client-intelligence")
-AGENT = "Agent-cap-market"
 API = "2025-05-15-preview"
 
 # Read-only. Every entry is a search, list or read.
@@ -77,19 +79,13 @@ ALLOWLIST: dict[str, list[str]] = {
     "WorkIQWord": [
         "GetDocumentContent",
     ],
-    # smclientintel (Fabric data agent) and the AI Search knowledge base expose
+    # The Fabric data agent and the AI Search knowledge base expose
     # a handful of tools each and are all read paths, so they are left whole.
 }
 
 
-def token() -> str:
-    out = subprocess.run(
-        ["az", "account", "get-access-token", "--resource",
-         "https://ai.azure.com", "--query", "accessToken", "-o", "tsv"],
-        capture_output=True, text=True, shell=True)
-    if out.returncode != 0:
-        sys.exit(f"az token failed: {out.stderr[:300]}")
-    return out.stdout.strip()
+def token(config: dict[str, str]) -> str:
+    return foundry_token(config)
 
 
 def label(tool: dict) -> str:
@@ -118,16 +114,23 @@ def current_allowed(tool: dict) -> list[str] | None:
     return None
 
 
-def main() -> int:
+def main(argv=None) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--apply", action="store_true")
     ap.add_argument("--clear", action="store_true",
                     help="remove every allowed_tools filter")
-    args = ap.parse_args()
+    args = ap.parse_args(argv)
 
-    h = {"Authorization": "Bearer " + token(), "Content-Type": "application/json"}
+    try:
+        config = load_foundry_config()
+    except ConfigurationError as exc:
+        ap.error(str(exc))
 
-    r = requests.get(f"{ENDPOINT}/agents/{AGENT}?api-version={API}",
+    import requests
+
+    h = {"Authorization": "Bearer " + token(config), "Content-Type": "application/json"}
+
+    r = requests.get(f"{agent_url(config)}?api-version={API}",
                      headers=h, timeout=60)
     r.raise_for_status()
     latest = r.json()["versions"]["latest"]
@@ -175,7 +178,7 @@ def main() -> int:
 
     new_def = dict(definition)
     new_def["tools"] = tools
-    r = requests.post(f"{ENDPOINT}/agents/{AGENT}/versions?api-version={API}",
+    r = requests.post(f"{agent_url(config)}/versions?api-version={API}",
                       headers=h, json={"definition": new_def}, timeout=120)
     if r.status_code >= 400:
         print(f"\nFAILED {r.status_code}: {r.text[:800]}")

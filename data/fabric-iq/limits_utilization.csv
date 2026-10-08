@@ -1,15 +1,15 @@
 client_id,client_name,limit_id,limit_type,limit_cad_m,utilised_cad_m,headroom_cad_m,utilisation_pct,status,limit_owner,next_review_date,as_of_date
-CLI-1001,Gibson Energy Inc.,LIM-1001-SN,Single-name credit limit,500.0,341.7,158.3,68.3,Green,Credit Committee,2027-03-31,2026-08-10
-CLI-1001,Gibson Energy Inc.,LIM-1001-DV,Derivative pre-settlement limit,90.0,69.2,20.8,76.9,Amber,Credit Risk - Global Markets,2027-03-31,2026-08-10
-CLI-1001,Gibson Energy Inc.,LIM-1001-TN,Tenor limit - max remaining maturity,7.0,3.6,3.4,51.4,Green,Credit Committee,2027-03-31,2026-08-10
-CLI-1001,Gibson Energy Inc.,LIM-1001-UW,Underwriting commitment limit,250.0,0.0,250.0,0.0,Green,Underwriting Committee,2026-12-31,2026-08-10
-SECTOR-ENERGY,Energy sector (all clients),LIM-SEC-ENE,Sector concentration limit,3200.0,2744.0,456.0,85.8,Amber,Chief Risk Officer,2026-12-31,2026-08-10
-CLI-1002,Keyera Corp.,LIM-1002-SN,Single-name credit limit,600.0,514.8,85.2,85.8,Amber,Credit Committee,2027-05-30,2026-08-10
-CLI-1003,Whitecap Resources Inc.,LIM-1003-SN,Single-name credit limit,375.0,194.6,180.4,51.9,Green,Credit Committee,2026-10-21,2026-08-10
-CLI-1004,Secure Waste Infrastructure,LIM-1004-SN,Single-name credit limit,250.0,208.8,41.2,83.5,Green,Credit Committee,2027-03-19,2026-08-10
-CLI-1005,Stella-Jones Inc.,LIM-1005-SN,Single-name credit limit,300.0,206.4,93.6,68.8,Green,Credit Committee,2027-11-28,2026-08-10
-CLI-1006,Russel Metals Inc.,LIM-1006-SN,Single-name credit limit,350.0,270.9,79.1,77.4,Green,Credit Committee,2027-08-25,2026-08-10
-CLI-1007,Cascades Inc.,LIM-1007-SN,Single-name credit limit,200.0,161.2,38.8,80.6,Green,Credit Committee,2027-10-17,2026-08-10
-CLI-1008,Ag Growth International Inc.,LIM-1008-SN,Single-name credit limit,150.0,137.2,12.8,91.5,Amber,Credit Committee,2027-02-14,2026-08-10
-CLI-1009,North West Company Inc.,LIM-1009-SN,Single-name credit limit,200.0,91.2,108.8,45.6,Green,Credit Committee,2027-11-20,2026-08-10
-CLI-1010,Superior Plus Corp.,LIM-1010-SN,Single-name credit limit,400.0,267.2,132.8,66.8,Green,Credit Committee,2026-12-17,2026-08-10
+CLI-1001,Gibson Energy Inc.,LIM-1001-SN,Single-name credit limit,500.0,341.7,158.3,68.3,Green,Credit Committee,2027-03-31,2026-10-05
+CLI-1001,Gibson Energy Inc.,LIM-1001-DV,Derivative pre-settlement limit,90.0,69.2,20.8,76.9,Amber,Credit Risk - Global Markets,2027-03-31,2026-10-05
+CLI-1001,Gibson Energy Inc.,LIM-1001-TN,Tenor limit - max remaining maturity,7.0,3.5,3.5,50.0,Green,Credit Committee,2027-03-31,2026-10-05
+CLI-1001,Gibson Energy Inc.,LIM-1001-UW,Underwriting commitment limit,250.0,0.0,250.0,0.0,Green,Underwriting Committee,2026-12-31,2026-10-05
+SECTOR-ENERGY,Energy sector (all clients),LIM-SEC-ENE,Sector concentration limit,3200.0,2744.0,456.0,85.8,Amber,Chief Risk Officer,2026-12-31,2026-10-05
+CLI-1002,Keyera Corp.,LIM-1002-SN,Single-name credit limit,600.0,514.8,85.2,85.8,Amber,Credit Committee,2027-07-25,2026-10-05
+CLI-1003,Whitecap Resources Inc.,LIM-1003-SN,Single-name credit limit,375.0,194.6,180.4,51.9,Green,Credit Committee,2026-12-16,2026-10-05
+CLI-1004,Secure Waste Infrastructure,LIM-1004-SN,Single-name credit limit,250.0,208.8,41.2,83.5,Green,Credit Committee,2027-05-14,2026-10-05
+CLI-1005,Stella-Jones Inc.,LIM-1005-SN,Single-name credit limit,300.0,206.4,93.6,68.8,Green,Credit Committee,2028-01-23,2026-10-05
+CLI-1006,Russel Metals Inc.,LIM-1006-SN,Single-name credit limit,350.0,270.9,79.1,77.4,Green,Credit Committee,2027-10-20,2026-10-05
+CLI-1007,Cascades Inc.,LIM-1007-SN,Single-name credit limit,200.0,161.2,38.8,80.6,Green,Credit Committee,2027-12-12,2026-10-05
+CLI-1008,Ag Growth International Inc.,LIM-1008-SN,Single-name credit limit,150.0,137.2,12.8,91.5,Amber,Credit Committee,2027-04-11,2026-10-05
+CLI-1009,North West Company Inc.,LIM-1009-SN,Single-name credit limit,200.0,91.2,108.8,45.6,Green,Credit Committee,2028-01-15,2026-10-05
+CLI-1010,Superior Plus Corp.,LIM-1010-SN,Single-name credit limit,400.0,267.2,132.8,66.8,Green,Credit Committee,2027-02-11,2026-10-05

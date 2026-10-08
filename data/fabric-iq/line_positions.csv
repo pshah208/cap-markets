@@ -1,0 +1,34 @@
+client_id,client_name,business_line,stance,proposed_action,rationale,policy_ref,owner_alias,status_date,lines_conflict
+CLI-1001,Gibson Energy Inc.,DCM / Coverage,Pitch,Revolver upsize CAD 1.10bn -> 1.35bn + 1-year extension (OPP-4471),Client asked for the upsize ahead of the 2027 refinancing; CFO / Treasurer meeting 8 October.,CP-003,sasha.ouellet,2026-10-02,Y
+CLI-1001,Gibson Energy Inc.,Credit Risk,Hold,Size to what clears the leverage covenant,Full upsize pro-forma 4.59x vs 4.50x maximum (breach); largest increase that clears fully drawn is CAD 195.8m.,CP-005,vance.deleon,2026-10-03,Y
+CLI-1001,Gibson Energy Inc.,Global Markets,Propose,Commodity + FX hedging overlay (OPP-4472),WCS differential and USD exposure on the Chauvin assets; proposal drafted.,CP-010,quinn.campbell,2026-09-17,Y
+CLI-1001,Gibson Energy Inc.,Control Room,Restricted,CR-2026-0184 live until 2026-11-10,Pitch on public information only; hedging solicitation needs Control Room clearance; research may not update the target.,CP-008,control.room,2026-10-01,Y
+CLI-1001,Gibson Energy Inc.,AML / KYC,Review,Periodic KYC refresh due 2026-11-25,Refresh file opened; no blocker yet.,CP-006,kyc.ops,2026-09-30,Y
+CLI-1002,Keyera Corp.,DCM / Coverage,Pitch,Revolver increase to close the wallet gap,Largest recorded gap to the 25% wallet target is on the revolver.,CP-003,sasha.ouellet,2026-09-29,Y
+CLI-1002,Keyera Corp.,Credit Risk,Review,Single-name limit 85.8% used (Amber),CAD 514.8m of 600.0m used; any increase needs a limit review first.,CP-001,vance.deleon,2026-09-30,Y
+CLI-1002,Keyera Corp.,Control Room,Review,Inquiry CRI-2026-0207 opened,Possible material non-public information reported from a client call on 2026-09-30; under review.,CP-009,control.room,2026-10-01,Y
+CLI-1003,Whitecap Resources Inc.,DCM / Coverage,Pitch,Revolver extension and upsize,Wallet gap on the revolver; client relationship strong.,CP-003,sasha.ouellet,2026-09-26,Y
+CLI-1003,Whitecap Resources Inc.,Credit Risk,Hold,Covenant conversation before any new money,Leverage covenant 3.42x moves to 4.00x vs 4.00x maximum on the overnight oil shock (-14.5% EBITDA).,CP-005,vance.deleon,2026-10-05,Y
+CLI-1003,Whitecap Resources Inc.,Global Markets,Propose,Crude collar programme for 2027 production,Hedging after a supply shock - appropriateness review required.,CP-010,quinn.campbell,2026-10-05,Y
+CLI-1004,Secure Waste Infrastructure,Global Markets,Propose,Commodity derivatives - new ISDA schedule,Largest wallet gap is commodity derivatives.,CP-010,quinn.campbell,2026-09-24,Y
+CLI-1004,Secure Waste Infrastructure,AML / KYC,Hold,Beneficial-ownership refresh before any new product,KYC refresh due 2026-11-25 and a new 10%+ shareholder reported; documents outstanding.,CP-006,kyc.ops,2026-10-02,Y
+CLI-1004,Secure Waste Infrastructure,Credit Risk,Support,Within limits (83.5%),Covenant comfortable under the shock.,CP-001,vance.deleon,2026-09-30,Y
+CLI-1005,Stella-Jones Inc.,DCM / Coverage,Pitch,Green bond underwriting mandate,Wallet gap on DCM underwriting; client exploring a green bond.,CP-003,sasha.ouellet,2026-09-25,Y
+CLI-1005,Stella-Jones Inc.,Credit Risk,Hold,Leverage covenant tight (3.96x vs 4.00x),Any incremental debt must be pro-formed first.,CP-005,vance.deleon,2026-09-30,Y
+CLI-1005,Stella-Jones Inc.,Sustainable Finance,Review,SLL KPI verification late,2025 sustainability-linked loan KPI verification not received; margin step-up and framework review before any green label.,CP-011,sf.desk,2026-09-29,Y
+CLI-1006,Russel Metals Inc.,DCM / Coverage,Pitch,Acquisition financing / bond underwriting,Public announcement of an acquisition; wallet gap on DCM underwriting.,CP-003,sasha.ouellet,2026-10-01,Y
+CLI-1006,Russel Metals Inc.,Credit Risk,Hold,Shocked leverage 4.02x vs 4.00x maximum,Breach under the scenario before any acquisition debt.,CP-005,vance.deleon,2026-10-05,Y
+CLI-1006,Russel Metals Inc.,Equity Research,Clear,Initiation note on the acquisition,Public information only; publishing as scheduled.,CP-008,robin.kline,2026-10-02,Y
+CLI-1007,Cascades Inc.,DCM / Coverage,Pitch,Revolver renewal and increase,Wallet gap on the revolver.,CP-003,sasha.ouellet,2026-09-22,Y
+CLI-1007,Cascades Inc.,Credit Risk,Hold,"Watchlist, rating IG-10 deteriorating",No new money until the mill-closure plan and Q3 results are reviewed.,CP-001,vance.deleon,2026-09-30,Y
+CLI-1007,Cascades Inc.,Global Markets,Propose,USD/CAD forwards programme,Wallet gap on FX.,CP-010,quinn.campbell,2026-09-23,Y
+CLI-1007,Cascades Inc.,Sustainable Finance,Review,SLL KPI missed (water intensity),Margin step-up applies; client asked to reset the KPI.,CP-011,sf.desk,2026-09-18,Y
+CLI-1008,Ag Growth International Inc.,Global Markets,Propose,Commodity derivatives (steel input hedges),Largest wallet gap is commodity derivatives.,CP-010,quinn.campbell,2026-09-21,Y
+CLI-1008,Ag Growth International Inc.,Credit Risk,Hold,Watchlist; single-name 91.5% used (Amber),No new PSE without a limit review.,CP-001,vance.deleon,2026-09-30,Y
+CLI-1008,Ag Growth International Inc.,AML / KYC,Hold,Sanctions screening alert SA-2026-077,Payment counterparty flagged in screening; new products paused until disposition.,CP-007,kyc.ops,2026-10-02,Y
+CLI-1009,North West Company Inc.,Global Markets,Propose,Renew USD/CAD forward programme,Routine annual renewal; client asked for it.,CP-010,quinn.campbell,2026-09-28,N
+CLI-1009,North West Company Inc.,Credit Risk,Support,Within limits (45.6%),Interest coverage comfortable.,CP-001,vance.deleon,2026-09-30,N
+CLI-1009,North West Company Inc.,AML / KYC,Clear,KYC current,Next refresh 2027-03-26.,CP-006,kyc.ops,2026-09-30,N
+CLI-1010,Superior Plus Corp.,DCM / Coverage,Pitch,Bond underwriting mandate,Largest wallet gap is DCM underwriting.,CP-003,sasha.ouellet,2026-09-27,Y
+CLI-1010,Superior Plus Corp.,Credit Risk,Support,Within limits (66.8%),Covenant comfortable.,CP-001,vance.deleon,2026-09-30,Y
+CLI-1010,Superior Plus Corp.,Global Markets,Review,Propane hedge execution complaint,Client raised a complaint about Q2 execution; review open.,CP-010,quinn.campbell,2026-09-19,Y

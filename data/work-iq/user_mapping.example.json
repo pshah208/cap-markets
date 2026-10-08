@@ -1,0 +1,47 @@
+{
+  "$note": "EXAMPLE ONLY. Copy to an ignored private *.local.json file and set WORKIQ_USER_MAPPING_FILE to its path. Replace every example.com UPN with an explicitly chosen licensed demo account. Set WORKIQ_TENANT_ID separately. Never seed production accounts.",
+  "driver_alias": "sydney.mattos",
+  "mapping": {
+    "sydney.mattos": {
+      "upn": "coverage-lead@example.com",
+      "displayName": "Sydney Mattos",
+      "wall_status": "public_side",
+      "jobTitle": "Managing Director, Corporate Coverage - Energy",
+      "department": "The Bank Capital Markets"
+    },
+    "sasha.ouellet": {
+      "upn": "relationship-manager@example.com",
+      "displayName": "Sasha Ouellet",
+      "wall_status": "wall_crossed",
+      "jobTitle": "Director, Corporate Banking & DCM Origination",
+      "department": "The Bank Capital Markets"
+    },
+    "robin.kline": {
+      "upn": "research-analyst@example.com",
+      "displayName": "Robin Kline",
+      "wall_status": "public_side",
+      "jobTitle": "Executive Director, Equity Research - Energy Infrastructure",
+      "department": "The Bank Capital Markets"
+    },
+    "quinn.campbell": {
+      "upn": "corporate-sales@example.com",
+      "displayName": "Quinn Campbell",
+      "wall_status": "public_side",
+      "jobTitle": "Director, Commodities & FX Corporate Sales",
+      "department": "The Bank Capital Markets"
+    },
+    "vance.deleon": {
+      "upn": "credit-risk@example.com",
+      "displayName": "Vance DeLeon",
+      "wall_status": "wall_crossed",
+      "jobTitle": "Director, Credit Risk - Energy & Midstream",
+      "department": "The Bank Capital Markets"
+    },
+    "admin": {
+      "upn": "demo-operator@example.com",
+      "displayName": "CM Operations (demo)",
+      "jobTitle": "Demo operator",
+      "department": "The Bank Capital Markets"
+    }
+  }
+}

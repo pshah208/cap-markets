@@ -40,6 +40,22 @@ export async function fetchAgentMetrics(): Promise<import("./types").AgentMetric
   return apiGet<import("./types").AgentMetrics>("/api/metrics/agent");
 }
 
+/* One shared request per page load: the slide and the pre-warm reuse it. The
+   BFF caches the answer for hours, so this is cheap after the first caller. */
+let webPulseRequest: Promise<import("./types").WebPulse> | null = null;
+
+export function fetchWebPulse(refresh = false): Promise<import("./types").WebPulse> {
+  if (!webPulseRequest || refresh) {
+    webPulseRequest = apiGet<import("./types").WebPulse>(
+      `/api/web-pulse${refresh ? "?refresh=true" : ""}`,
+    ).catch((e) => {
+      webPulseRequest = null;
+      return { status: "unavailable", detail: String(e) } as import("./types").WebPulse;
+    });
+  }
+  return webPulseRequest;
+}
+
 /* Generic authenticated helpers, used by the chat skills. The skill endpoints
    require a signed-in user because the room card carries limit, covenant and
    restricted-list information. */
@@ -60,6 +76,24 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   return r.json();
 }
 
+/** POST and save the response as a file (the approval-paper Word drafts). */
+export async function apiDownload(path: string, body: unknown, fallbackName: string): Promise<void> {
+  const r = await fetch(path, {
+    method: "POST",
+    headers: { ...(await authHeaders()), "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  if (!r.ok) throw new Error(`${path} ${r.status}`);
+  const name = /filename="([^"]+)"/.exec(r.headers.get("Content-Disposition") ?? "")?.[1]
+    ?? fallbackName;
+  const url = URL.createObjectURL(await r.blob());
+  const a = Object.assign(document.createElement("a"), { href: url, download: name });
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export interface StreamHandlers {
   onStatus?: (text: string) => void;
   onIQ?: (iq: IQId, status: "active" | "done", detail: string) => void;
@@ -68,6 +102,8 @@ export interface StreamHandlers {
   onMessage?: (text: string, citations: Citation[]) => void;
   onError?: (text: string, detail: string) => void;
   onDone?: (payload: Record<string, unknown>) => void;
+  /** Any other named event (mission harness steps, tool calls, reviewer stream). */
+  onEvent?: (event: string, payload: any) => void;
 }
 
 /**
@@ -82,10 +118,20 @@ export async function streamChat(
   handlers: StreamHandlers,
   signal?: AbortSignal,
 ): Promise<void> {
-  const res = await fetch("/api/chat", {
+  return streamSSE("/api/chat", { question, threadId }, handlers, signal);
+}
+
+/** POST `body` to an SSE endpoint (chat, scenario narrative) and dispatch its frames. */
+export async function streamSSE(
+  path: string,
+  body: unknown,
+  handlers: StreamHandlers,
+  signal?: AbortSignal,
+): Promise<void> {
+  const res = await fetch(path, {
     method: "POST",
     headers: { "Content-Type": "application/json", ...(await authHeaders()) },
-    body: JSON.stringify({ question, threadId }),
+    body: JSON.stringify(body),
     signal,
   });
 
@@ -150,6 +196,7 @@ export async function streamChat(
           handlers.onDone?.(payload);
           break;
         default:
+          handlers.onEvent?.(event, payload);
           break;
       }
     }

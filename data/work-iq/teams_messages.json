@@ -1,7 +1,7 @@
 {
-  "$schema_note": "SYNTHETIC DEMO DATA. Work IQ Teams corpus for the Capital Markets Client Intelligence Agent. BMO Capital Markets is a branding label only. Gibson Energy Inc. is a real public company, used only so the Web IQ layer's live grounding returns genuine public news - every internal figure, colleague, exposure, limit, covenant, approval and policy referenced here is invented for a demo.",
-  "scenario": "BMO Capital Markets - preparation for the 13 August 2026 Gibson Energy (TSX:GEI) CFO/Treasurer coverage meeting",
-  "as_of": "2026-08-10",
+  "$schema_note": "SYNTHETIC DEMO DATA. Work IQ Teams corpus for the Capital Markets Client Intelligence Agent. The Bank Capital Markets is a branding label only. Gibson Energy Inc. is a real public company, used only so the Web IQ layer's live grounding returns genuine public news - every internal figure, colleague, exposure, limit, covenant, approval and policy referenced here is invented for a demo.",
+  "scenario": "The Bank Capital Markets - preparation for the 8 October 2026 Gibson Energy (TSX:GEI) CFO/Treasurer coverage meeting",
+  "as_of": "2026-10-05",
   "team": {
     "displayName": "Capital Markets - Gibson Energy Coverage",
     "description": "SYNTHETIC DEMO DATA. Coverage team workspace for the Gibson Energy Inc. (TSX:GEI) relationship. Every figure, message, policy and decision in this team was generated for a demonstration.",
@@ -24,65 +24,65 @@
         {
           "id": "TH-G01",
           "from": "sydney.mattos",
-          "createdDateTime": "2026-07-16T12:55:00Z",
+          "createdDateTime": "2026-09-10T12:55:00Z",
           "subject": "FY26 account plan signed",
           "replies": [
             {
               "from": "sasha.ouellet",
-              "createdDateTime": "2026-07-16T13:20:00Z",
+              "createdDateTime": "2026-09-10T13:20:00Z",
               "message": "Read. The gap that jumps out is ECM - zero revenue against an estimated CAD 2.8m of street wallet. We have never been on an equity mandate for this name."
             },
             {
               "from": "quinn.campbell",
-              "createdDateTime": "2026-07-16T13:44:00Z",
+              "createdDateTime": "2026-09-10T13:44:00Z",
               "message": "And we are number one in commodity derivatives. That is the position I want protected before we go chasing the ones we have never had."
             },
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-07-16T14:02:00Z",
+              "createdDateTime": "2026-09-10T14:02:00Z",
               "message": "Noting for the record that the plan lists a target hold of CAD 210m on the revolver. That number has not been to Credit Committee. It is an ambition in a planning document, not an approval."
             },
             {
               "from": "sydney.mattos",
-              "createdDateTime": "2026-07-16T14:15:00Z",
+              "createdDateTime": "2026-09-10T14:15:00Z",
               "message": "Correct and the plan says so. Nobody puts that number in front of a client."
             }
           ],
-          "message": "Account plan for Gibson Energy is signed and filed under Client Files. Headline: FY26 YTD revenue CAD 8.42m vs CAD 7.14m same period FY25, up 17.9 per cent. Wallet share 21.4 per cent, up from 18.9, now ranked second. Three H2 objectives - revolver upsize, hedging overlay, position for the 2027 maturity. Read it before the 13 August meeting."
+          "message": "Account plan for Gibson Energy is signed and filed under Client Files. Headline: FY26 YTD revenue CAD 8.42m vs CAD 7.14m same period FY25, up 17.9 per cent. Wallet share 21.4 per cent, up from 18.9, now ranked second. Three H2 objectives - revolver upsize, hedging overlay, position for the 2027 maturity. Read it before the 8 October meeting."
         },
         {
           "id": "TH-G02",
           "from": "sydney.mattos",
-          "createdDateTime": "2026-07-27T11:30:00Z",
+          "createdDateTime": "2026-09-21T11:30:00Z",
           "subject": "Q2 results",
           "replies": [
             {
               "from": "robin.kline",
-              "createdDateTime": "2026-07-27T12:10:00Z",
+              "createdDateTime": "2026-09-21T12:10:00Z",
               "message": "Understood. I will read the release and nothing in this channel."
             },
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-07-27T12:35:00Z",
+              "createdDateTime": "2026-09-21T12:35:00Z",
               "message": "Leverage went 3.94x to 4.18x on a full quarter of acquisition debt service. Against a 4.50x covenant that is 0.32 turns. I will come back with the pro-forma."
             }
           ],
-          "message": "Gibson reported Q2 this morning. Everything in the release is public and usable. Nothing any of us says in this team about our own credit view, our limits or our rating is. Robin stays public side."
+          "message": "Q2 is still Gibson's latest quarterly release on the public record. Everything in the release is public and usable. Nothing any of us says in this team about our own credit view, our limits or our rating is. Robin stays public side."
         },
         {
           "id": "TH-G03",
           "from": "sydney.mattos",
-          "createdDateTime": "2026-08-10T17:40:00Z",
+          "createdDateTime": "2026-10-05T17:40:00Z",
           "subject": "Thursday is items 1, 2 and 5",
           "replies": [
             {
               "from": "quinn.campbell",
-              "createdDateTime": "2026-08-10T17:52:00Z",
+              "createdDateTime": "2026-10-05T17:52:00Z",
               "message": "Fine by me. I would rather not present a structure I could not evidence anyway - I still do not have the contracted volume split."
             },
             {
               "from": "sasha.ouellet",
-              "createdDateTime": "2026-08-10T18:04:00Z",
+              "createdDateTime": "2026-10-05T18:04:00Z",
               "message": "Pack reissued in Client Files, version 3. Agenda items 3 and 4 removed rather than reworded."
             }
           ],
@@ -97,27 +97,27 @@
         {
           "id": "TH-C01",
           "from": "sasha.ouellet",
-          "createdDateTime": "2026-07-21T19:30:00Z",
+          "createdDateTime": "2026-09-15T19:30:00Z",
           "subject": "Treasurer call - three takeaways",
           "replies": [
             {
               "from": "sydney.mattos",
-              "createdDateTime": "2026-07-21T20:02:00Z",
+              "createdDateTime": "2026-09-15T20:02:00Z",
               "message": "Good discipline on the qualification. Make sure it is in the call report in those words - CP-014 wants the indication and the qualification recorded, not just the indication."
             },
             {
               "from": "quinn.campbell",
-              "createdDateTime": "2026-07-21T20:25:00Z",
+              "createdDateTime": "2026-09-15T20:25:00Z",
               "message": "The differential comment is the most valuable thing in this call. That is a client telling us the problem. I will come back with a shape."
             },
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-07-22T13:10:00Z",
+              "createdDateTime": "2026-09-16T13:10:00Z",
               "message": "Before anyone comes back with anything - do not indicate a hold. Sector is amber and the leverage covenant is at 0.32 turns. Pro-forma required before pitch under CP-005, not before mandate."
             },
             {
               "from": "sasha.ouellet",
-              "createdDateTime": "2026-07-22T13:35:00Z",
+              "createdDateTime": "2026-09-16T13:35:00Z",
               "message": "Understood. Nothing goes to them before your pro-forma."
             }
           ],
@@ -126,36 +126,36 @@
         {
           "id": "TH-C02",
           "from": "sasha.ouellet",
-          "createdDateTime": "2026-07-29T14:10:00Z",
-          "subject": "Open commitment from 21 May is still open",
+          "createdDateTime": "2026-09-23T14:10:00Z",
+          "subject": "Open commitment from 16 July is still open",
           "replies": [
             {
               "from": "sydney.mattos",
-              "createdDateTime": "2026-07-29T14:40:00Z",
+              "createdDateTime": "2026-09-23T14:40:00Z",
               "message": "Close it before Thursday. Repeatedly carrying an unclosed commitment forward is a relationship failure and it gets reported in the quarterly conduct review. I would rather it was closed badly than open."
             },
             {
               "from": "sasha.ouellet",
-              "createdDateTime": "2026-08-09T16:30:00Z",
+              "createdDateTime": "2026-10-04T16:30:00Z",
               "message": "Closed. Sent this afternoon. We will not win on price - the incumbent owns the operating accounts. Our argument is the asymmetry: CAD 0.315m of cash management revenue, about 22 per cent share, ranked third, against a CAD 465m committed lending position."
             }
           ],
-          "message": "We owed them a cash management comparison from the 21 May meeting. It is nine weeks old. It is a mandatory field in the pre-meeting brief as an open commitment from the previous meeting. I do not want to carry it into a second brief."
+          "message": "We owed them a cash management comparison from the 16 July meeting. It is nine weeks old. It is a mandatory field in the pre-meeting brief as an open commitment from the previous meeting. I do not want to carry it into a second brief."
         },
         {
           "id": "TH-C03",
           "from": "sasha.ouellet",
-          "createdDateTime": "2026-08-07T21:45:00Z",
+          "createdDateTime": "2026-10-02T21:45:00Z",
           "subject": "Draft agenda sent to Control Room unchanged",
           "replies": [
             {
               "from": "sydney.mattos",
-              "createdDateTime": "2026-08-07T22:05:00Z",
+              "createdDateTime": "2026-10-02T22:05:00Z",
               "message": "That is the right call. CP-008 says clearance is sought on the agenda as it stands, not on a narrowed description of it. If they cut something, we take the cut."
             },
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-08-08T12:20:00Z",
+              "createdDateTime": "2026-10-03T12:20:00Z",
               "message": "Add the two housekeeping items to the brief as well - the outstanding KYC documents and the cash management comparison. Both are CP-014 fields."
             }
           ],
@@ -164,16 +164,16 @@
         {
           "id": "TH-C04",
           "from": "robin.kline",
-          "createdDateTime": "2026-08-07T11:50:00Z",
+          "createdDateTime": "2026-10-02T11:50:00Z",
           "subject": "I am out of the meeting",
           "replies": [
             {
               "from": "sydney.mattos",
-              "createdDateTime": "2026-08-07T12:15:00Z",
+              "createdDateTime": "2026-10-02T12:15:00Z",
               "message": "Noted and respected. Nobody will ask."
             }
           ],
-          "message": "For the record - since the name went restricted I have not published, not changed the rating or target price, and have declined two client calls on GEI. I am not attending 13 August and I have asked not to be copied. The published FY26 H2 midstream sector memo is public and can be used as it stands; please do not ask me to write something new for a client meeting while the restriction is live, because that is participation in marketing."
+          "message": "For the record - since the name went restricted I have not published, not changed the rating or target price, and have declined two client calls on GEI. I am not attending 8 October and I have asked not to be copied. The published FY26 H2 midstream sector memo is public and can be used as it stands; please do not ask me to write something new for a client meeting while the restriction is live, because that is participation in marketing."
         }
       ]
     },
@@ -184,22 +184,22 @@
         {
           "id": "TH-R01",
           "from": "vance.deleon",
-          "createdDateTime": "2026-07-22T14:20:00Z",
+          "createdDateTime": "2026-09-16T14:20:00Z",
           "subject": "Where the limits actually sit",
           "replies": [
             {
               "from": "sasha.ouellet",
-              "createdDateTime": "2026-07-22T14:45:00Z",
+              "createdDateTime": "2026-09-16T14:45:00Z",
               "message": "So on the single name we have room for the upsize."
             },
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-07-22T15:02:00Z",
+              "createdDateTime": "2026-09-16T15:02:00Z",
               "message": "On the single name, yes. That is not the binding constraint. Energy sector is CAD 2,744m of CAD 3,200m - 85.8 per cent, amber. Midstream sub-ceiling CAD 1,600m and sub-ceilings are hard. An incremental CAD 45m of hold is a rounding error to them and is not a rounding error to us."
             },
             {
               "from": "sydney.mattos",
-              "createdDateTime": "2026-07-22T15:30:00Z",
+              "createdDateTime": "2026-09-16T15:30:00Z",
               "message": "Then we structure it as arrangement above final hold with a documented sell-down, which is what CP-002 says the default should be when a sector is amber."
             }
           ],
@@ -208,65 +208,65 @@
         {
           "id": "TH-R02",
           "from": "vance.deleon",
-          "createdDateTime": "2026-08-06T18:50:00Z",
+          "createdDateTime": "2026-10-01T18:50:00Z",
           "subject": "Pro-forma complete",
           "replies": [
             {
               "from": "sydney.mattos",
-              "createdDateTime": "2026-08-06T19:15:00Z",
+              "createdDateTime": "2026-10-01T19:15:00Z",
               "message": "So the answer is not no. The answer is yes with a covenant conversation attached."
             },
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-08-06T19:30:00Z",
+              "createdDateTime": "2026-10-01T19:30:00Z",
               "message": "That is my position. Negotiate relief or a step-down at the same time, not as a follow-on request in six months when the headroom has gone."
             },
             {
               "from": "sasha.ouellet",
-              "createdDateTime": "2026-08-06T20:05:00Z",
+              "createdDateTime": "2026-10-01T20:05:00Z",
               "message": "Which is a much better conversation to have while we are second in wallet and rising than after a bad print."
             },
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-08-06T20:20:00Z",
+              "createdDateTime": "2026-10-01T20:20:00Z",
               "message": "Also flagging the add-back point. Their calculation includes run-rate acquisition synergies. I track the unadjusted ratio in parallel. They do not straddle a band this quarter. They will if realised synergies lag."
             }
           ],
-          "message": "Pro-forma on the upsize to CAD 1.35bn with our hold at CAD 210m, fully drawn assumption at the next two test dates per CP-005. Base case does not breach. It does not leave enough room to absorb a soft quarter in Marketing. Current 4.18x of 4.50x, 0.32 turns, Tight band. Prior quarter 3.94x."
+          "message": "Pro-forma on the upsize to CAD 1.35bn with our hold at CAD 210m, fully drawn assumption at the next two test dates per CP-005. Fully drawn at CAD 1.35bn it is 4.59x against the 4.50x maximum - a breach on the base case. Largest increase that clears is CAD 195.8m, at zero headroom. Current 4.18x of 4.50x, 0.32 turns, Tight band. Prior quarter 3.94x."
         },
         {
           "id": "TH-R03",
           "from": "sasha.ouellet",
-          "createdDateTime": "2026-08-07T14:35:00Z",
+          "createdDateTime": "2026-10-02T14:35:00Z",
           "subject": "KYC clock - 51 days",
           "replies": [
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-08-07T15:00:00Z",
+              "createdDateTime": "2026-10-02T15:00:00Z",
               "message": "That is the real deadline on this transaction, not the Credit Committee calendar."
             },
             {
               "from": "sydney.mattos",
-              "createdDateTime": "2026-08-07T15:22:00Z",
+              "createdDateTime": "2026-10-02T15:22:00Z",
               "message": "Raise the outstanding documents on Thursday as housekeeping. Not as a condition. It must not read as leverage."
             },
             {
               "from": "sasha.ouellet",
-              "createdDateTime": "2026-08-07T15:40:00Z",
-              "message": "Agreed. Also flagging sanctions - screen clean 2 August on the obligor and beneficial owners, but the terminal and marine counterparties on the Chauvin volumes were not in that run. A clean screen on the obligor is not a clean screen on the flow."
+              "createdDateTime": "2026-10-02T15:40:00Z",
+              "message": "Agreed. Also flagging sanctions - screen clean 27 September on the obligor and beneficial owners, but the terminal and marine counterparties on the Chauvin volumes were not in that run. A clean screen on the obligor is not a clean screen on the flow."
             }
           ],
-          "message": "Periodic KYC refresh due 30 September 2026, two documents outstanding. From the due date, no grace period: no new products, no increase to any committed facility completed, no new derivative documentation executed. Credit Committee is five business days once convened. If approval lands late September and the refresh has not completed we get an approval we cannot execute."
+          "message": "Periodic KYC refresh due 25 November 2026, two documents outstanding. From the due date, no grace period: no new products, no increase to any committed facility completed, no new derivative documentation executed. Credit Committee is five business days once convened. If approval lands late November and the refresh has not completed we get an approval we cannot execute."
         },
         {
           "id": "TH-R04",
           "from": "vance.deleon",
-          "createdDateTime": "2026-08-10T12:40:00Z",
+          "createdDateTime": "2026-10-05T12:40:00Z",
           "subject": "Credit block final",
           "replies": [
             {
               "from": "sydney.mattos",
-              "createdDateTime": "2026-08-10T13:00:00Z",
+              "createdDateTime": "2026-10-05T13:00:00Z",
               "message": "In the brief, not attached to it. The covenant line goes in even though it is uncomfortable."
             }
           ],
@@ -281,27 +281,27 @@
         {
           "id": "TH-M01",
           "from": "quinn.campbell",
-          "createdDateTime": "2026-07-23T17:00:00Z",
+          "createdDateTime": "2026-09-17T17:00:00Z",
           "subject": "Shape of the Chauvin overlay",
           "replies": [
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-07-24T13:30:00Z",
+              "createdDateTime": "2026-09-18T13:30:00Z",
               "message": "It does not fit. A 24-month differential at CAD 240m does not sit inside CAD 20.8m of remaining PSE headroom on a differential add-on. Differential add-ons are higher than outright at the same notional - fatter-tailed spread distribution."
             },
             {
               "from": "quinn.campbell",
-              "createdDateTime": "2026-07-24T14:05:00Z",
+              "createdDateTime": "2026-09-18T14:05:00Z",
               "message": "Then it comes down or it changes shape. I am not quoting a differential on an outright add-on."
             },
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-07-24T14:25:00Z",
+              "createdDateTime": "2026-09-18T14:25:00Z",
               "message": "And note the PSE line is a sub-limit of the CAD 500m single-name limit and consumes it. A bigger derivative position and a bigger loan hold are competing for the same limit. If the revolver goes to CAD 210m the arithmetic tightens for both of you."
             },
             {
               "from": "quinn.campbell",
-              "createdDateTime": "2026-07-24T14:50:00Z",
+              "createdDateTime": "2026-09-18T14:50:00Z",
               "message": "That is worth Sydney hearing before Thursday. We are not choosing between two products, we are choosing how to spend one limit."
             }
           ],
@@ -310,22 +310,22 @@
         {
           "id": "TH-M02",
           "from": "quinn.campbell",
-          "createdDateTime": "2026-08-05T17:15:00Z",
+          "createdDateTime": "2026-09-30T17:15:00Z",
           "subject": "Three options after resizing",
           "replies": [
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-08-05T17:45:00Z",
+              "createdDateTime": "2026-09-30T17:45:00Z",
               "message": "A is the one I can support today without a limit change. C I would not run alongside the revolver - two limit asks in the same committee cycle is how you get neither."
             },
             {
               "from": "sydney.mattos",
-              "createdDateTime": "2026-08-05T18:10:00Z",
+              "createdDateTime": "2026-09-30T18:10:00Z",
               "message": "A. It does more of what the client actually asked for and it survives a bad month."
             },
             {
               "from": "quinn.campbell",
-              "createdDateTime": "2026-08-09T19:05:00Z",
+              "createdDateTime": "2026-10-04T19:05:00Z",
               "message": "A is built and priced with the three-scenario illustration drafted. What I still do not have is the contracted volume split, so without it what I present is a framework and questions, not a structure. And I have no Control Room clearance."
             }
           ],
@@ -334,17 +334,17 @@
         {
           "id": "TH-M03",
           "from": "quinn.campbell",
-          "createdDateTime": "2026-08-10T18:00:00Z",
+          "createdDateTime": "2026-10-05T18:00:00Z",
           "subject": "Item 3 not cleared - standing down",
           "replies": [
             {
               "from": "sydney.mattos",
-              "createdDateTime": "2026-08-10T18:20:00Z",
+              "createdDateTime": "2026-10-05T18:20:00Z",
               "message": "You called this on Sunday and you did not solicit while it was unclear. That is exactly what should have happened."
             },
             {
               "from": "vance.deleon",
-              "createdDateTime": "2026-08-10T18:35:00Z",
+              "createdDateTime": "2026-10-05T18:35:00Z",
               "message": "Silver lining - the PSE headroom stays where it is, which makes the revolver conversation cleaner."
             }
           ],

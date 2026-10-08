@@ -7,7 +7,7 @@ rather than the model being grounded.
 
 These assertions therefore check two things:
 
-  1. structure  - 14 documents, CP-001..CP-014, no gaps, every one substantial
+  1. structure  - 17 documents, CP-001..CP-017, no gaps, every one substantial
      and attributed;
   2. the tension - the specific clauses the trap answer cites must be present as
      written, not paraphrased.
@@ -45,9 +45,11 @@ def chk(label: str, cond: object, detail: str = "") -> None:
 
 
 print("\nStructure")
-chk("14 documents", len(docs) == 14)
-chk("ids CP-001..CP-014 with no gaps",
-    [x["id"] for x in docs] == [f"CP-{i:03d}" for i in range(1, 15)])
+chk("17 documents", len(docs) == 17)
+chk("ids CP-001..CP-017 with no gaps",
+    [x["id"] for x in docs] == [f"CP-{i:03d}" for i in range(1, 18)])
+chk("CP-015 house view states the PSE direction",
+    "reduces the firm's pre-settlement exposure" in json.dumps(d))
 chk("every category declared", all(x["category"] in d["categories"] for x in docs))
 chk("every doc over 1500 chars", all(len(x["content"]) > 1500 for x in docs),
     str([x["id"] for x in docs if len(x["content"]) <= 1500]))
@@ -94,8 +96,10 @@ for s in ["CAD 465m", "341.7", "68.3", "0.32", "21.4", "IG-6", "85.8"]:
 print("\nGuardrails")
 chk("public ratings flagged indicative", "indicative" in t.lower())
 chk("synthetic disclaimer present", "SYNTHETIC" in t.upper())
-chk("no reference to another demo's institution",
-    not any(n in t for n in ("Scotiabank", "Scotia", "Contoso", "RBC", "Vale")))
+chk("scenario uses the canonical institution",
+    d["scenario"].startswith("The Bank - "))
+chk("disclosure identifies a fictional institution",
+    "The Bank is a fictional institution." in d["$schema_note"])
 
 print("\n" + ("PASSED" if ok else "FAILED"))
 sys.exit(0 if ok else 1)

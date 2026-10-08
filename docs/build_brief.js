@@ -1,9 +1,9 @@
 /**
- * BMO Capital Markets - Global Client Intelligence Agent
+ * Capital Markets - Global Client Intelligence Agent
  * Scenario and capability brief.
  *
- * Every figure is pulled from capital-markets-client-intelligence/data/scenario_facts.py,
- * the single source of truth the whole demo reconciles against.
+ * Figures in this authored brief should be reconciled with data/scenario_facts.py
+ * before regenerating it.
  *
  *   npm install -g docx
  *   node build_brief.js
@@ -217,7 +217,7 @@ function iqSection(key, tagline, contributes, looksAt, questions) {
 
 // ---------------------------------------------------------------- build ---
 const doc = new Document({
-  creator: "BMO Capital Markets demo",
+  creator: "Capital Markets Client Intelligence demo",
   title: "Global Client Intelligence Agent - scenario and capability brief",
   description: "SYNTHETIC DEMO DATA.",
   styles: {
@@ -257,7 +257,7 @@ const doc = new Document({
         border: { bottom: { style: BorderStyle.SINGLE, size: 6, color: BRAND, space: 6 } },
         tabStops: [{ type: TabStopType.RIGHT, position: TabStopPosition.MAX }],
         children: [
-          new TextRun({ text: "BMO Capital Markets", bold: true, size: 17, color: BRAND }),
+          new TextRun({ text: "Capital Markets Client Intelligence", bold: true, size: 17, color: BRAND }),
           new TextRun({ text: "\tGlobal Client Intelligence Agent", size: 17, color: MUTED }),
         ],
       })] }),
@@ -317,7 +317,7 @@ const doc = new Document({
             new Paragraph({ spacing: { after: 60 }, children: [new TextRun({
               text: "Synthetic demonstration data", bold: true, size: 20, color: "8A4008" })] }),
             new Paragraph({ spacing: { after: 0, line: 264 }, children: [new TextRun({
-              text: "BMO Capital Markets is used here as a branding label only. Every internal "
+              text: "The Bank is a fictional institution in this scenario. Every internal "
                   + "figure in this document \u2014 exposures, limits, revenue, wallet share, ratings, "
                   + "covenants, colleagues, emails and policies \u2014 was generated for a demonstration "
                   + "and reflects no real institution, client relationship or credit position. "
@@ -335,7 +335,7 @@ const doc = new Document({
         { text: "It is Monday 17 August 2026. On Thursday, four bankers from three business " },
         { text: "lines fly to Rio de Janeiro to meet the CFO and Group Treasurer of " },
         { text: "Gibson Energy Inc.", bold: true, color: INK },
-        { text: " (TSX:GEI), a Tier 1 midstream energy client BMO has banked " },
+        { text: " (TSX:GEI), a Tier 1 midstream energy client the Bank has banked " },
         { text: "since 2007.", },
       ]),
 
@@ -706,6 +706,6 @@ const doc = new Document({
 });
 
 Packer.toBuffer(doc).then((buf) => {
-  fs.writeFileSync("BMO-Capital-Markets-Client-Intelligence-Brief.docx", buf);
-  console.log("written: BMO-Capital-Markets-Client-Intelligence-Brief.docx");
+  fs.writeFileSync("Capital-Markets-Client-Intelligence-Brief.docx", buf);
+  console.log("written: Capital-Markets-Client-Intelligence-Brief.docx");
 });

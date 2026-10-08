@@ -1,4 +1,4 @@
-"""Build the offline dashboard cache; --check validates sources and exact output."""
+"""Build the offline dashboard snapshot; --check validates sources and exact output."""
 
 from __future__ import annotations
 
@@ -18,8 +18,7 @@ AS_OF = FACTS["as_of"]
 D = Decimal
 DISCLAIMER = (
     "SYNTHETIC DEMO ONLY: issuer names are labels; all internal figures and evidence "
-    "are invented, not real client relationships, credit positions or investment advice. "
-    "Offline cached scope only; no API calls, live retrieval or external facts."
+    "are invented, not real client relationships, credit positions or investment advice."
 )
 UNITS = (
     "Source monetary values are CAD millions (revenue converted from CAD thousands). "
@@ -32,7 +31,7 @@ MATURITY_BASIS = (
     "issuer-wide debt or the proposed refinancing pipeline. Facility rows are undated "
     "and treated as the scenario snapshot, not historical observations."
 )
-# Cached, per-company illustrative evidence: client_id -> (work email id, policy id,
+# Per-company illustrative evidence: client_id -> (work email id, policy id,
 # policy is company-specific). Matching is by the email's client_id field, never by
 # a company name appearing somewhere in the text. Companies absent from this table
 # keep the honest "unavailable" evidence text.
@@ -103,7 +102,7 @@ def build_snapshot() -> dict:
         exposure = total(exposures, "current_exposure_cad_m")
         commitment = total(facilities, "commitment_cad_m")
         revenue = total(revenues, "fy26_ytd_revenue_cad_k") / 1000
-        wallet_revenue = total(wallets, "bmo_revenue_cad_k") / 1000
+        wallet_revenue = total(wallets, "bank_revenue_cad_k") / 1000
         street = total(wallets, "estimated_street_wallet_cad_k") / 1000
         ceiling = D(limit["limit_cad_m"])
         utilized = D(limit["utilised_cad_m"])
@@ -146,18 +145,18 @@ def build_snapshot() -> dict:
             f"CAD {utilized}m of CAD {ceiling}m. Internal synthetic rating "
             f"{client['internal_risk_rating']}; trend {client['risk_trend']}; "
             f"watchlist flag {client['watchlist_flag']}. KYC refresh due "
-            f"{client['kyc_refresh_due']} (relative to cached date, not today). "
+            f"{client['kyc_refresh_due']} (relative to the snapshot date, not today). "
             "Headroom is not approval for new commitments."
         )
         evidence = [
-            {"iq": "Fabric IQ", "status": "cached synthetic",
-             "text": "Local CSV snapshot only; no Fabric service query. " + UNITS},
+            {"iq": "Fabric IQ", "status": "synthetic",
+             "text": "From the governed Fabric tables at the snapshot date. " + UNITS},
             {"iq": "Work IQ", "status": "unavailable",
-             "text": "No company-specific Work evidence selected for this cache."},
+             "text": "No company-specific Work evidence selected for this snapshot."},
             {"iq": "Foundry IQ", "status": "unavailable",
-             "text": "No company-specific Foundry evidence selected for this cache."},
+             "text": "No company-specific Foundry evidence selected for this snapshot."},
             {"iq": "Web IQ", "status": "unavailable",
-             "text": "web_iq_queries.json declares no offline cache. No news, ratings or external facts retrieved."},
+             "text": "Public news and ratings are not part of the snapshot - ask in Explore for live Web IQ."},
         ]
         sources = ["data/fabric-iq/clients.csv"] + [
             f"data/fabric-iq/{name}.csv" for name in tables
@@ -208,10 +207,10 @@ def build_snapshot() -> dict:
                     "Not a live retrieval."
                 )
             evidence[1] = {
-                "iq": evidence[1]["iq"], "status": "cached synthetic",
+                "iq": evidence[1]["iq"], "status": "synthetic",
                 "text": f"Illustrative local source {email_id}: {email['subject']}. Not a live retrieval.",
             }
-            evidence[2] = {"iq": evidence[2]["iq"], "status": "cached synthetic", "text": policy_card}
+            evidence[2] = {"iq": evidence[2]["iq"], "status": "synthetic", "text": policy_card}
             sources.append(f"data/work-iq/emails.json#{email_id}")
             sources.append(f"data/foundry-iq/cm_policies.json#{policy_id}")
         companies.append({
@@ -237,7 +236,7 @@ def build_snapshot() -> dict:
 
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--check", action="store_true", help="Read-only: validate truth and fail on a stale/missing cache")
+    parser.add_argument("--check", action="store_true", help="Read-only: validate truth and fail on a stale/missing snapshot")
     args = parser.parse_args()
     try:
         snapshot = build_snapshot()
@@ -245,7 +244,7 @@ def main() -> int:
         if args.check:
             require(OUTPUT.exists() and OUTPUT.read_bytes() == content,
                     "Missing/stale snapshot.json; run python data\\generate_dashboard_snapshot.py")
-            print("PASS: 10 companies; source aggregation, scenario reconciliation, maturity, units and deterministic cache verified.")
+            print("PASS: 10 companies; source aggregation, scenario reconciliation, maturity, units and deterministic snapshot verified.")
         else:
             OUTPUT.parent.mkdir(parents=True, exist_ok=True)
             OUTPUT.write_bytes(content)

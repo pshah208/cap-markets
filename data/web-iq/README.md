@@ -32,7 +32,7 @@ Three of the four layers are synthetic. One is real. The agent must never let th
 |---|---|
 | Quote a synthetic internal figure as if it were public | It would be a false statement about a real public company |
 | Attribute an internal credit view to a news source | Same problem, plus it fabricates a citation |
-| Present a public figure as BMO's internal position | Corrupts the internal record |
+| Present a public figure as the Bank's internal position | Corrupts the internal record |
 | Reconcile a public/internal contradiction silently | The contradiction is often the most valuable finding |
 
 The agent instructions enforce this: external claims require a citation from the grounding
@@ -40,32 +40,23 @@ tool; internal claims are attributed to Fabric IQ, Work IQ or a named policy doc
 
 ## Provisioning
 
-Web IQ needs a **Grounding with Bing Search** resource and a connection on the Foundry
-project.
+**Choose your bank first** using the [root README](../../README.md). From the standalone
+repository root:
 
 ```powershell
-az account set --subscription a7d3b871-d2a9-4d67-9704-8792a5d3db99
-
-# 1. The Bing grounding resource (Bicep: infra/modules/bing-grounding.bicep)
-az deployment group create `
-  --resource-group rg-cmintel-demo `
-  --template-file ..\..\infra\main.bicep `
-  --parameters ..\..\infra\main.parameters.json
-
-# 2. Confirm the connection is visible to the project
-$env:FOUNDRY_PROJECT_ENDPOINT = "https://cmintel-foundry.services.ai.azure.com/api/projects/proj-client-intelligence"
-$env:BING_GROUNDING_CONNECTION = "bing-grounding-cmintel"
+.\setup-bank.ps1 -BankName 'Example Bank' -BankShortName 'Example' -PrimaryColor '#164E63' -AccentColor '#B45309'
 ```
 
-Then verify end to end:
+Web IQ needs a **Grounding with Bing Search** resource and a connection on your Foundry
+project. The reference module is `infra\modules\bing-grounding.bicep` at the repository
+root. Use the root README for current deployment steps and governance prerequisites;
+configure `FOUNDRY_PROJECT_ENDPOINT` and `BING_GROUNDING_CONNECTION` for your own
+environment. Bank setup does not create resources or approve access.
 
-```powershell
-cd ..\..\agent
-python create_agent.py --ask "What has happened externally with Gibson Energy in the last 30 days?" --role analyst
-```
-
-A correct answer cites real, dated sources. An answer with no citations means the connection
-is not wired — check the connection name before believing the output.
+Once your deployment and permissions are verified, an end-to-end test can ask:
+“What has happened externally with Gibson Energy in the last 30 days?” A correct live
+answer cites dated public sources. If citations or tool traces are missing, treat the
+answer as unverified and check the connection rather than inferring deployment success.
 
 ## Query design
 

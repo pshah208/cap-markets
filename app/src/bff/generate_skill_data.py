@@ -3,9 +3,8 @@
 WHY A GENERATOR RATHER THAN A TRANSCRIPTION
 -------------------------------------------
 The BFF container image only copies `src/bff`, so it cannot read
-`data/fabric-iq/*.csv` at runtime. The Scotia demo solved the same problem by
-hand-transcribing its offer catalogue into the BFF with a comment pointing at the
-source. That works until someone edits the source and forgets the copy.
+`data/fabric-iq/*.csv` at runtime. Hand-transcribing a catalogue into the BFF
+works only until someone edits the source and forgets the copy.
 
 This does the transcription mechanically instead: it reads `scenario_facts.py`
 and the generated CSVs, and writes a Python module the BFF imports. Re-run it
@@ -91,9 +90,54 @@ def build() -> dict:
         })
     radar.sort(key=lambda r: -r["utilisation_pct"])
 
+    # Every client in the book, for the dashboard's per-company stress test and
+    # credit papers. Only figures that exist for that client are carried - no
+    # client other than the hero has absolute net debt or EBITDA, so none is
+    # invented here.
+    clients_csv = rows("clients.csv")
+    snapshot_path = HERE.parent / "web" / "src" / "dashboard" / "snapshot.json"
+    snap = {c["id"]: c for c in json.loads(snapshot_path.read_text(encoding="utf-8"))["companies"]}
+    clients: dict[str, dict] = {}
+    for c in clients_csv:
+        cid = c["client_id"]
+        s = snap.get(cid, {})
+        clients[cid] = {
+            "id": cid, "name": c["client_name"], "ticker": c["ticker"],
+            "sector": c["sector"], "sub_sector": c["sub_sector"],
+            "tier": c["coverage_tier"], "rating": c["internal_risk_rating"],
+            "rating_prior": c["internal_risk_rating_prior"], "trend": c["risk_trend"],
+            "watchlist": c["watchlist_flag"] == "Y",
+            "kyc_refresh_due": c["kyc_refresh_due"], "last_meeting": c["last_meeting_date"],
+            "covenants": [
+                {"covenant": v["covenant"], "test": v["test_type"],
+                 "threshold": f(v["threshold"]), "actual": f(v["actual"]),
+                 "prior": f(v["prior_quarter_actual"]), "unit": v["unit"],
+                 "headroom": f(v["headroom"]), "status": v["status"],
+                 "last_tested": v["last_tested_date"], "next_test": v["next_test_date"]}
+                for v in covenants if v["client_id"] == cid
+            ],
+            "limits": [
+                {"id": r["limit_id"], "type": r["limit_type"],
+                 "limit": f(r["limit_cad_m"]), "utilised": f(r["utilised_cad_m"]),
+                 "headroom": f(r["headroom_cad_m"]),
+                 "utilisation_pct": f(r["utilisation_pct"]),
+                 "status": r["status"], "owner": r["limit_owner"]}
+                for r in limits if r["client_id"] == cid
+            ],
+            "facilities": [
+                {"id": r["facility_id"], "type": r["facility_type"],
+                 "commitment": f(r["commitment_cad_m"]), "drawn": f(r["drawn_cad_m"]),
+                 "maturity": r["maturity_date"]}
+                for r in facilities if r["client_id"] == cid
+            ],
+            "opportunity": s.get("opportunity", ""),
+            "risk": s.get("risk", ""),
+            "data_quality": s.get("dataQuality", []),
+        }
+
     by_alias = {p["alias"]: p for p in PEOPLE}
     attendees = []
-    for alias in meeting["bmo_attendees"]:
+    for alias in meeting["bank_attendees"]:
         p = by_alias.get(alias, {})
         row = next((t for t in team
                     if t["client_id"] == hero and t["alias"] == alias), {})
@@ -160,7 +204,7 @@ def build() -> dict:
         "facilities": [
             {"id": r["facility_id"], "type": r["facility_type"],
              "commitment": f(r["commitment_cad_m"]), "drawn": f(r["drawn_cad_m"]),
-             "maturity": r["maturity_date"], "role": r["bmo_role"]}
+              "maturity": r["maturity_date"], "role": r["bank_role"]}
             for r in facilities if r["client_id"] == hero
         ],
         "leverage_history": history,
@@ -178,6 +222,7 @@ def build() -> dict:
             "effect": mnpi["effect"],
         },
         "radar": radar,
+        "clients": clients,
         "metrics": FACTS["hero_metrics"],
     }
 
@@ -238,6 +283,7 @@ def main() -> int:
     print(f"  covenants         {len(d['covenants_all'])}")
     print(f"  limits            {len(d['limits'])}")
     print(f"  radar             {len(d['radar'])} clients")
+    print(f"  clients           {len(d['clients'])} (stress + credit papers)")
     print(f"  meeting attendees {len(d['meeting']['attendees'])}")
     return 0
 

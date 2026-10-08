@@ -3,71 +3,48 @@
 Checks what each app *requests* in its manifest, what has actually been
 *granted* (admin consent), and flags anything the app needs at run time but is
 missing.
+
+Required environment: AZURE_TENANT_ID (tenant GUID), INFRA_SPA_NAME and
+INFRA_BFF_NAME (distinct, unique app display names). No optional environment
+settings. Read-only; importing this module does not acquire credentials.
 """
 
 from __future__ import annotations
 
-import subprocess
-import sys
+import argparse
 
-import requests
-
-GRAPH = "https://graph.microsoft.com/v1.0"
-GRAPH_APP_ID = "00000003-0000-0000-c000-000000000000"
-SPA_NAME = "cm-client-intelligence-spa"
-BFF_NAME = "cm-client-intelligence-bff"
-
-
-def token() -> str:
-    o = subprocess.run(["az", "account", "get-access-token", "--resource",
-                        "https://graph.microsoft.com", "--query", "accessToken",
-                        "-o", "tsv"], capture_output=True, text=True, shell=True)
-    if o.returncode != 0:
-        sys.exit("run az login")
-    return o.stdout.strip()
+if __package__:
+    from .portability_config import (
+        ConfigurationError, GraphClient, app_names, environment, eq_filter,
+        find_app, find_sp, tenant_id,
+    )
+else:
+    from portability_config import (
+        ConfigurationError, GraphClient, app_names, environment, eq_filter,
+        find_app, find_sp, tenant_id,
+    )
 
 
-H = {"Authorization": f"Bearer {token()}"}
+def audit(g: GraphClient, name: str) -> None:
+    cache = {}
 
+    def get(path):
+        return g.call("GET", path)
 
-def get(path: str):
-    r = requests.get(f"{GRAPH}{path}", headers=H, timeout=60)
-    r.raise_for_status()
-    return r.json()
+    def resource_sp(app_id):
+        if app_id not in cache:
+            cache[app_id] = find_sp(g, app_id) or {}
+        return cache[app_id]
 
-
-def app_by_name(name: str):
-    v = get(f"/applications?$filter=displayName eq '{name}'")["value"]
-    return v[0] if v else None
-
-
-def sp_by_appid(app_id: str):
-    v = get(f"/servicePrincipals?$filter=appId eq '{app_id}'")["value"]
-    return v[0] if v else None
-
-
-# Resource service principals we care about, resolved lazily.
-_res_cache: dict[str, dict] = {}
-
-
-def resource_sp(app_id: str):
-    if app_id not in _res_cache:
-        v = get(f"/servicePrincipals?$filter=appId eq '{app_id}'"
-                "&$select=id,appId,displayName,oauth2PermissionScopes,appRoles")["value"]
-        _res_cache[app_id] = v[0] if v else {}
-    return _res_cache[app_id]
-
-
-def audit(name: str) -> None:
     print("=" * 74)
     print(name)
     print("=" * 74)
-    app = app_by_name(name)
+    app = find_app(g, name)
     if not app:
         print("  NOT FOUND\n")
         return
     app = get(f"/applications/{app['id']}")
-    sp = sp_by_appid(app["appId"])
+    sp = find_sp(g, app["appId"])
     print(f"  appId        : {app['appId']}")
     print(f"  audience     : {app.get('signInAudience')}")
     print(f"  public client: {app.get('isFallbackPublicClient')}")
@@ -103,20 +80,19 @@ def audit(name: str) -> None:
     # Granted delegated consent
     print("\n  GRANTED (delegated, admin consent):")
     if sp:
-        grants = get(f"/oauth2PermissionGrants?$filter=clientId eq '{sp['id']}'")["value"]
+        grants = g.collection(f"/oauth2PermissionGrants?{eq_filter('clientId', sp['id'])}")
         if not grants:
             print("    (none)")
-        for g in grants:
-            res = get(f"/servicePrincipals/{g['resourceId']}?$select=displayName,appId")
-            print(f"    {res.get('displayName', '?'):<22} {g.get('consentType'):<14} "
-                  f"{g['scope'].strip()}")
+        for grant in grants:
+            res = get(f"/servicePrincipals/{grant['resourceId']}?$select=displayName,appId")
+            print(f"    {res.get('displayName', '?'):<22} {grant.get('consentType'):<14} "
+                  f"{grant['scope'].strip()}")
 
         # Granted application roles
-        ras = get(f"/servicePrincipals/{sp['id']}/appRoleAssignments")["value"]
+        ras = g.collection(f"/servicePrincipals/{sp['id']}/appRoleAssignments")
         if ras:
             print("\n  GRANTED (application roles):")
             for ra in ras:
-                res = resource_sp("")  # not needed; look up by resourceId
                 r = get(f"/servicePrincipals/{ra['resourceId']}"
                         "?$select=displayName,appRoles")
                 rm = {x["id"]: x["value"] for x in r.get("appRoles", [])}
@@ -125,15 +101,29 @@ def audit(name: str) -> None:
     print()
 
 
-audit(SPA_NAME)
-audit(BFF_NAME)
+def main(argv=None, environ=None) -> None:
+    ap = argparse.ArgumentParser(description=__doc__)
+    ap.parse_args(argv)
+    env = environment(environ)
+    try:
+        tenant = tenant_id(env)
+        spa_name, bff_name = app_names(env)
+    except ConfigurationError as exc:
+        ap.error(str(exc))
+    g = GraphClient(tenant)
+    audit(g, spa_name)
+    audit(g, bff_name)
 
-print("=" * 74)
-print("RUNTIME REQUIREMENTS")
-print("=" * 74)
-print("""
+    print("=" * 74)
+    print("RUNTIME REQUIREMENTS")
+    print("=" * 74)
+    print("""
   SPA  -> BFF        api://<bff>/access_as_user            delegated
   BFF  -> Graph      User.Read                             delegated (persona card)
   BFF  -> Foundry    https://ai.azure.com/.default         delegated, via OBO
                      (the agent call itself)
 """)
+
+
+if __name__ == "__main__":
+    main()

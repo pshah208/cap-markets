@@ -25,12 +25,15 @@
 // rbac.bicep, so switching this connection to Entra auth later needs no new grants.
 
 @description('Foundry (AIServices) account name the connection is created on.')
+@minLength(2)
 param foundryAccountName string
 
 @description('Azure AI Search service name to connect to.')
+@minLength(1)
 param searchServiceName string
 
 @description('Connection name as it will appear in the Foundry portal.')
+@minLength(1)
 param connectionName string
 
 resource foundryAccount 'Microsoft.CognitiveServices/accounts@2025-04-01-preview' existing = {

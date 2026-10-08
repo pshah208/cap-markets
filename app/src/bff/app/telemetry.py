@@ -138,6 +138,8 @@ def record_run(*, ok: bool = True, **_ignored) -> None:
     are the source for all of that, and a second, less accurate copy of the same
     figure is how a dashboard starts lying.
     """
+    if settings.mock_mode:
+        return
     try:
         with _session_lock:
             _session.append(_SessionRun(datetime.now(timezone.utc), ok))
@@ -177,8 +179,8 @@ _token_lock = asyncio.Lock()
 async def _access_token() -> str:
     """Bearer token for the Log Analytics API, from the app's managed identity.
 
-    The container app runs as the user-assigned identity `id-cmci`, which holds
-    Monitoring Reader on the workspace. DefaultAzureCredential picks that up
+    The container app's managed identity needs Monitoring Reader on the
+    workspace. DefaultAzureCredential picks that up
     from AZURE_CLIENT_ID inside the container, and a developer's `az login`
     locally.
 
@@ -188,6 +190,7 @@ async def _access_token() -> str:
     is not installed" - which is silently swallowed as "could not read traces".
     """
     global _token
+    _require_configured()
     async with _token_lock:
         if _token and _token[1] - 120 > time.time():
             return _token[0]
@@ -206,6 +209,14 @@ async def _access_token() -> str:
         return tok.token
 
 
+def _require_configured() -> None:
+    if settings.mock_mode:
+        raise RuntimeError("Foundry telemetry access is disabled in MOCK_MODE.")
+    error = settings.telemetry_config_error()
+    if error:
+        raise ValueError(error)
+
+
 def _query(window_days: int, agent: str) -> str:
     """KQL: one row per question the agent was asked.
 
@@ -215,7 +226,7 @@ def _query(window_days: int, agent: str) -> str:
     would otherwise show up as free questions and flatter the average.
     """
     agent_filter = (
-        f"| where tostring(P['gen_ai.agent.name']) == '{agent}'" if agent else ""
+        f"| where tostring(P['gen_ai.agent.name']) == {_json.dumps(agent)}" if agent else ""
     )
     return " ".join(f"""
         let win = {int(window_days)}d;
@@ -270,6 +281,9 @@ class FoundryRun:
 
 async def _fetch_runs() -> list[FoundryRun]:
     """Run the trace query. Raises on failure so the caller can report why."""
+    _require_configured()
+    if not settings.agent_name.strip():
+        raise ValueError("Set FOUNDRY_AGENT_NAME to select the agent's traces.")
     token = await _access_token()
     body = {"query": _query(settings.telemetry_window_days, settings.agent_name)}
     url = LOG_ANALYTICS_URL.format(ws=settings.log_analytics_workspace_id)
@@ -462,11 +476,23 @@ async def snapshot() -> dict:
     """Everything chapter 12 renders: Foundry traces plus billed Azure cost."""
     global _cache
 
+    if settings.mock_mode:
+        snap = _empty("Foundry telemetry is disabled in MOCK_MODE.")
+        snap["pendingRuns"] = 0
+        return snap
+
     if not settings.log_analytics_workspace_id:
         snap = _empty(
             "Foundry tracing is not wired up here.",
             "Set LOG_ANALYTICS_WORKSPACE_ID to the workspace behind the "
             "project's Application Insights connection.")
+        snap["billed"] = await billed_cost()
+        return snap
+
+    error = settings.telemetry_config_error()
+    if error or not settings.agent_name.strip():
+        snap = _empty("Foundry tracing is not configured.",
+                      error or "Set FOUNDRY_AGENT_NAME to select the agent's traces.")
         snap["billed"] = await billed_cost()
         return snap
 
